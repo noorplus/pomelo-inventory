@@ -1,0 +1,79 @@
+# Pomelo Inventory — Supabase Project Metadata
+
+project:
+  name: pomelo-inventory
+  repository: noorplus/pomelo-inventory
+  purpose: Production inventory management application
+  database: PostgreSQL
+  platform: Supabase
+  schema: public
+  migration_status: repository_only
+  applied_to_supabase: false
+
+migration:
+  version: 20260925000100
+  name: initial_schema
+  path: supabase/migrations/20260925000100_initial_schema.sql
+  scope: authentication profiles, organizations, organization memberships
+  status: production_schema_ready
+  apply_requires_explicit_approval: true
+
+architecture:
+  authentication:
+    provider: Supabase Auth
+    source_of_truth: auth.users
+    password_storage: Supabase Auth only
+  tenancy:
+    model: multi_organization
+    membership_table: public.organization_users
+    organization_identifier: six_digit_sequence
+  authorization:
+    mechanism: PostgreSQL Row Level Security
+    metadata_authorization: prohibited
+  timestamps:
+    type: timestamptz
+    timezone: UTC
+
+schema:
+  tables:
+    - public.profiles
+    - public.organizations
+    - public.organization_users
+  enums:
+    - public.organization_status
+  sequences:
+    - public.organization_number_seq
+  extensions:
+    - citext
+
+organization:
+  required_fields:
+    - organization_name
+    - phone_number
+    - email
+    - address
+  optional_fields:
+    - tin
+    - bin
+  unique_fields:
+    - organization_name
+    - phone_number
+    - email
+  status_values:
+    - Active
+    - Inactive
+    - Suspend
+
+security:
+  rls_enabled:
+    - public.profiles
+    - public.organizations
+    - public.organization_users
+  service_role_in_application: false
+  security_definer_functions_restricted: true
+  authorization_data_in_user_metadata: false
+
+deployment:
+  database_changes_applied: false
+  github_commit_contains_migration: true
+  next_step: review_and_explicitly_apply_migration_to_supabase
