@@ -14,7 +14,7 @@ export default async function ProductsPage() {
 
   const [{ data: organization }, { data: products }, { data: units }] = await Promise.all([
     supabase.from("organizations").select("organization_name").eq("id", organizationId).single(),
-    supabase.from("products").select("id, product_name, retail_price, status, created_at, uom_id, units_of_measure(name)").eq("organization_id", organizationId).order("product_name"),
+    supabase.from("products").select("id, product_name, retail_price, status, created_at, uom_id").eq("organization_id", organizationId).order("product_name"),
     supabase.from("units_of_measure").select("id, name").eq("organization_id", organizationId).eq("status", "Active").order("name"),
   ]);
 
@@ -43,7 +43,7 @@ export default async function ProductsPage() {
           </form>
         </section>
         <section className="section-heading"><div><h2>Product list</h2><p className="muted">{products?.length ?? 0} products in this organization.</p></div></section>
-        <section className="table-card"><table><thead><tr><th>Product</th><th>UoM</th><th>Retail price</th><th>Status</th></tr></thead><tbody>{products?.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{Array.isArray(product.units_of_measure) ? product.units_of_measure[0]?.name : product.units_of_measure?.name}</td><td>{Number(product.retail_price).toFixed(2)}</td><td><span className="status-badge">{product.status}</span></td></tr>)}</tbody></table>{!products?.length && <div className="empty-state"><div className="empty-icon">▦</div><div><h2>No products yet</h2><p>Add a product after creating at least one active UoM.</p></div></div>}</section>
+        <section className="table-card"><table><thead><tr><th>Product</th><th>UoM</th><th>Retail price</th><th>Status</th></tr></thead><tbody>{products?.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{units?.find((unit) => unit.id === product.uom_id)?.name || "—"}</td><td>{Number(product.retail_price).toFixed(2)}</td><td><span className="status-badge">{product.status}</span></td></tr>)}</tbody></table>{!products?.length && <div className="empty-state"><div className="empty-icon">▦</div><div><h2>No products yet</h2><p>Add a product after creating at least one active UoM.</p></div></div>}</section>
       </main>
     </div>
   );
