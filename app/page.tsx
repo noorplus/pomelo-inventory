@@ -1,17 +1,3 @@
-const stats = [
-  { label: "Total Products", value: "1,248" },
-  { label: "Warehouses", value: "8" },
-  { label: "Low Stock", value: "23" },
-  { label: "Pending Purchases", value: "17" },
-];
-
-const movements = [
-  { product: "Office Chair", warehouse: "Main Warehouse", type: "Received", qty: "+120", status: "Completed" },
-  { product: "Oak Table", warehouse: "Production Store", type: "Issued", qty: "-24", status: "Completed" },
-  { product: "LED Desk Lamp", warehouse: "Main Warehouse", type: "Transferred", qty: "+40", status: "Completed" },
-  { product: "Filing Cabinet", warehouse: "Dhaka Warehouse", type: "Received", qty: "+60", status: "Completed" },
-];
-
 export default function Home() {
   return (
     <div className="dashboard">
@@ -19,13 +5,13 @@ export default function Home() {
         <div className="brand">Pomelo Inventory</div>
         <nav className="nav" aria-label="Main navigation">
           <a className="active" href="/">Dashboard</a>
-          <a href="#">Products</a>
-          <a href="#">Warehouses</a>
-          <a href="#">Stock Movements</a>
-          <a href="#">Purchases</a>
-          <a href="#">Transfers</a>
-          <a href="#">Suppliers</a>
-          <a href="#">Reports</a>
+          <a href="/products">Products</a>
+          <a href="/warehouses">Warehouses</a>
+          <a href="/stock-movements">Stock Movements</a>
+          <a href="/purchases">Purchases</a>
+          <a href="/transfers">Transfers</a>
+          <a href="/suppliers">Suppliers</a>
+          <a href="/reports">Reports</a>
         </nav>
       </aside>
 
@@ -38,38 +24,29 @@ export default function Home() {
         </header>
 
         <section className="grid" aria-label="Inventory summary">
-          {stats.map((stat) => (
-            <div className="card" key={stat.label}>
-              <div className="card-label">{stat.label}</div>
-              <div className="card-value">{stat.value}</div>
-            </div>
-          ))}
+          <div className="card">
+            <div className="card-label">Total Products</div>
+            <div className="card-value">—</div>
+          </div>
+          <div className="card">
+            <div className="card-label">Warehouses</div>
+            <div className="card-value">—</div>
+          </div>
+          <div className="card">
+            <div className="card-label">Low Stock</div>
+            <div className="card-value">—</div>
+          </div>
+          <div className="card">
+            <div className="card-label">Pending Purchases</div>
+            <div className="card-value">—</div>
+          </div>
         </section>
 
         <section className="card table-card">
           <div className="table-title">Recent Stock Movements</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Warehouse</th>
-                <th>Type</th>
-                <th>Quantity</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movements.map((movement) => (
-                <tr key={movement.product}>
-                  <td>{movement.product}</td>
-                  <td>{movement.warehouse}</td>
-                  <td>{movement.type}</td>
-                  <td>{movement.qty}</td>
-                  <td><span className="status">{movement.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="muted" style={{ padding: "20px" }}>
+            No inventory data is available yet.
+          </div>
         </section>
       </main>
     </div>
