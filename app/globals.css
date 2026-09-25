@@ -231,3 +231,46 @@ button { -webkit-tap-highlight-color: transparent; }
   .auth-card { padding: 20px; border-radius: 12px; }
   .auth-card h1 { font-size: 22px; }
 }
+
+
+.contact-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) minmax(150px, 1fr) minmax(180px, 1.2fr);
+  gap: 14px;
+  align-items: end;
+}
+.contact-form label {
+  display: grid;
+  gap: 7px;
+  color: #344054;
+  font-size: 12px;
+  font-weight: 700;
+}
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--foreground);
+  outline: none;
+}
+.contact-form input { min-height: 42px; }
+.contact-form textarea { resize: vertical; min-height: 42px; }
+.contact-form input:focus,
+.contact-form textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+.contact-form .primary-button { min-height: 42px; }
+
+@media (max-width: 1100px) {
+  .contact-form { grid-template-columns: 1fr 1fr; }
+  .contact-form .primary-button { grid-column: 1 / -1; }
+}
+
+@media (max-width: 620px) {
+  .contact-form { grid-template-columns: 1fr; }
+  .contact-form .primary-button { grid-column: auto; }
+}

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/app/components/sign-out-button";
 
 type Props = {
-  active: "system" | "uom" | "products";
+  active: "system" | "uom" | "products" | "contacts";
   children: React.ReactNode;
 };
 
@@ -28,6 +28,7 @@ export default async function WorkspaceShell({ active, children }: Props) {
 
   const nav = [
     ["system", "/", "⌂", "System"],
+    ["contacts", "/contacts", "◎", "Contacts"],
     ["uom", "/uom", "◈", "UoM"],
     ["products", "/products", "▦", "Products"],
   ] as const;
