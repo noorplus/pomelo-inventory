@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function CreateOrganizationPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -19,41 +18,55 @@ export default function CreateOrganizationPage() {
 
   useEffect(() => {
     let active = true;
+    const supabase = createClient();
+
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (!active) return;
-      if (!user) {
+
+      if (userError || !user) {
         router.replace("/auth/login");
         return;
       }
 
-      const { data: memberships } = await supabase
+      const { data: memberships, error: membershipError } = await supabase
         .from("organization_users")
         .select("organization_id")
         .eq("user_id", user.id)
         .limit(1);
 
+      if (!active) return;
+
+      if (membershipError) {
+        setError(membershipError.message);
+        setLoading(false);
+        return;
+      }
+
       if (memberships?.length) {
         router.replace("/");
         return;
       }
+
       setLoading(false);
     })();
+
     return () => { active = false; };
-  }, [router, supabase]);
+  }, [router]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSaving(true);
 
+    const supabase = createClient();
     const { error } = await supabase.rpc("create_organization", {
-      p_organization_name: name,
-      p_phone_number: phone,
-      p_email: email,
-      p_address: address,
-      p_tin: tin || null,
-      p_bin: bin || null,
+      p_organization_name: name.trim(),
+      p_phone_number: phone.trim(),
+      p_email: email.trim(),
+      p_address: address.trim(),
+      p_tin: tin.trim() || null,
+      p_bin: bin.trim() || null,
     });
 
     if (error) {
