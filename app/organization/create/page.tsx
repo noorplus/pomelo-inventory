@@ -79,23 +79,108 @@ export default function CreateOrganizationPage() {
     router.refresh();
   }
 
-  if (loading) return <main className="auth-shell"><section className="auth-card"><p className="muted">Loading...</p></section></main>;
+  if (loading) {
+    return (
+      <main className="auth-shell">
+        <section className="auth-card">
+          <div className="auth-brand">Pomelo Inventory</div>
+          <p className="muted">Preparing your workspace…</p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="auth-shell">
       <section className="auth-card wide">
-        <div className="auth-brand">Pomelo Inventory</div>
+        <div className="auth-brand">
+          <span className="brand-mark">P</span>
+          <span>Pomelo Inventory</span>
+        </div>
+
+        <p className="eyebrow">FIRST STEP</p>
         <h1>Create your organization</h1>
-        <p className="muted">Your organization will receive a six-digit organization number automatically.</p>
+        <p className="muted">
+          Enter the organization details you want stored in your inventory
+          workspace. A six-digit organization number will be generated
+          automatically.
+        </p>
+
         <form onSubmit={submit} className="form">
-          <label>Organization Name<input required value={name} onChange={(e) => setName(e.target.value)} /></label>
-          <label>Phone Number<input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
-          <label>Organization Email<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label>Address<textarea required rows={3} value={address} onChange={(e) => setAddress(e.target.value)} /></label>
-          <label>TIN <span className="muted">(optional)</span><input value={tin} onChange={(e) => setTin(e.target.value)} /></label>
-          <label>BIN <span className="muted">(optional)</span><input value={bin} onChange={(e) => setBin(e.target.value)} /></label>
+          <label>
+            Organization name
+            <input
+              required
+              autoComplete="organization"
+              placeholder="e.g. Noor Plus Trading"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+
+          <div className="info-grid">
+            <label>
+              Phone number
+              <input
+                required
+                type="tel"
+                autoComplete="tel"
+                placeholder="+880 1XXXXXXXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </label>
+            <label>
+              Organization email
+              <input
+                required
+                type="email"
+                autoComplete="email"
+                placeholder="office@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <label>
+            Address
+            <textarea
+              required
+              rows={3}
+              autoComplete="street-address"
+              placeholder="Full business address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </label>
+
+          <div className="info-grid">
+            <label>
+              TIN <span className="muted">(optional)</span>
+              <input
+                inputMode="numeric"
+                placeholder="Tax identification number"
+                value={tin}
+                onChange={(e) => setTin(e.target.value)}
+              />
+            </label>
+            <label>
+              BIN <span className="muted">(optional)</span>
+              <input
+                inputMode="numeric"
+                placeholder="Business identification number"
+                value={bin}
+                onChange={(e) => setBin(e.target.value)}
+              />
+            </label>
+          </div>
+
           {error && <div className="form-error" role="alert">{error}</div>}
-          <button className="primary-button" disabled={saving}>{saving ? "Creating..." : "Create organization"}</button>
+
+          <button className="primary-button" disabled={saving}>
+            {saving ? "Creating workspace…" : "Create organization"}
+          </button>
         </form>
       </section>
     </main>
