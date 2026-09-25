@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SignOutButton } from "@/app/components/sign-out-button";
+import WorkspaceShell from "@/app/components/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -44,96 +44,44 @@ export default async function Home() {
     );
   }
 
-  const initials = (profile?.full_name || user.email || "U")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part: string) => part[0]?.toUpperCase())
-    .join("");
-
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
+    <WorkspaceShell active="system">
+      <header className="topbar">
         <div>
-          <div className="brand">
-            <span className="brand-mark">P</span>
-            <span>Pomelo Inventory</span>
-          </div>
-          <div className="workspace-label">WORKSPACE</div>
-          <nav className="nav" aria-label="Main navigation">
-            <a className="active" href="/">
-              <span>⌂</span>
-              System
-            </a>
-          </nav>
+          <p className="eyebrow">Workspace</p>
+          <h1>System</h1>
+          <p className="muted">Your organization workspace overview.</p>
         </div>
-
-        <div className="sidebar-footer">
-          <div className="sidebar-user">
-            <div className="avatar">{initials || "U"}</div>
-            <div className="sidebar-user-copy">
-              <strong>{profile?.full_name || "User"}</strong>
-              <span>{user.email}</span>
-            </div>
-          </div>
-          <SignOutButton />
+        <div className="topbar-org">
+          <span className="status-dot" />
+          <span>{organization.organization_name}</span>
         </div>
-      </aside>
-
-      <main className="main">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">Workspace</p>
-            <h1>System</h1>
-            <p className="muted">Your organization workspace overview.</p>
-          </div>
-          <div className="topbar-org">
-            <span className="status-dot" />
-            <span>{organization.organization_name}</span>
-          </div>
-        </header>
-
-        <section className="welcome-card">
-          <div>
-            <span className="section-kicker">ORGANIZATION</span>
-            <h2>{organization.organization_name}</h2>
-            <p>
-              Organization #{organization.organization_number} ·{" "}
-              {organization.status}
-            </p>
-          </div>
-          <div className="org-number">
-            <span>Organization ID</span>
-            <strong>#{organization.organization_number}</strong>
-          </div>
-        </section>
-
-        <section className="section-heading">
-          <div>
-            <h2>Organization information</h2>
-            <p className="muted">Information stored in your database.</p>
-          </div>
-        </section>
-
-        <section className="info-grid" aria-label="Organization information">
-          <InfoItem label="Organization name" value={organization.organization_name} />
-          <InfoItem label="Email" value={organization.email} />
-          <InfoItem label="Phone number" value={organization.phone_number} />
-          <InfoItem label="Address" value={organization.address} wide />
-          <InfoItem label="TIN" value={organization.tin || "Not provided"} />
-          <InfoItem label="BIN" value={organization.bin || "Not provided"} />
-          <InfoItem label="Status" value={organization.status} badge />
-          <InfoItem
-            label="Created"
-            value={new Date(organization.created_at).toLocaleDateString("en-GB", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-            })}
-          />
-        </section>
-      </main>
-    </div>
+      </header>
+      <section className="welcome-card">
+        <div>
+          <span className="section-kicker">ORGANIZATION</span>
+          <h2>{organization.organization_name}</h2>
+          <p>Organization #{organization.organization_number} · {organization.status}</p>
+        </div>
+        <div className="org-number">
+          <span>Organization ID</span>
+          <strong>#{organization.organization_number}</strong>
+        </div>
+      </section>
+      <section className="section-heading">
+        <div><h2>Organization information</h2><p className="muted">Information stored in your database.</p></div>
+      </section>
+      <section className="info-grid" aria-label="Organization information">
+        <InfoItem label="Organization name" value={organization.organization_name} />
+        <InfoItem label="Email" value={organization.email} />
+        <InfoItem label="Phone number" value={organization.phone_number} />
+        <InfoItem label="Address" value={organization.address} wide />
+        <InfoItem label="TIN" value={organization.tin || "Not provided"} />
+        <InfoItem label="BIN" value={organization.bin || "Not provided"} />
+        <InfoItem label="Status" value={organization.status} badge />
+        <InfoItem label="Created" value={new Date(organization.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} />
+      </section>
+    </WorkspaceShell>
   );
 }
 
