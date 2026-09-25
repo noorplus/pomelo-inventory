@@ -4,7 +4,6 @@ import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
-  const supabase = createClient();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,6 +28,7 @@ export default function SignupPage() {
 
     setLoading(true);
     const origin = window.location.origin;
+    const supabase = createClient();
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
