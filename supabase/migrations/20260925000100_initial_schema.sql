@@ -1,7 +1,11 @@
 -- Pomelo Inventory - Initial Production Schema
--- Supabase / PostgreSQL
--- This migration is intentionally stored in GitHub only.
--- Apply to Supabase only when explicitly requested.
+-- PostgreSQL / Supabase
+-- Repository migration only. Do not apply to Supabase unless explicitly requested.
+-- Metadata strategy:
+--   * profiles.metadata stores non-authoritative user profile extensions.
+--   * organizations.metadata stores non-authoritative organization extensions/integrations.
+--   * Authorization is never based on JSON metadata; use relational columns and RLS.
+--   * Passwords and authentication secrets remain exclusively in auth.users.
 
 create extension if not exists citext;
 
@@ -22,8 +26,14 @@ create sequence public.organization_number_seq
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+
+  constraint profiles_full_name_not_blank
+    check (btrim(full_name) <> ''),
+  constraint profiles_metadata_object
+    check (jsonb_typeof(metadata) = 'object')
 );
 
 create table public.organizations (
@@ -36,6 +46,7 @@ create table public.organizations (
   tin text,
   bin text,
   status public.organization_status not null default 'Active',
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
 
@@ -45,18 +56,28 @@ create table public.organizations (
   constraint organizations_name_unique unique (organization_name),
   constraint organizations_phone_unique unique (phone_number),
   constraint organizations_email_unique unique (email),
-  constraint organizations_name_not_blank check (btrim(organization_name::text) <> ''),
-  constraint organizations_phone_not_blank check (btrim(phone_number) <> ''),
-  constraint organizations_email_not_blank check (btrim(email::text) <> ''),
-  constraint organizations_address_not_blank check (btrim(address) <> '')
+  constraint organizations_name_not_blank
+    check (btrim(organization_name::text) <> ''),
+  constraint organizations_phone_not_blank
+    check (btrim(phone_number) <> ''),
+  constraint organizations_email_not_blank
+    check (btrim(email::text) <> ''),
+  constraint organizations_address_not_blank
+    check (btrim(address) <> ''),
+  constraint organizations_metadata_object
+    check (jsonb_typeof(metadata) = 'object')
 );
 
 create table public.organization_users (
   organization_id uuid not null references public.organizations(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
+  metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
 
-  primary key (organization_id, user_id)
+  primary key (organization_id, user_id),
+
+  constraint organization_users_metadata_object
+    check (jsonb_typeof(metadata) = 'object')
 );
 
 create index organization_users_user_id_idx
@@ -64,6 +85,12 @@ create index organization_users_user_id_idx
 
 create index organizations_status_idx
   on public.organizations(status);
+
+create index organizations_metadata_gin_idx
+  on public.organizations using gin (metadata);
+
+create index profiles_metadata_gin_idx
+  on public.profiles using gin (metadata);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -123,7 +150,8 @@ create or replace function public.create_organization(
   p_email text,
   p_address text,
   p_tin text default null,
-  p_bin text default null
+  p_bin text default null,
+  p_metadata jsonb default '{}'::jsonb
 )
 returns public.organizations
 language plpgsql
@@ -139,11 +167,18 @@ declare
   v_address text := btrim(p_address);
   v_tin text := nullif(btrim(p_tin), '');
   v_bin text := nullif(btrim(p_bin), '');
+  v_metadata jsonb := coalesce(p_metadata, '{}'::jsonb);
 begin
   if v_user_id is null then
     raise exception using
       errcode = '42501',
       message = 'Authentication required';
+  end if;
+
+  if jsonb_typeof(v_metadata) <> 'object' then
+    raise exception using
+      errcode = '22023',
+      message = 'Organization metadata must be a JSON object';
   end if;
 
   if v_name = '' then
@@ -162,40 +197,14 @@ begin
     raise exception using errcode = '22023', message = 'Address is required';
   end if;
 
-  if exists (
-    select 1 from public.organizations
-    where organization_name = v_name::citext
-  ) then
-    raise exception using
-      errcode = '23505',
-      message = 'organization_name already exists';
-  end if;
-
-  if exists (
-    select 1 from public.organizations
-    where phone_number = v_phone
-  ) then
-    raise exception using
-      errcode = '23505',
-      message = 'phone_number already exists';
-  end if;
-
-  if exists (
-    select 1 from public.organizations
-    where email = v_email::citext
-  ) then
-    raise exception using
-      errcode = '23505',
-      message = 'email already exists';
-  end if;
-
   insert into public.organizations (
     organization_name,
     phone_number,
     email,
     address,
     tin,
-    bin
+    bin,
+    metadata
   )
   values (
     v_name,
@@ -203,7 +212,8 @@ begin
     v_email,
     v_address,
     v_tin,
-    v_bin
+    v_bin,
+    v_metadata
   )
   returning * into v_organization;
 
@@ -228,15 +238,16 @@ exception
       where email = v_email::citext
     ) then
       raise exception using errcode = '23505', message = 'email already exists';
+    else
+      raise;
     end if;
-    raise;
 end;
 $$;
 
-revoke all on function public.create_organization(text, text, text, text, text, text)
+revoke all on function public.create_organization(text, text, text, text, text, text, jsonb)
   from public, anon;
 
-grant execute on function public.create_organization(text, text, text, text, text, text)
+grant execute on function public.create_organization(text, text, text, text, text, text, jsonb)
   to authenticated;
 
 alter table public.profiles enable row level security;
@@ -286,3 +297,24 @@ grant select on table public.organization_users to authenticated;
 revoke insert, update, delete on table public.organizations from authenticated;
 revoke insert, update, delete on table public.organization_users from authenticated;
 revoke delete on table public.profiles from authenticated;
+
+comment on table public.profiles is
+  'Application profile linked one-to-one with Supabase Auth users. Authentication credentials remain in auth.users.';
+
+comment on column public.profiles.metadata is
+  'Non-authoritative extensibility metadata. Never use this field for authorization decisions.';
+
+comment on table public.organizations is
+  'Tenant organizations for the Pomelo Inventory application.';
+
+comment on column public.organizations.organization_number is
+  'Six-digit human-facing organization identifier generated from organization_number_seq.';
+
+comment on column public.organizations.metadata is
+  'Non-authoritative organization metadata for future integrations and extensions.';
+
+comment on table public.organization_users is
+  'Many-to-many membership relation between authenticated users and organizations.';
+
+comment on column public.organization_users.metadata is
+  'Non-authoritative membership metadata. Roles and authorization should use explicit relational columns when introduced.';
