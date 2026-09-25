@@ -1,0 +1,2 @@
+-- Initial schema migration.
+-- Intentionally empty: database schema will be added incrementally.
