@@ -245,11 +245,19 @@ using (
 revoke all on table public.units_of_measure from anon;
 revoke all on table public.products from anon;
 
-grant select, insert, update, delete
+grant select, insert, delete
 on table public.units_of_measure
 to authenticated;
 
-grant select, insert, update, delete
+grant update (name, status)
+on table public.units_of_measure
+to authenticated;
+
+grant select, insert, delete
+on table public.products
+to authenticated;
+
+grant update (product_name, uom_id, retail_price, status)
 on table public.products
 to authenticated;
 
