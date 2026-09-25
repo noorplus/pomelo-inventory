@@ -36,7 +36,7 @@ export default async function WorkspaceShell({ active, children }: Props) {
     .trim()
     .split(/\s+/)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
+    .map((part: string) => part[0]?.toUpperCase())
     .join("");
 
   return (
