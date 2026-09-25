@@ -63,7 +63,7 @@ export default async function Home() {
           <nav className="nav" aria-label="Main navigation">
             <a className="active" href="/">
               <span>⌂</span>
-              Dashboard
+              System
             </a>
           </nav>
         </div>
@@ -84,7 +84,7 @@ export default async function Home() {
         <header className="topbar">
           <div>
             <p className="eyebrow">Workspace</p>
-            <h1>Dashboard</h1>
+            <h1>System</h1>
             <p className="muted">Your organization workspace overview.</p>
           </div>
           <div className="topbar-org">
