@@ -164,3 +164,70 @@ button { -webkit-tap-highlight-color: transparent; }
 .table-card tbody tr:last-child td { border-bottom:0; }
 @media (max-width: 900px) { .product-form { grid-template-columns:1fr 1fr; } .product-form .primary-button { grid-column:1 / -1; } }
 @media (max-width: 620px) { .inline-form,.product-form { grid-template-columns:1fr; } .table-card { overflow-x:auto; } .table-card table { min-width:620px; } }
+
+/* Mobile navigation and touch-friendly layout */
+@media (max-width: 900px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    min-height: auto;
+    padding: 10px 14px;
+    border-bottom: 1px solid #1d2939;
+  }
+  .brand {
+    padding: 2px 4px 10px;
+    font-size: 16px;
+  }
+  .brand-mark { width: 32px; height: 32px; }
+  .workspace-label { display: none; }
+  .nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 0 0 4px;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 10px 13px;
+    white-space: nowrap;
+  }
+  .sidebar-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .sidebar-user { border-top: 0; padding: 0; min-width: 0; }
+  .sidebar-user-copy { max-width: 52vw; }
+  .ghost-button { min-height: 40px; }
+  .main { padding: 24px 20px 40px; }
+}
+@media (max-width: 620px) {
+  .sidebar { padding: 9px 10px; }
+  .brand { padding-bottom: 8px; }
+  .brand span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav a { min-height: 40px; padding: 9px 11px; font-size: 13px; }
+  .sidebar-footer { margin-top: 6px; }
+  .sidebar-user-copy strong, .sidebar-user-copy span { max-width: 44vw; }
+  .main { padding: 20px 12px 30px; }
+  .topbar { gap: 14px; margin-bottom: 20px; }
+  .topbar h1 { font-size: 24px; }
+  .topbar-org { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .welcome-card { padding: 20px; gap: 18px; }
+  .welcome-card h2 { font-size: 19px; }
+  .data-card { padding: 14px; }
+  .inline-form, .product-form { gap: 12px; }
+  .primary-button { width: 100%; min-height: 46px; }
+  .section-heading { margin: 24px 0 12px; }
+  .table-card { border-radius: 10px; }
+  .table-card th, .table-card td { padding: 12px 14px; }
+  .empty-state { margin: 0; padding: 18px; }
+  .auth-shell { padding: 14px; }
+  .auth-card { padding: 20px; border-radius: 12px; }
+  .auth-card h1 { font-size: 22px; }
+}
