@@ -39,7 +39,10 @@ export default function SignupPage() {
     });
 
     if (error) {
-      setError(error.message);
+      const message = error.message.toLowerCase().includes("rate limit")
+        ? "Email sending is temporarily rate-limited. Please wait and try again later."
+        : error.message;
+      setError(message);
       setLoading(false);
       return;
     }
@@ -56,17 +59,36 @@ export default function SignupPage() {
   return (
     <main className="auth-shell">
       <section className="auth-card wide">
-        <div className="auth-brand">Pomelo Inventory</div>
+        <div className="auth-brand">
+          <span className="brand-mark">P</span>
+          <span>Pomelo Inventory</span>
+        </div>
+        <p className="eyebrow">GET STARTED</p>
         <h1>Create your account</h1>
-        <p className="muted">Use your name, email and password to get started.</p>
+        <p className="muted">Create your secure account to start your inventory workspace.</p>
+
         <form onSubmit={submit} className="form">
-          <label>Full Name<input required autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} /></label>
-          <label>Email<input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label>Password<input type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-          <label>Confirm Password<input type="password" required minLength={8} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} /></label>
+          <label>
+            Full name
+            <input required autoComplete="name" placeholder="Your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          </label>
+          <label>
+            Email
+            <input type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
+          <label>
+            Password
+            <input type="password" required minLength={8} autoComplete="new-password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </label>
+          <label>
+            Confirm password
+            <input type="password" required minLength={8} autoComplete="new-password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+          </label>
           {error && <div className="form-error" role="alert">{error}</div>}
           {message && <div className="form-success" role="status">{message}</div>}
-          <button className="primary-button" disabled={loading}>{loading ? "Creating account..." : "Create account"}</button>
+          <button className="primary-button" disabled={loading}>
+            {loading ? "Creating account…" : "Create account"}
+          </button>
         </form>
         <p className="auth-link">Already registered? <a href="/auth/login">Sign in</a></p>
       </section>

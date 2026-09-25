@@ -6,79 +6,171 @@ export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) redirect("/auth/login");
 
-  const { data: memberships, error } = await supabase
+  const { data: memberships, error: membershipError } = await supabase
     .from("organization_users")
     .select("organization_id")
     .eq("user_id", user.id)
     .limit(1);
 
-  if (error) {
-    return <main className="auth-shell"><section className="auth-card"><h1>Unable to load workspace</h1><p className="form-error">{error.message}</p></section></main>;
-  }
-
+  if (membershipError) return <WorkspaceError message={membershipError.message} />;
   if (!memberships?.length) redirect("/organization/create");
 
-  const { data: organization, error: organizationError } = await supabase
-    .from("organizations")
-    .select("organization_number, organization_name, email, phone_number, status")
-    .eq("id", memberships[0].organization_id)
-    .single();
+  const organizationId = memberships[0].organization_id;
+
+  const [{ data: organization, error: organizationError }, { data: profile }] =
+    await Promise.all([
+      supabase
+        .from("organizations")
+        .select(
+          "organization_number, organization_name, email, phone_number, address, tin, bin, status, created_at",
+        )
+        .eq("id", organizationId)
+        .single(),
+      supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    ]);
 
   if (organizationError || !organization) {
-    return <main className="auth-shell"><section className="auth-card"><h1>Unable to load organization</h1><p className="form-error">{organizationError?.message ?? "Organization not found."}</p></section></main>;
+    return (
+      <WorkspaceError
+        title="Organization unavailable"
+        message={organizationError?.message ?? "Your organization could not be found."}
+      />
+    );
   }
 
+  const initials = (profile?.full_name || user.email || "U")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part: string) => part[0]?.toUpperCase())
+    .join("");
+
   return (
-    <div className="dashboard">
+    <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">Pomelo Inventory</div>
-        <nav className="nav" aria-label="Main navigation">
-          <a className="active" href="/">Dashboard</a>
-          <a href="/products">Products</a>
-          <a href="/warehouses">Warehouses</a>
-          <a href="/stock-movements">Stock Movements</a>
-          <a href="/purchases">Purchases</a>
-          <a href="/transfers">Transfers</a>
-          <a href="/suppliers">Suppliers</a>
-          <a href="/reports">Reports</a>
-        </nav>
-        <div className="sidebar-bottom"><SignOutButton /></div>
+        <div>
+          <div className="brand">
+            <span className="brand-mark">P</span>
+            <span>Pomelo Inventory</span>
+          </div>
+          <div className="workspace-label">WORKSPACE</div>
+          <nav className="nav" aria-label="Main navigation">
+            <a className="active" href="/">
+              <span>⌂</span>
+              Dashboard
+            </a>
+          </nav>
+        </div>
+
+        <div className="sidebar-footer">
+          <div className="sidebar-user">
+            <div className="avatar">{initials || "U"}</div>
+            <div className="sidebar-user-copy">
+              <strong>{profile?.full_name || "User"}</strong>
+              <span>{user.email}</span>
+            </div>
+          </div>
+          <SignOutButton />
+        </div>
       </aside>
 
       <main className="main">
-        <header className="header">
+        <header className="topbar">
           <div>
+            <p className="eyebrow">Workspace</p>
             <h1>Dashboard</h1>
-            <div className="muted">{organization.organization_name} · #{organization.organization_number}</div>
+            <p className="muted">Your organization workspace overview.</p>
           </div>
-          <span className="status">{organization.status}</span>
+          <div className="topbar-org">
+            <span className="status-dot" />
+            <span>{organization.organization_name}</span>
+          </div>
         </header>
 
-        <section className="grid" aria-label="Inventory summary">
-          <div className="card"><div className="card-label">Total Products</div><div className="card-value">—</div></div>
-          <div className="card"><div className="card-label">Warehouses</div><div className="card-value">—</div></div>
-          <div className="card"><div className="card-label">Low Stock</div><div className="card-value">—</div></div>
-          <div className="card"><div className="card-label">Pending Purchases</div><div className="card-value">—</div></div>
-        </section>
-
-        <section className="card org-card">
-          <h2>Organization</h2>
-          <div className="org-grid">
-            <div><span className="card-label">Organization Number</span><strong>{organization.organization_number}</strong></div>
-            <div><span className="card-label">Email</span><strong>{organization.email}</strong></div>
-            <div><span className="card-label">Phone</span><strong>{organization.phone_number}</strong></div>
+        <section className="welcome-card">
+          <div>
+            <span className="section-kicker">ORGANIZATION</span>
+            <h2>{organization.organization_name}</h2>
+            <p>
+              Organization #{organization.organization_number} ·{" "}
+              {organization.status}
+            </p>
+          </div>
+          <div className="org-number">
+            <span>Organization ID</span>
+            <strong>#{organization.organization_number}</strong>
           </div>
         </section>
 
-        <section className="card table-card">
-          <div className="table-title">Recent Stock Movements</div>
-          <div className="muted" style={{ padding: "20px" }}>No inventory data is available yet.</div>
+        <section className="section-heading">
+          <div>
+            <h2>Organization information</h2>
+            <p className="muted">Information stored in your database.</p>
+          </div>
+        </section>
+
+        <section className="info-grid" aria-label="Organization information">
+          <InfoItem label="Organization name" value={organization.organization_name} />
+          <InfoItem label="Email" value={organization.email} />
+          <InfoItem label="Phone number" value={organization.phone_number} />
+          <InfoItem label="Address" value={organization.address} wide />
+          <InfoItem label="TIN" value={organization.tin || "Not provided"} />
+          <InfoItem label="BIN" value={organization.bin || "Not provided"} />
+          <InfoItem label="Status" value={organization.status} badge />
+          <InfoItem
+            label="Created"
+            value={new Date(organization.created_at).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
+          />
         </section>
       </main>
     </div>
+  );
+}
+
+function InfoItem({
+  label,
+  value,
+  wide = false,
+  badge = false,
+}: {
+  label: string;
+  value: string;
+  wide?: boolean;
+  badge?: boolean;
+}) {
+  return (
+    <div className={wide ? "info-item wide" : "info-item"}>
+      <span>{label}</span>
+      {badge ? <strong className="status-badge">{value}</strong> : <strong>{value}</strong>}
+    </div>
+  );
+}
+
+function WorkspaceError({
+  title = "Unable to load workspace",
+  message,
+}: {
+  title?: string;
+  message: string;
+}) {
+  return (
+    <main className="auth-shell">
+      <section className="auth-card">
+        <div className="auth-brand">Pomelo Inventory</div>
+        <h1>{title}</h1>
+        <p className="form-error" role="alert">{message}</p>
+        <a className="secondary-button" href="/auth/login">Return to sign in</a>
+      </section>
+    </main>
   );
 }
