@@ -1,14 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { SignOutButton } from "@/app/components/sign-out-button";
+import WorkspaceShell from "@/app/components/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-  const { data: memberships } = await supabase.from("organization_users").select("organization_id").eq("user_id", user.id).limit(1);
+  const { data: memberships } = await supabase.from("organization_users").select("organization_id").eq("user_id", (await supabase.auth.getUser()).data.user?.id || "").limit(1);
   if (!memberships?.length) redirect("/organization/create");
   const organizationId = memberships[0].organization_id;
 
@@ -19,33 +17,19 @@ export default async function ProductsPage() {
   ]);
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div>
-          <div className="brand"><span className="brand-mark">P</span><span>Pomelo Inventory</span></div>
-          <div className="workspace-label">WORKSPACE</div>
-          <nav className="nav" aria-label="Main navigation">
-            <a href="/"><span>⌂</span>System</a>
-            <a href="/uom"><span>◈</span>UoM</a>
-            <a className="active" href="/products"><span>▦</span>Products</a>
-          </nav>
-        </div>
-        <div className="sidebar-footer"><div className="sidebar-user"><div className="avatar">{(user.email?.[0] || "U").toUpperCase()}</div><div className="sidebar-user-copy"><strong>{organization?.organization_name || "Organization"}</strong><span>{user.email}</span></div></div><SignOutButton /></div>
-      </aside>
-      <main className="main">
-        <header className="topbar"><div><p className="eyebrow">MASTER DATA</p><h1>Products</h1><p className="muted">Manage products and their retail prices for this organization.</p></div></header>
-        <section className="data-card">
-          <form className="product-form" action={createProduct}>
-            <label>Product name<input name="product_name" placeholder="Product name" required /></label>
-            <label>UoM<select name="uom_id" required><option value="">Select UoM</option>{units?.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select></label>
-            <label>Retail price<input name="retail_price" type="number" min="0" step="0.0001" placeholder="0.00" required /></label>
-            <button className="primary-button" type="submit">Add Product</button>
-          </form>
-        </section>
-        <section className="section-heading"><div><h2>Product list</h2><p className="muted">{products?.length ?? 0} products in this organization.</p></div></section>
-        <section className="table-card"><table><thead><tr><th>Product</th><th>UoM</th><th>Retail price</th><th>Status</th></tr></thead><tbody>{products?.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{units?.find((unit) => unit.id === product.uom_id)?.name || "—"}</td><td>{Number(product.retail_price).toFixed(2)}</td><td><span className="status-badge">{product.status}</span></td></tr>)}</tbody></table>{!products?.length && <div className="empty-state"><div className="empty-icon">▦</div><div><h2>No products yet</h2><p>Add a product after creating at least one active UoM.</p></div></div>}</section>
-      </main>
-    </div>
+    <WorkspaceShell active="products">
+      <header className="topbar"><div><p className="eyebrow">MASTER DATA</p><h1>Products</h1><p className="muted">Manage products and their retail prices for this organization.</p></div></header>
+      <section className="data-card">
+        <form className="product-form" action={createProduct}>
+          <label>Product name<input name="product_name" placeholder="Product name" required /></label>
+          <label>UoM<select name="uom_id" required><option value="">Select UoM</option>{units?.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}</select></label>
+          <label>Retail price<input name="retail_price" type="number" min="0" step="0.0001" placeholder="0.00" required /></label>
+          <button className="primary-button" type="submit">Add Product</button>
+        </form>
+      </section>
+      <section className="section-heading"><div><h2>Product list</h2><p className="muted">{products?.length ?? 0} products in this organization.</p></div></section>
+      <section className="table-card"><table><thead><tr><th>Product</th><th>UoM</th><th>Retail price</th><th>Status</th></tr></thead><tbody>{products?.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{units?.find((unit) => unit.id === product.uom_id)?.name || "—"}</td><td>{Number(product.retail_price).toFixed(2)}</td><td><span className="status-badge">{product.status}</span></td></tr>)}</tbody></table>{!products?.length && <div className="empty-state"><div className="empty-icon">▦</div><div><h2>No products yet</h2><p>Add a product after creating at least one active UoM.</p></div></div>}</section>
+    </WorkspaceShell>
   );
 }
 
