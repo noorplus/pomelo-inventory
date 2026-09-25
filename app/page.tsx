@@ -18,10 +18,7 @@ export default async function Home() {
     .eq("user_id", user.id)
     .limit(1);
 
-  if (membershipError) {
-    return <WorkspaceError message={membershipError.message} />;
-  }
-
+  if (membershipError) return <WorkspaceError message={membershipError.message} />;
   if (!memberships?.length) redirect("/organization/create");
 
   const organizationId = memberships[0].organization_id;
@@ -62,7 +59,6 @@ export default async function Home() {
             <span className="brand-mark">P</span>
             <span>Pomelo Inventory</span>
           </div>
-
           <div className="workspace-label">WORKSPACE</div>
           <nav className="nav" aria-label="Main navigation">
             <a className="active" href="/">
@@ -89,9 +85,7 @@ export default async function Home() {
           <div>
             <p className="eyebrow">Workspace</p>
             <h1>Dashboard</h1>
-            <p className="muted">
-              Manage your organization information from one place.
-            </p>
+            <p className="muted">Your organization workspace overview.</p>
           </div>
           <div className="topbar-org">
             <span className="status-dot" />
@@ -117,9 +111,7 @@ export default async function Home() {
         <section className="section-heading">
           <div>
             <h2>Organization information</h2>
-            <p className="muted">
-              Details currently stored in your Pomelo Inventory database.
-            </p>
+            <p className="muted">Information stored in your database.</p>
           </div>
         </section>
 
@@ -139,18 +131,6 @@ export default async function Home() {
               year: "numeric",
             })}
           />
-        </section>
-
-        <section className="empty-state">
-          <div className="empty-icon">+</div>
-          <div>
-            <h2>Inventory modules are ready to be added</h2>
-            <p className="muted">
-              Products, warehouses, purchases, stock movements and reports are
-              not shown yet because those entities do not exist in the current
-              database schema.
-            </p>
-          </div>
         </section>
       </main>
     </div>
@@ -188,12 +168,8 @@ function WorkspaceError({
       <section className="auth-card">
         <div className="auth-brand">Pomelo Inventory</div>
         <h1>{title}</h1>
-        <p className="form-error" role="alert">
-          {message}
-        </p>
-        <a className="secondary-button" href="/auth/login">
-          Return to sign in
-        </a>
+        <p className="form-error" role="alert">{message}</p>
+        <a className="secondary-button" href="/auth/login">Return to sign in</a>
       </section>
     </main>
   );
