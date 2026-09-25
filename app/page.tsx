@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/app/components/sign-out-button";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -20,13 +22,15 @@ export default async function Home() {
 
   if (!memberships?.length) redirect("/organization/create");
 
-  const { data: organization } = await supabase
+  const { data: organization, error: organizationError } = await supabase
     .from("organizations")
     .select("organization_number, organization_name, email, phone_number, status")
     .eq("id", memberships[0].organization_id)
     .single();
 
-  if (!organization) redirect("/organization/create");
+  if (organizationError || !organization) {
+    return <main className="auth-shell"><section className="auth-card"><h1>Unable to load organization</h1><p className="form-error">{organizationError?.message ?? "Organization not found."}</p></section></main>;
+  }
 
   return (
     <div className="dashboard">
