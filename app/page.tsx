@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
+import SystemPage from "@/app/system/page";
 
-export default function Home() {
-  redirect("/system");
-}
+export default SystemPage;
