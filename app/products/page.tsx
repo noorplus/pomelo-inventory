@@ -20,7 +20,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     (async () => {
       let query = supabase
         .from("products")
-        .select("id, product_name, retail_price, status, created_at, uom_id")
+        .select("id, product_name, retail_price, status, uom_id")
         .eq("organization_id", organizationId);
 
       if (search) query = query.ilike("product_name", `%${search.replace(/[\\%_]/g, "\\$&")}%`);
