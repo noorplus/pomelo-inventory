@@ -16,10 +16,11 @@ export default async function DashboardPage() {
     );
   }
 
-  const [{ count: productsCount }, { count: contactsCount }, { count: uomCount }] = await Promise.all([
+  const [{ count: productsCount }, { count: contactsCount }, { count: uomCount }, { count: purchasesCount }] = await Promise.all([
     supabase.from("products").select("id", { count: "exact", head: true }),
     supabase.from("contacts").select("id", { count: "exact", head: true }),
     supabase.from("units_of_measure").select("id", { count: "exact", head: true }),
+    supabase.from("purchases").select("id", { count: "exact", head: true }),
   ]);
 
   return (
@@ -71,6 +72,11 @@ export default async function DashboardPage() {
           <strong>{uomCount ?? 0}</strong>
           <span>Manage units of measure</span>
         </Link>
+        <Link className="dashboard-stat-card" href="/purchases">
+          <span className="section-kicker">PURCHASES</span>
+          <strong>{purchasesCount ?? 0}</strong>
+          <span>Manage purchase invoices</span>
+        </Link>
       </section>
 
       <section className="section-heading">
@@ -84,6 +90,7 @@ export default async function DashboardPage() {
         <Link className="secondary-button" href="/products/new">+ Add product</Link>
         <Link className="secondary-button" href="/contacts/new">+ Add contact</Link>
         <Link className="secondary-button" href="/uom">Manage UoM</Link>
+        <Link className="secondary-button" href="/purchases/new">+ New purchase</Link>
         <Link className="secondary-button" href="/settings">Organization settings</Link>
       </section>
     </WorkspaceShell>
