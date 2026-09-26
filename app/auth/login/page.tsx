@@ -1,32 +1,22 @@
-"use client";
+import Link from "next/link";
+import LoginForm from "@/app/auth/login/login-form";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+type Props = {
+  searchParams: Promise<{ error?: string }>;
+};
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const code = new URLSearchParams(window.location.search).get("error");
-    if (code === "confirmation_failed") setError("Email confirmation failed. Please request a new confirmation email.");
-    if (code === "missing_code") setError("The confirmation link is incomplete.");
-  }, []);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) { setError(error.message); setLoading(false); return; }
-    router.replace("/");
-    router.refresh();
+function getInitialError(code?: string) {
+  if (code === "confirmation_failed") {
+    return "Email confirmation failed. Please request a new confirmation email.";
   }
+  if (code === "missing_code") {
+    return "The confirmation link is incomplete.";
+  }
+  return "";
+}
+
+export default async function LoginPage({ searchParams }: Props) {
+  const { error } = await searchParams;
 
   return (
     <main className="auth-shell">
@@ -35,13 +25,8 @@ export default function LoginPage() {
         <p className="eyebrow">WELCOME BACK</p>
         <h1>Sign in</h1>
         <p className="muted">Access your inventory workspace securely.</p>
-        <form onSubmit={submit} className="form">
-          <label>Email<input type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label>Password<input type="password" required autoComplete="current-password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-          {error && <div className="form-error" role="alert">{error}</div>}
-          <button className="primary-button" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</button>
-        </form>
-        <p className="auth-link">New here? <a href="/auth/signup">Create an account</a></p>
+        <LoginForm initialError={getInitialError(error)} />
+        <p className="auth-link">New here? <Link href="/auth/signup">Create an account</Link></p>
       </section>
     </main>
   );
