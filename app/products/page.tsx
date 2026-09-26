@@ -1,21 +1,13 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = { search?: string; uom_id?: string; status?: string; sort?: string; direction?: string };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-
-  const { data: memberships } = await supabase.from("organization_users").select("organization_id").eq("user_id", user.id).limit(1);
-  if (!memberships?.length) redirect("/organization/create");
-
-  const organizationId = memberships[0].organization_id;
+  const { supabase, organizationId } = await getWorkspaceContext();
   const params = await searchParams;
   const search = String(params.search || "").trim();
   const selectedUom = String(params.uom_id || "").trim();
@@ -29,7 +21,6 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   ]);
 
   const unitMap = new Map((units ?? []).map((unit) => [unit.id, unit.name]));
-
   const filteredProducts = (productsResult.data ?? []).filter((product) => {
     const matchesSearch = !search || product.product_name.toLowerCase().includes(search.toLowerCase());
     const matchesUom = !selectedUom || product.uom_id === selectedUom;
@@ -45,13 +36,13 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     return direction === "asc" ? comparison : -comparison;
   });
   const error = productsResult.error || unitsError;
+
   return (
     <WorkspaceShell active="products">
       <section className="module-toolbar">
         <div><h1>Products</h1><p className="muted">Products, units, and current retail prices.</p></div>
         <Link className="primary-button" href="/products/new">+ Add Product</Link>
       </section>
-
       <section className="filter-card" aria-label="Product filters">
         <form className="contact-filter" method="get">
           <label>Search<input name="search" defaultValue={search} placeholder="Product name" /></label>
@@ -61,7 +52,6 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           {(search || selectedUom || status) && <Link className="filter-clear" href="/products">Clear</Link>}
         </form>
       </section>
-
       {error ? <section className="form-error" role="alert">Unable to load products: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{products.length} product{products.length === 1 ? "" : "s"}</strong>{(search || selectedUom || status) && <span>Filtered results</span>}</div>
@@ -77,7 +67,6 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     </WorkspaceShell>
   );
 }
-
 
 function SortableHeader({ label, field, search, uomId, status, sort, direction, className = "" }: { label: string; field: string; search: string; uomId: string; status: string; sort: string; direction: string; className?: string }) {
   const nextDirection = sort === field && direction === "asc" ? "desc" : "asc";
