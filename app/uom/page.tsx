@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
