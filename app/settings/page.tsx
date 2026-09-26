@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
@@ -159,5 +160,5 @@ function InfoItem({ label, value, wide = false, badge = false }: { label: string
 }
 
 function WorkspaceError({ title, message }: { title: string; message: string }) {
-  return <main className="auth-shell"><section className="auth-card"><div className="auth-brand"><span className="brand-mark">P</span><span>Pomelo Inventory</span></div><p className="eyebrow">WORKSPACE ERROR</p><h1>{title}</h1><p className="form-error" role="alert">{message}</p><a className="secondary-button" href="/login">Return to sign in</a></section></main>;
+  return <main className="auth-shell"><section className="auth-card"><div className="auth-brand"><span className="brand-mark">P</span><span>Pomelo Inventory</span></div><p className="eyebrow">WORKSPACE ERROR</p><h1>{title}</h1><p className="form-error" role="alert">{message}</p><Link className="secondary-button" href="/login">Return to sign in</Link></section></main>;
 }
