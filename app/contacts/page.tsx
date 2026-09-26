@@ -68,6 +68,18 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   );
 }
 
+
+function SortableHeader({ label, field, search, status, sort, direction }: { label: string; field: string; search: string; status: string; sort: string; direction: string }) {
+  const nextDirection = sort === field && direction === "asc" ? "desc" : "asc";
+  const query = new URLSearchParams();
+  if (search) query.set("search", search);
+  if (status) query.set("status", status);
+  query.set("sort", field);
+  query.set("direction", nextDirection);
+  const indicator = sort === field ? (direction === "asc" ? " ↑" : " ↓") : "";
+  return <th className="sortable-header"><Link href={"/contacts?" + query.toString()}>{label}{indicator}</Link></th>;
+}
+
 function EmptyState({ icon, title, text }: { icon: string; title: string; text: string }) {
   return <div className="empty-state"><div className="empty-icon">{icon}</div><div><h2>{title}</h2><p>{text}</p></div></div>;
 }
