@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         phone: phone || null,
         email: email || null,
         address: address || null,
-        status: statusText,
+        status: statusText as "Active" | "Inactive",
         created_by: user.id,
       });
     }
