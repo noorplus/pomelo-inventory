@@ -1,13 +1,14 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
+import { getCachedUnitsOfMeasure } from "@/lib/cache/reference-data";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = { search?: string; uom_id?: string; status?: string; sort?: string; direction?: string };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, accessToken } = await getWorkspaceContext();
   const params = await searchParams;
   const search = String(params.search || "").trim();
   const selectedUom = String(params.uom_id || "").trim();
@@ -16,7 +17,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const direction = params.direction === "desc" ? "desc" : "asc";
 
   const [{ data: units, error: unitsError }, productsResult] = await Promise.all([
-    supabase.from("units_of_measure").select("id, name").eq("organization_id", organizationId).order("name"),
+    getCachedUnitsOfMeasure(organizationId, accessToken),
     (async () => {
       let query = supabase
         .from("products")
