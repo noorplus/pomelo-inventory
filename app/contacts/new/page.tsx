@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
@@ -12,7 +13,7 @@ export default async function NewContactPage() {
       <section className="form-page">
         <div className="form-page-header">
           <div><p className="eyebrow">CONTACTS</p><h1>Add Contact</h1><p className="muted">Create a customer, supplier, or other business contact.</p></div>
-          <a className="secondary-button" href="/contacts">Back to Contacts</a>
+          <Link className="secondary-button" href="/contacts">Back to Contacts</Link>
         </div>
         <section className="data-card">
           <form className="contact-form contact-form-page" action={createContact}>
