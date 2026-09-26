@@ -423,6 +423,7 @@ declare
   v_user_id uuid := (select auth.uid());
   v_purchase public.purchases%rowtype;
   v_item jsonb;
+  v_item_id uuid;
   v_product_id uuid;
   v_quantity numeric(18,4);
   v_unit_price numeric(18,4);
@@ -437,6 +438,7 @@ declare
   v_product_status public.product_status;
   v_contact_org uuid;
   v_contact_status public.contact_status;
+  v_existing_ids uuid[] := '{}'::uuid[];
   v_now timestamptz := now();
 begin
   if v_user_id is null then raise exception 'Authentication required'; end if;
@@ -458,6 +460,7 @@ begin
   for v_item in select value from jsonb_array_elements(p_items)
   loop
     begin
+      if nullif(v_item->>'id', '') is not null then v_item_id := (v_item->>'id')::uuid; else v_item_id := null; end if;
       v_product_id := (v_item->>'product_id')::uuid;
       v_quantity := (v_item->>'quantity')::numeric;
       v_unit_price := (v_item->>'unit_price')::numeric;
@@ -466,11 +469,24 @@ begin
     exception when others then
       raise exception 'Invalid purchase item data';
     end;
+
     if v_quantity <= 0 or v_unit_price < 0 or v_item_discount < 0 or v_item_tax < 0 then raise exception 'Purchase item values are invalid'; end if;
     if v_item_discount > v_quantity * v_unit_price then raise exception 'Purchase item discount cannot exceed line base'; end if;
+
+    if v_item_id is not null then
+      if not exists (
+        select 1 from public.purchase_items pi
+        where pi.id = v_item_id and pi.purchase_id = v_purchase.id and pi.organization_id = v_purchase.organization_id
+      ) then
+        raise exception 'Purchase item does not belong to this purchase';
+      end if;
+      v_existing_ids := array_append(v_existing_ids, v_item_id);
+    end if;
+
     select p.organization_id, p.status into v_product_org, v_product_status from public.products p where p.id = v_product_id;
     if not found or v_product_org <> v_purchase.organization_id then raise exception 'Product does not belong to this organization'; end if;
     if v_product_status <> 'Active' then raise exception 'Purchase contains an inactive product'; end if;
+
     v_line_total := v_quantity * v_unit_price - v_item_discount + v_item_tax;
     v_subtotal := v_subtotal + v_quantity * v_unit_price;
     v_discount := v_discount + v_item_discount;
@@ -478,23 +494,46 @@ begin
     v_total := v_total + v_line_total;
   end loop;
 
-  delete from public.purchase_items where purchase_id = v_purchase.id and organization_id = v_purchase.organization_id;
+  if coalesce(array_length(v_existing_ids, 1), 0) = 0 then
+    delete from public.purchase_items where purchase_id = v_purchase.id and organization_id = v_purchase.organization_id;
+  else
+    delete from public.purchase_items
+    where purchase_id = v_purchase.id
+      and organization_id = v_purchase.organization_id
+      and not (id = any(v_existing_ids));
+  end if;
 
   for v_item in select value from jsonb_array_elements(p_items)
   loop
+    v_item_id := nullif(v_item->>'id', '')::uuid;
     v_product_id := (v_item->>'product_id')::uuid;
     v_quantity := (v_item->>'quantity')::numeric;
     v_unit_price := (v_item->>'unit_price')::numeric;
     v_item_discount := coalesce((v_item->>'discount')::numeric, 0);
     v_item_tax := coalesce((v_item->>'tax')::numeric, 0);
     v_line_total := v_quantity * v_unit_price - v_item_discount + v_item_tax;
-    insert into public.purchase_items (
-      organization_id, purchase_id, product_id, quantity, unit_price,
-      discount, tax, line_total, created_by
-    ) values (
-      v_purchase.organization_id, v_purchase.id, v_product_id, v_quantity, v_unit_price,
-      v_item_discount, v_item_tax, v_line_total, v_user_id
-    );
+
+    if v_item_id is not null then
+      update public.purchase_items
+      set product_id = v_product_id,
+          quantity = v_quantity,
+          unit_price = v_unit_price,
+          discount = v_item_discount,
+          tax = v_item_tax,
+          line_total = v_line_total,
+          updated_at = v_now
+      where id = v_item_id
+        and purchase_id = v_purchase.id
+        and organization_id = v_purchase.organization_id;
+    else
+      insert into public.purchase_items (
+        organization_id, purchase_id, product_id, quantity, unit_price,
+        discount, tax, line_total, created_by
+      ) values (
+        v_purchase.organization_id, v_purchase.id, v_product_id, v_quantity, v_unit_price,
+        v_item_discount, v_item_tax, v_line_total, v_user_id
+      );
+    end if;
   end loop;
 
   update public.purchases
