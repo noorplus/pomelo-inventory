@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
