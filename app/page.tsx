@@ -1,33 +1,13 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getWorkspaceContext } from "@/lib/auth/workspace";
 import WorkspaceShell from "@/app/components/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  const { organization } = await getWorkspaceContext();
 
-  const { data: memberships, error: membershipError } = await supabase
-    .from("organization_users")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1);
-
-  if (membershipError) return <WorkspaceError message={membershipError.message} />;
-  if (!memberships?.length) redirect("/organization/create");
-
-  const organizationId = memberships[0].organization_id;
-  const [{ data: organization, error: organizationError }, { data: profile }] = await Promise.all([
-    supabase.from("organizations").select(
-      "organization_number, organization_name, email, phone_number, address, tin, bin, status, created_at"
-    ).eq("id", organizationId).single(),
-    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
-  ]);
-
-  if (organizationError || !organization) {
-    return <WorkspaceError title="Organization unavailable" message={organizationError?.message ?? "Your organization could not be found."} />;
+  if (!organization) {
+    return <WorkspaceError title="Organization unavailable" message="Your organization could not be found." />;
   }
 
   return (
