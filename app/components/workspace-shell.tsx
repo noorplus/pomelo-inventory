@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/app/components/sign-out-button";
+import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 type Props = {
   active: "system" | "uom" | "products" | "contacts";
@@ -8,23 +7,7 @@ type Props = {
 };
 
 export default async function WorkspaceShell({ active, children }: Props) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-
-  const { data: memberships } = await supabase
-    .from("organization_users")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1);
-
-  if (!memberships?.length) redirect("/organization/create");
-
-  const organizationId = memberships[0].organization_id;
-  const [{ data: organization }, { data: profile }] = await Promise.all([
-    supabase.from("organizations").select("organization_name").eq("id", organizationId).single(),
-    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
-  ]);
+  const { user, organization, profile } = await getWorkspaceContext();
 
   const nav = [
     ["system", "/", "⌂", "System"],
