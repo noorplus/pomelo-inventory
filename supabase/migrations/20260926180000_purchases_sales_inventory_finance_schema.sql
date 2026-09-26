@@ -552,17 +552,15 @@ create policy "purchase_items_insert_draft" on public.purchase_items for insert 
     where ou.organization_id = purchase_items.organization_id and ou.user_id = (select auth.uid()) and p.status = 'Draft'
   )
 );
-create policy "purchase_items_update_draft" on public.purchase_items for update to authenticated using (exists (
+create policy "purchase_items_update_draft" on public.purchase_items for update to authenticated using (
   select 1 from public.organization_users ou
   join public.purchases p on p.id = purchase_items.purchase_id and p.organization_id = purchase_items.organization_id
   where ou.organization_id = purchase_items.organization_id and ou.user_id = (select auth.uid()) and p.status = 'Draft'
-)) with check (
-  created_by = (select auth.uid()) and exists (
+)) with check (exists (
     select 1 from public.organization_users ou
     join public.purchases p on p.id = purchase_items.purchase_id and p.organization_id = purchase_items.organization_id
     where ou.organization_id = purchase_items.organization_id and ou.user_id = (select auth.uid()) and p.status = 'Draft'
-  )
-);
+  ));
 create policy "purchase_items_delete_draft" on public.purchase_items for delete to authenticated using (exists (
   select 1 from public.organization_users ou
   join public.purchases p on p.id = purchase_items.purchase_id and p.organization_id = purchase_items.organization_id
@@ -595,17 +593,15 @@ create policy "sale_items_insert_draft" on public.sale_items for insert to authe
     where ou.organization_id = sale_items.organization_id and ou.user_id = (select auth.uid()) and s.status = 'Draft'
   )
 );
-create policy "sale_items_update_draft" on public.sale_items for update to authenticated using (exists (
+create policy "sale_items_update_draft" on public.sale_items for update to authenticated using (
   select 1 from public.organization_users ou
   join public.sales s on s.id = sale_items.sale_id and s.organization_id = sale_items.organization_id
   where ou.organization_id = sale_items.organization_id and ou.user_id = (select auth.uid()) and s.status = 'Draft'
-)) with check (
-  created_by = (select auth.uid()) and exists (
+)) with check (exists (
     select 1 from public.organization_users ou
     join public.sales s on s.id = sale_items.sale_id and s.organization_id = sale_items.organization_id
     where ou.organization_id = sale_items.organization_id and ou.user_id = (select auth.uid()) and s.status = 'Draft'
-  )
-);
+  ));
 create policy "sale_items_delete_draft" on public.sale_items for delete to authenticated using (exists (
   select 1 from public.organization_users ou
   join public.sales s on s.id = sale_items.sale_id and s.organization_id = sale_items.organization_id
@@ -695,3 +691,41 @@ comment on table public.stock is 'Current stock balance per organization and pro
 comment on table public.inventory_movements is 'Immutable inventory movement ledger. Quantity is positive; direction determines stock effect. created_by records the operation actor.';
 comment on table public.payment_allocations is 'Payment allocations. Read-only to clients; controlled payment operations enforce allocation integrity and record created_by.';
 comment on table public.account_transactions is 'Immutable accounting ledger. Corrections should use reversing entries; created_by records the operation actor.';
+
+ 
+-- Creator immutability for Draft line items.
+create or replace function public.prevent_purchase_item_creator_change()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+begin
+  if new.created_by <> old.created_by then
+    raise exception 'Purchase item creator cannot be changed';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger purchase_items_prevent_creator_change
+before update on public.purchase_items
+for each row execute function public.prevent_purchase_item_creator_change();
+
+create or replace function public.prevent_sale_item_creator_change()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+begin
+  if new.created_by <> old.created_by then
+    raise exception 'Sale item creator cannot be changed';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger sale_items_prevent_creator_change
+before update on public.sale_items
+for each row execute function public.prevent_sale_item_creator_change();
