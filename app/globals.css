@@ -511,3 +511,28 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
     grid-template-columns: 1fr;
   }
 }
+
+
+/* CSV import/export actions */
+.module-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; flex-wrap: wrap; }
+.csv-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.csv-file-input { display: none; }
+.csv-button { margin-top: 0; min-height: 37px; white-space: nowrap; }
+.csv-result {
+  flex-basis: 100%;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: right;
+}
+@media (max-width: 700px) {
+  .module-actions { width: 100%; justify-content: stretch; }
+  .module-actions > .primary-button { flex: 1 1 100%; }
+  .csv-actions { width: 100%; }
+  .csv-actions .csv-button { flex: 1 1 0; }
+  .csv-result { text-align: left; }
+}
+@media (max-width: 620px) {
+  .module-actions { gap: 6px; }
+  .csv-actions .csv-button { min-height: 34px; padding: 7px 9px; }
+}
