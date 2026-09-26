@@ -2,25 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = { error?: string };
 
 export default async function NewProductPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-
-  const { data: memberships } = await supabase
-    .from("organization_users")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1);
-
-  if (!memberships?.length) redirect("/organization/create");
-
-  const organizationId = memberships[0].organization_id;
+  const { supabase, organizationId } = await getWorkspaceContext();
   const params = await searchParams;
 
   const { data: units, error: unitsError } = await supabase
@@ -57,7 +46,6 @@ export default async function NewProductPage({ searchParams }: { searchParams: P
                 Product name<span className="required-mark">*</span>
                 <input name="product_name" placeholder="Product name" required />
               </label>
-
               <label>
                 Unit of measure<span className="required-mark">*</span>
                 <select name="uom_id" defaultValue="" required>
@@ -65,7 +53,6 @@ export default async function NewProductPage({ searchParams }: { searchParams: P
                   {units.map((unit) => <option key={unit.id} value={unit.id}>{unit.name}</option>)}
                 </select>
               </label>
-
               <label>
                 Retail price<span className="required-mark">*</span>
                 <div className="price-input">
@@ -73,9 +60,7 @@ export default async function NewProductPage({ searchParams }: { searchParams: P
                   <input name="retail_price" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" required />
                 </div>
               </label>
-
               {errorMessage && <div className="form-error contact-address" role="alert">{errorMessage}</div>}
-
               <button className="primary-button" type="submit">Save Product</button>
             </form>
           </section>
