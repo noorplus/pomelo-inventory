@@ -5,7 +5,7 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = { search?: string; status?: string };
+type SearchParams = { search?: string; status?: string; sort?: string; direction?: string };
 
 export default async function ContactsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const supabase = await createClient();
@@ -19,10 +19,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const params = await searchParams;
   const search = String(params.search || "").trim();
   const status = params.status === "Inactive" ? "Inactive" : params.status === "Active" ? "Active" : "";
+  const sort = ["id_no", "name", "phone", "email", "address", "status"].includes(params.sort || "") ? String(params.sort) : "id_no";
+  const direction = params.direction === "desc" ? "desc" : "asc";
 
   let query = supabase.from("contacts")
     .select("id, id_no, name, phone, email, address, status, created_at")
-    .eq("organization_id", organizationId).order("id_no");
+    .eq("organization_id", organizationId).order(sort, { ascending: direction === "asc" });
 
   if (search) {
     const escaped = search.replace(/[,]/g, "");
@@ -51,7 +53,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load contacts: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{contacts?.length ?? 0} contact{contacts?.length === 1 ? "" : "s"}</strong>{(search || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table><thead><tr><th>ID No.</th><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Status</th></tr></thead>
+          <div className="table-scroll"><table><thead><tr><SortableHeader label="ID No." field="id_no" search={search} status={status} sort={sort} direction={direction} />
+              <SortableHeader label="Name" field="name" search={search} status={status} sort={sort} direction={direction} />
+              <SortableHeader label="Phone" field="phone" search={search} status={status} sort={sort} direction={direction} />
+              <SortableHeader label="Email" field="email" search={search} status={status} sort={sort} direction={direction} />
+              <SortableHeader label="Address" field="address" search={search} status={status} sort={sort} direction={direction} />
+              <SortableHeader label="Status" field="status" search={search} status={status} sort={sort} direction={direction} /></tr></thead>
             <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><strong>{contact.name}</strong></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td></tr>)}</tbody>
           </table></div>
           {!contacts?.length && <EmptyState icon="◎" title="No contacts found" text={search || status ? "Try changing your filters." : "Add your first customer or supplier contact."} />}
