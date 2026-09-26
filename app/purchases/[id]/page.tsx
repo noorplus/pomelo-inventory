@@ -41,12 +41,13 @@ export default async function PurchaseDetailPage({
     );
   }
 
-  const [{ data: items, error: itemsError }, { data: contacts }, { data: products }, { data: allocations }, { data: returns }] = await Promise.all([
+  const [{ data: items, error: itemsError }, { data: contacts }, { data: products }, { data: allocations }, { data: returns }, { data: stockList }] = await Promise.all([
     supabase.from("purchase_items").select("id, product_id, quantity, unit_price, discount, tax, line_total, products(product_name, retail_price, uom_id)").eq("organization_id", organizationId).eq("purchase_id", id).order("created_at"),
     supabase.from("contacts").select("id, id_no, name, phone").eq("organization_id", organizationId).eq("status", "Active").order("name").limit(500),
     supabase.from("products").select("id, product_name, retail_price, uom_id").eq("organization_id", organizationId).eq("status", "Active").order("product_name").limit(500),
     supabase.from("payment_allocations").select("allocated_amount, payments!inner(status)").eq("organization_id", organizationId).eq("purchase_id", id),
     supabase.from("account_transactions").select("debit").eq("organization_id", organizationId).eq("reference_type", "Purchase").eq("reference_id", id).like("transaction_type", "Purchase Return%"),
+    supabase.from("stock").select("product_id, quantity").eq("organization_id", organizationId),
   ]);
 
   const paid = (allocations ?? []).reduce((sum, allocation) => {
@@ -59,6 +60,13 @@ export default async function PurchaseDetailPage({
   const due = Math.max(0, Number(purchase.total) - paid - returned);
   const contact = Array.isArray(purchase.contacts) ? purchase.contacts[0] : purchase.contacts;
   const error = query.error ? decodeURIComponent(query.error) : "";
+  const stockMap = new Map<string, number>();
+  (stockList ?? []).forEach((s) => stockMap.set(s.product_id, Number(s.quantity || 0)));
+  const productsWithStock = (products ?? []).map((entry) => ({
+    ...entry,
+    retail_price: Number(entry.retail_price),
+    stock_quantity: stockMap.get(entry.id) ?? 0,
+  }));
 
   if (itemsError) {
     return (
@@ -78,7 +86,7 @@ export default async function PurchaseDetailPage({
           </div>
           <PurchaseForm
             contacts={(contacts ?? []).map((entry) => ({ ...entry, id_no: Number(entry.id_no) }))}
-            products={(products ?? []).map((entry) => ({ ...entry, retail_price: Number(entry.retail_price) }))}
+            products={productsWithStock}
             action={updatePurchase}
             submitLabel="Save Draft"
             purchaseId={purchase.id}

@@ -12,12 +12,21 @@ export default async function NewPurchasePage({ searchParams }: { searchParams: 
   const { supabase, organizationId } = await getWorkspaceContext();
   const params = await searchParams;
 
-  const [{ data: contacts, error: contactsError }, { data: products, error: productsError }] = await Promise.all([
+  const [{ data: contacts, error: contactsError }, { data: products, error: productsError }, { data: stockList }] = await Promise.all([
     supabase.from("contacts").select("id, id_no, name, phone").eq("organization_id", organizationId).eq("status", "Active").order("name").limit(500),
     supabase.from("products").select("id, product_name, retail_price, uom_id").eq("organization_id", organizationId).eq("status", "Active").order("product_name").limit(500),
+    supabase.from("stock").select("product_id, quantity").eq("organization_id", organizationId),
   ]);
 
   const error = contactsError?.message || productsError?.message || (params.error ? decodeURIComponent(params.error) : "");
+
+  const stockMap = new Map<string, number>();
+  (stockList ?? []).forEach((s) => stockMap.set(s.product_id, Number(s.quantity || 0)));
+  const productsWithStock = (products ?? []).map((product) => ({
+    ...product,
+    retail_price: Number(product.retail_price),
+    stock_quantity: stockMap.get(product.id) ?? 0,
+  }));
 
   return (
     <WorkspaceShell active="purchases">
@@ -38,7 +47,7 @@ export default async function NewPurchasePage({ searchParams }: { searchParams: 
         ) : (
           <PurchaseForm
             contacts={contacts.map((contact) => ({ ...contact, id_no: Number(contact.id_no) }))}
-            products={(products ?? []).map((product) => ({ ...product, retail_price: Number(product.retail_price) }))}
+            products={productsWithStock}
             action={createPurchase}
             submitLabel="Save Draft"
             error={params.error ? decodeURIComponent(params.error) : ""}

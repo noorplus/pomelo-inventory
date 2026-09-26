@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-type Product = { id: string; product_name: string; retail_price: number; uom_id: string };
+type Product = { id: string; product_name: string; retail_price: number; uom_id: string; stock_quantity?: number };
 type Contact = { id: string; id_no: number; name: string; phone: string | null };
 type Item = { id?: string; product_id: string; quantity: number; unit_price: number; discount: number; tax: number };
 
@@ -111,13 +111,20 @@ export default function PurchaseForm({
                 {items.map((item, index) => {
                   const base = Number(item.quantity || 0) * Number(item.unit_price || 0);
                   const lineTotal = base - Number(item.discount || 0) + Number(item.tax || 0);
+                  const prod = products.find((p) => p.id === item.product_id);
+                  const currentStock = prod?.stock_quantity ?? 0;
                   return (
                     <tr key={index}>
                       <td>
                         <select value={item.product_id} onChange={(event) => selectProduct(index, event.target.value)} required aria-label="Product">
                           <option value="" disabled>Select product</option>
-                          {products.map((product) => <option key={product.id} value={product.id}>{product.product_name}</option>)}
+                          {products.map((product) => <option key={product.id} value={product.id}>{product.product_name} (Stock: {product.stock_quantity ?? 0})</option>)}
                         </select>
+                        {item.product_id && (
+                          <span style={{ fontSize: "10px", color: "var(--muted)", display: "block", marginTop: "2px" }}>
+                            In stock: {currentStock} → after receive: {currentStock + Number(item.quantity || 0)}
+                          </span>
+                        )}
                       </td>
                       <td className="numeric"><input className="compact-number" type="number" min="0.0001" step="0.0001" value={item.quantity} onChange={(event) => updateItem(index, { quantity: Number(event.target.value) })} aria-label="Quantity" required /></td>
                       <td className="numeric"><input className="compact-number" type="number" min="0" step="0.01" value={item.unit_price} onChange={(event) => updateItem(index, { unit_price: Number(event.target.value) })} aria-label="Unit price" required /></td>
