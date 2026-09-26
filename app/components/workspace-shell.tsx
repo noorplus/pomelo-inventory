@@ -2,6 +2,14 @@ import Link from "next/link";
 import { SignOutButton } from "@/app/components/sign-out-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
+const nav = [
+  ["dashboard", "/", "⌂", "Dashboard"],
+  ["settings", "/settings", "⚙", "Settings"],
+  ["contacts", "/contacts", "◎", "Contacts"],
+  ["uom", "/uom", "◈", "UoM"],
+  ["products", "/products", "▦", "Products"],
+] as const;
+
 type Props = {
   active: "dashboard" | "settings" | "uom" | "products" | "contacts";
   children: React.ReactNode;
