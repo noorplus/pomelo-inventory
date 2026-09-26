@@ -399,3 +399,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .sortable-header { padding: 0 !important; }
 .sortable-header a { display: block; padding: 8px 11px; color: inherit; }
 .sortable-header a:hover { color: var(--foreground); background: #eef2f6; }
+
+
+/* Sortable data-table headers */
+.sortable-header { padding: 0 !important; }
+.sortable-header a { display: block; padding: 8px 11px; color: inherit; }
+.sortable-header a:hover { color: var(--foreground); background: #eef2f6; }
