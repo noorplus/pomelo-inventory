@@ -8,7 +8,10 @@ import { getCachedUnitsOfMeasure } from "@/lib/cache/reference-data";
 export const dynamic = "force-dynamic";
 
 export default async function UomPage() {
-  const { supabase, organizationId, accessToken } = await getWorkspaceContext();
+  const { supabase, organizationId } = await getWorkspaceContext();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) return null;
 
   let units: Awaited<ReturnType<typeof getCachedUnitsOfMeasure>> = [];
   let error: Error | null = null;
