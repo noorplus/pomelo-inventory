@@ -13,6 +13,7 @@
 -- Contacts remain the shared Customer/Supplier master.
 -- Invoice numbers are generated when a Draft invoice is first inserted.
 -- No additional table is introduced for numbering.
+-- Schema freeze: future workflow integrity belongs in controlled RPC/service operations.
 
 create type public.invoice_status as enum ('Draft', 'Confirmed', 'Cancelled');
 create type public.payment_type as enum ('In', 'Out');
@@ -691,6 +692,78 @@ comment on table public.stock is 'Current stock balance per organization and pro
 comment on table public.inventory_movements is 'Immutable inventory movement ledger. Quantity is positive; direction determines stock effect. created_by records the operation actor.';
 comment on table public.payment_allocations is 'Payment allocations. Read-only to clients; controlled payment operations enforce allocation integrity and record created_by.';
 comment on table public.account_transactions is 'Immutable accounting ledger. Corrections should use reversing entries; created_by records the operation actor.';
+comment on column public.expense_categories.created_by is 'Creator is immutable after insert.';
+comment on column public.expense_categories.organization_id is 'Tenant ownership is immutable after insert.';
+comment on column public.expenses.created_by is 'Creator is immutable after insert.';
+comment on column public.expenses.organization_id is 'Tenant ownership is immutable after insert.';
+comment on column public.payments.created_by is 'Creator is immutable after insert.';
+comment on column public.payments.organization_id is 'Tenant ownership is immutable after insert.';
+
+ 
+-- Creator and organization immutability for master/financial business records.
+-- These fields establish audit ownership and tenant scope at creation time.
+create or replace function public.prevent_expense_category_identity_change()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $func$
+begin
+  if new.organization_id <> old.organization_id then
+    raise exception 'Expense category organization cannot be changed';
+  end if;
+  if new.created_by <> old.created_by then
+    raise exception 'Expense category creator cannot be changed';
+  end if;
+  return new;
+end;
+$func$;
+
+create trigger expense_categories_prevent_identity_change
+before update on public.expense_categories
+for each row execute function public.prevent_expense_category_identity_change();
+
+create or replace function public.prevent_expense_identity_change()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $func$
+begin
+  if new.organization_id <> old.organization_id then
+    raise exception 'Expense organization cannot be changed';
+  end if;
+  if new.created_by <> old.created_by then
+    raise exception 'Expense creator cannot be changed';
+  end if;
+  return new;
+end;
+$func$;
+
+create trigger expenses_prevent_identity_change
+before update on public.expenses
+for each row execute function public.prevent_expense_identity_change();
+
+create or replace function public.prevent_payment_identity_change()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $func$
+begin
+  if new.organization_id <> old.organization_id then
+    raise exception 'Payment organization cannot be changed';
+  end if;
+  if new.created_by <> old.created_by then
+    raise exception 'Payment creator cannot be changed';
+  end if;
+  return new;
+end;
+$func$;
+
+create trigger payments_prevent_identity_change
+before update on public.payments
+for each row execute function public.prevent_payment_identity_change();
 
  
 -- Creator immutability for Draft line items.
