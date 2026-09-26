@@ -1,5 +1,7 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import InvoiceDocument from "@/app/components/invoice-document";
+import PrintButton from "@/app/components/print-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import {
   cancelExpenseAction,
@@ -19,10 +21,12 @@ export default async function ExpenseDetailPage({
   params: Promise<Params>;
   searchParams: Promise<SearchParams>;
 }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, organization } = await getWorkspaceContext();
   const { id } = await params;
   const query = await searchParams;
   const error = query.error ? decodeURIComponent(query.error) : "";
+
+  const orgName = organization?.organization_name || "Pomelo Inventory";
 
   const { data: expense, error: expenseError } = await supabase
     .from("expenses")
@@ -74,6 +78,7 @@ export default async function ExpenseDetailPage({
             </p>
           </div>
           <div className="module-actions">
+            <PrintButton />
             <Link className="secondary-button" href="/accounting?tab=expenses">
               Back to Expenses
             </Link>
@@ -162,6 +167,33 @@ export default async function ExpenseDetailPage({
             <p>{expense.notes}</p>
           </section>
         )}
+
+        <div className="print-area">
+          <InvoiceDocument
+            orgName={orgName}
+            orgPhone={organization?.phone_number}
+            orgEmail={organization?.email}
+            orgAddress={organization?.address}
+            title="EXPENSE VOUCHER"
+            docNo={expense.expense_no}
+            date={expense.expense_date}
+            status={expense.status}
+            partyLabel="Payee"
+            partyName={contact?.name || "—"}
+            partyPhone={contact?.phone}
+            extraMeta={[{ label: "Category", value: category?.name || "General" }]}
+            lines={[
+              {
+                name: expense.description,
+                detail: category?.name,
+                total: Number(expense.amount),
+              },
+            ]}
+            lineMode="simple"
+            total={Number(expense.amount)}
+            notes={expense.notes}
+          />
+        </div>
       </section>
     </WorkspaceShell>
   );

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import InvoiceDocument from "@/app/components/invoice-document";
+import PrintButton from "@/app/components/print-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { cancelPurchase, confirmPurchase, deletePurchase, updatePurchase } from "@/app/purchases/actions";
 import PurchaseForm from "@/app/purchases/purchase-form";
@@ -16,9 +18,11 @@ export default async function PurchaseDetailPage({
   params: Promise<Params>;
   searchParams: Promise<SearchParams>;
 }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, organization } = await getWorkspaceContext();
   const { id } = await params;
   const query = await searchParams;
+
+  const orgName = organization?.organization_name || "Pomelo Inventory";
 
   const { data: purchase, error: purchaseError } = await supabase
     .from("purchases")
@@ -104,7 +108,7 @@ export default async function PurchaseDetailPage({
       <section className="form-page">
         <div className="form-page-header">
           <div><p className="eyebrow">PURCHASE • {purchase.status.toUpperCase()}</p><h1>Purchase {purchase.invoice_no}</h1><p className="muted">{purchase.invoice_date} · {contact?.name || "Unknown contact"}</p></div>
-          <div className="module-actions"><Link className="secondary-button" href="/purchases">Back to Purchases</Link>{purchase.status === "Confirmed" && <form action={cancelPurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="secondary-button" type="submit">Cancel Purchase</button></form>}</div>
+          <div className="module-actions"><PrintButton /><Link className="secondary-button" href="/purchases">Back to Purchases</Link>{purchase.status === "Confirmed" && <form action={cancelPurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="secondary-button" type="submit">Cancel Purchase</button></form>}</div>
         </div>
 
         {error && <div className="form-error" role="alert">{error}</div>}
@@ -137,6 +141,42 @@ export default async function PurchaseDetailPage({
         </section>
 
         {purchase.notes && <section className="data-card"><p className="eyebrow">NOTES</p><p>{purchase.notes}</p></section>}
+
+        <div className="print-area">
+          <InvoiceDocument
+            orgName={orgName}
+            orgPhone={organization?.phone_number}
+            orgEmail={organization?.email}
+            orgAddress={organization?.address}
+            title="PURCHASE BILL"
+            docNo={"#" + purchase.invoice_no}
+            date={purchase.invoice_date}
+            status={purchase.status}
+            partyLabel="Supplier"
+            partyName={contact?.name || "—"}
+            partyPhone={contact?.phone}
+            partyEmail={contact?.email}
+            lines={(items ?? []).map((item) => {
+              const product = Array.isArray(item.products) ? item.products[0] : item.products;
+              return {
+                name: product?.product_name || "—",
+                qty: Number(item.quantity),
+                unitPrice: Number(item.unit_price),
+                discount: Number(item.discount),
+                tax: Number(item.tax),
+                total: Number(item.line_total),
+              };
+            })}
+            lineMode="items"
+            subtotal={Number(purchase.subtotal)}
+            discount={Number(purchase.discount)}
+            tax={Number(purchase.tax)}
+            total={Number(purchase.total)}
+            paid={paid}
+            due={due}
+            notes={purchase.notes}
+          />
+        </div>
       </section>
     </WorkspaceShell>
   );

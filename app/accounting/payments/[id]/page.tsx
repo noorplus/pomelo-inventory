@@ -1,5 +1,7 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import InvoiceDocument from "@/app/components/invoice-document";
+import PrintButton from "@/app/components/print-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import {
   cancelPaymentAction,
@@ -20,10 +22,12 @@ export default async function PaymentDetailPage({
   params: Promise<Params>;
   searchParams: Promise<SearchParams>;
 }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, organization } = await getWorkspaceContext();
   const { id } = await params;
   const query = await searchParams;
   const error = query.error ? decodeURIComponent(query.error) : "";
+
+  const orgName = organization?.organization_name || "Pomelo Inventory";
 
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
@@ -245,6 +249,7 @@ export default async function PaymentDetailPage({
             </p>
           </div>
           <div className="module-actions">
+            {payment.status !== "Draft" && <PrintButton />}
             <Link className="secondary-button" href="/accounting?tab=payments">
               Back to Payments
             </Link>
@@ -389,6 +394,40 @@ export default async function PaymentDetailPage({
             <p className="eyebrow">NOTES</p>
             <p>{payment.notes}</p>
           </section>
+        )}
+
+        {payment.status !== "Draft" && (
+          <div className="print-area">
+            <InvoiceDocument
+              orgName={orgName}
+              orgPhone={organization?.phone_number}
+              orgEmail={organization?.email}
+              orgAddress={organization?.address}
+              title={isTypeIn ? "MONEY RECEIPT" : "PAYMENT VOUCHER"}
+              docNo={payment.payment_no}
+              date={payment.payment_date}
+              status={payment.status}
+              partyLabel={isTypeIn ? "Received From" : "Paid To"}
+              partyName={contact?.name || "—"}
+              partyPhone={contact?.phone}
+              extraMeta={[
+                { label: "Method", value: payment.payment_method },
+                ...(payment.reference_no ? [{ label: "Reference", value: payment.reference_no }] : []),
+              ]}
+              lines={(existingAllocations ?? []).map((a) => {
+                const docType = a.sale_id ? "Sale" : a.purchase_id ? "Purchase" : "Expense";
+                const saleDoc = Array.isArray(a.sales) ? a.sales[0] : a.sales;
+                const purchaseDoc = Array.isArray(a.purchases) ? a.purchases[0] : a.purchases;
+                const expenseDoc = Array.isArray(a.expenses) ? a.expenses[0] : a.expenses;
+                const docNo =
+                  saleDoc?.invoice_no || purchaseDoc?.invoice_no || expenseDoc?.expense_no || "—";
+                return { name: `${docType} #${docNo}`, total: Number(a.allocated_amount) };
+              })}
+              lineMode="simple"
+              total={Number(payment.amount)}
+              notes={payment.notes}
+            />
+          </div>
         )}
       </section>
     </WorkspaceShell>

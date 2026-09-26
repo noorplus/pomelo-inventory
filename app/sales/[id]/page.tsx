@@ -1,5 +1,7 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import InvoiceDocument from "@/app/components/invoice-document";
+import PrintButton from "@/app/components/print-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { cancelSale, confirmSale, deleteSale, updateSale } from "@/app/sales/actions";
 import SalesForm from "@/app/sales/sales-form";
@@ -16,9 +18,11 @@ export default async function SaleDetailPage({
   params: Promise<Params>;
   searchParams: Promise<SearchParams>;
 }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, organization } = await getWorkspaceContext();
   const { id } = await params;
   const query = await searchParams;
+
+  const orgName = organization?.organization_name || "Pomelo Inventory";
 
   const { data: sale, error: saleError } = await supabase
     .from("sales")
@@ -195,6 +199,7 @@ export default async function SaleDetailPage({
             </p>
           </div>
           <div className="module-actions">
+            <PrintButton />
             <Link className="secondary-button" href="/sales">
               Back to Sales
             </Link>
@@ -420,6 +425,42 @@ export default async function SaleDetailPage({
             <p>{sale.notes}</p>
           </section>
         )}
+
+        <div className="print-area">
+          <InvoiceDocument
+            orgName={orgName}
+            orgPhone={organization?.phone_number}
+            orgEmail={organization?.email}
+            orgAddress={organization?.address}
+            title="SALES INVOICE"
+            docNo={"#" + sale.invoice_no}
+            date={sale.invoice_date}
+            status={sale.status}
+            partyLabel="Customer"
+            partyName={contact?.name || "—"}
+            partyPhone={contact?.phone}
+            partyEmail={contact?.email}
+            lines={(items ?? []).map((item) => {
+              const product = Array.isArray(item.products) ? item.products[0] : item.products;
+              return {
+                name: product?.product_name || "—",
+                qty: Number(item.quantity),
+                unitPrice: Number(item.unit_price),
+                discount: Number(item.discount),
+                tax: Number(item.tax),
+                total: Number(item.line_total),
+              };
+            })}
+            lineMode="items"
+            subtotal={Number(sale.subtotal)}
+            discount={Number(sale.discount)}
+            tax={Number(sale.tax)}
+            total={Number(sale.total)}
+            paid={paid}
+            due={due}
+            notes={sale.notes}
+          />
+        </div>
       </section>
     </WorkspaceShell>
   );
