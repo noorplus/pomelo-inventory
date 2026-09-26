@@ -1,22 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-type WorkspaceReferenceData = {
-  organization: {
-    id: string;
-    organization_number: number;
-    organization_name: string;
-    email: string | null;
-    phone_number: string;
-    address: string;
-    tin: string | null;
-    bin: string | null;
-    status: string;
-    created_at: string;
-  } | null;
-  profile: { full_name: string | null } | null;
-};
-
 type UnitOfMeasure = {
   id: string;
   name: string;
