@@ -58,9 +58,7 @@ async function createUom(formData: FormData) {
   const organizationId = memberships[0].organization_id;
   const { error } = await supabase.from("units_of_measure").insert({ organization_id: organizationId, name, created_by: user.id });
   if (error) return;
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
-  if (accessToken) invalidateCachedUnitsOfMeasure(organizationId, accessToken);
+  await invalidateCachedUnitsOfMeasure(organizationId, user.id);
   redirect("/uom");
 }
 
