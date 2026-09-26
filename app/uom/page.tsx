@@ -2,17 +2,20 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
+import { getCachedUnitsOfMeasure, invalidateCachedUnitsOfMeasure } from "@/lib/cache/reference-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function UomPage() {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, user } = await getWorkspaceContext();
 
-  const { data: units, error } = await supabase
-    .from("units_of_measure")
-    .select("id, name, status, created_at")
-    .eq("organization_id", organizationId)
-    .order("name");
+  let units: Awaited<ReturnType<typeof getCachedUnitsOfMeasure>> = [];
+  let error: Error | null = null;
+  try {
+    units = await getCachedUnitsOfMeasure(supabase, organizationId, user.id);
+  } catch (caught) {
+    error = caught instanceof Error ? caught : new Error("Unable to load units.");
+  }
 
   return (
     <WorkspaceShell active="uom">
@@ -51,8 +54,10 @@ async function createUom(formData: FormData) {
   if (!memberships?.length) redirect("/organization/create");
   const name = String(formData.get("name") || "").trim();
   if (!name) return;
-  const { error } = await supabase.from("units_of_measure").insert({ organization_id: memberships[0].organization_id, name, created_by: user.id });
+  const organizationId = memberships[0].organization_id;
+  const { error } = await supabase.from("units_of_measure").insert({ organization_id: organizationId, name, created_by: user.id });
   if (error) return;
+  await invalidateCachedUnitsOfMeasure(organizationId, user.id);
   redirect("/uom");
 }
 
