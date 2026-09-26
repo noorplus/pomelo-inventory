@@ -1,7 +1,7 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/app/components/workspace-shell";
-import { getWorkspaceContext } from "@/lib/auth/workspace";
+import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ export default async function NewContactPage() {
       <section className="form-page">
         <div className="form-page-header">
           <div><p className="eyebrow">CONTACTS</p><h1>Add Contact</h1><p className="muted">Create a customer, supplier, or other business contact.</p></div>
-          <a className="secondary-button" href="/contacts">Back to Contacts</a>
+          <Link className="secondary-button" href="/contacts">Back to Contacts</Link>
         </div>
         <section className="data-card">
           <form className="contact-form contact-form-page" action={createContact}>
@@ -31,12 +31,7 @@ export default async function NewContactPage() {
 
 async function createContact(formData: FormData) {
   "use server";
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-
-  const { data: memberships } = await supabase.from("organization_users").select("organization_id").eq("user_id", user.id).limit(1);
-  if (!memberships?.length) redirect("/organization/create");
+  const { supabase, user, organizationId } = await getWorkspaceMembership();
 
   const name = String(formData.get("name") || "").trim();
   if (!name) return;
@@ -46,7 +41,7 @@ async function createContact(formData: FormData) {
   const address = String(formData.get("address") || "").trim();
 
   const { error } = await supabase.from("contacts").insert({
-    organization_id: memberships[0].organization_id,
+    organization_id: organizationId,
     name,
     phone: phone || null,
     email: email || null,

@@ -1,20 +1,23 @@
+import Link from "next/link";
 import { SignOutButton } from "@/app/components/sign-out-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
+const nav = [
+  ["dashboard", "/", "⌂", "Dashboard"],
+  ["settings", "/settings", "⚙", "Settings"],
+  ["contacts", "/contacts", "◎", "Contacts"],
+  ["uom", "/uom", "◈", "UoM"],
+  ["products", "/products", "▦", "Products"],
+] as const;
+
 type Props = {
-  active: "system" | "uom" | "products" | "contacts";
+  active: "dashboard" | "settings" | "uom" | "products" | "contacts";
   children: React.ReactNode;
 };
 
 export default async function WorkspaceShell({ active, children }: Props) {
   const { user, organization, profile } = await getWorkspaceContext();
 
-  const nav = [
-    ["system", "/system", "⌂", "System"],
-    ["contacts", "/contacts", "◎", "Contacts"],
-    ["uom", "/uom", "◈", "UoM"],
-    ["products", "/products", "▦", "Products"],
-  ] as const;
 
   const initials = (profile?.full_name || user.email || "U")
     .trim()
@@ -32,9 +35,9 @@ export default async function WorkspaceShell({ active, children }: Props) {
               <summary aria-label="Open navigation menu">☰</summary>
               <nav className="nav mobile-nav" aria-label="Main navigation">
                 {nav.map(([key, href, icon, label]) => (
-                  <a key={key} className={active === key ? "active" : ""} href={href}>
+                  <Link key={key} className={active === key ? "active" : ""} href={href}>
                     <span>{icon}</span>{label}
-                  </a>
+                  </Link>
                 ))}
               </nav>
             </details>
@@ -59,9 +62,9 @@ export default async function WorkspaceShell({ active, children }: Props) {
         <div className="workspace-label">WORKSPACE</div>
         <nav className="nav desktop-nav" aria-label="Main navigation">
           {nav.map(([key, href, icon, label]) => (
-            <a key={key} className={active === key ? "active" : ""} href={href}>
+            <Link key={key} className={active === key ? "active" : ""} href={href}>
               <span>{icon}</span>{label}
-            </a>
+            </Link>
           ))}
         </nav>
         <div className="sidebar-footer">

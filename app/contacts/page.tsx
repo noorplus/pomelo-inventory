@@ -15,11 +15,11 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const direction = params.direction === "desc" ? "desc" : "asc";
 
   let query = supabase.from("contacts")
-    .select("id, id_no, name, phone, email, address, status, created_at")
+    .select("id, id_no, name, phone, email, address, status")
     .eq("organization_id", organizationId).order(sort, { ascending: direction === "asc" });
 
   if (search) {
-    const escaped = search.replace(/[,]/g, "");
+    const escaped = search.replace(/[\\%,_]/g, (character) => `\\${character}`).replace(/,/g, "");
     query = query.or(`name.ilike.%${escaped}%,phone.ilike.%${escaped}%,email.ilike.%${escaped}%,address.ilike.%${escaped}%`);
   }
   if (status) query = query.eq("status", status);
