@@ -5,87 +5,87 @@ import { redirect } from "next/navigation";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { createClient } from "@/lib/supabase/server";
 
-export async function updateSystemProfile(formData: FormData) {
+async function getMembership() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: memberships, error: membershipError } = await supabase
+  const { data: memberships, error } = await supabase
     .from("organization_users")
     .select("organization_id")
     .eq("user_id", user.id)
     .limit(1);
 
-  if (membershipError || !memberships?.length) redirect("/organization/create");
+  if (error || !memberships?.length) redirect("/organization/create");
+  return { supabase, user, organizationId: memberships[0].organization_id };
+}
 
-  const organizationId = memberships[0].organization_id;
+export async function updateOrganization(formData: FormData) {
+  const { supabase, organizationId } = await getMembership();
   const organizationName = String(formData.get("organization_name") || "").trim();
   const email = String(formData.get("email") || "").trim();
   const phoneNumber = String(formData.get("phone_number") || "").trim();
   const address = String(formData.get("address") || "").trim();
   const tin = String(formData.get("tin") || "").trim() || null;
   const bin = String(formData.get("bin") || "").trim() || null;
-  const fullName = String(formData.get("full_name") || "").trim();
 
-  if (!organizationName || !email || !phoneNumber || !address || !fullName) {
-    redirect("/system?error=required");
+  if (!organizationName || !email || !phoneNumber || !address) {
+    redirect("/system?error=organization-required");
   }
 
-  const { error: organizationError } = await supabase
+  const { error } = await supabase
     .from("organizations")
-    .update({
-      organization_name: organizationName,
-      email,
-      phone_number: phoneNumber,
-      address,
-      tin,
-      bin,
-    })
+    .update({ organization_name: organizationName, email, phone_number: phoneNumber, address, tin, bin })
     .eq("id", organizationId);
 
-  if (organizationError) redirect("/system?error=" + encodeURIComponent(organizationError.message));
+  if (error) redirect("/system?error=" + encodeURIComponent(error.message));
 
-  const { error: profileError } = await supabase
+  revalidatePath("/");
+  revalidatePath("/system");
+  redirect("/system?saved=organization");
+}
+
+export async function updateCurrentUser(formData: FormData) {
+  const { supabase, user } = await getMembership();
+  const fullName = String(formData.get("full_name") || "").trim();
+
+  if (!fullName) redirect("/system?error=user-required");
+
+  const { error } = await supabase
     .from("profiles")
     .update({ full_name: fullName })
     .eq("id", user.id);
 
-  if (profileError) redirect("/system?error=" + encodeURIComponent(profileError.message));
+  if (error) redirect("/system?error=" + encodeURIComponent(error.message));
 
   revalidatePath("/");
   revalidatePath("/system");
-  redirect("/system?saved=1");
+  redirect("/system?saved=user");
 }
 
 export default async function SystemPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const params = await searchParams;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  const { supabase, user, organizationId } = await getMembership();
 
-  const { data: memberships } = await supabase
-    .from("organization_users")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1);
-
-  if (!memberships?.length) redirect("/organization/create");
-
-  const organizationId = memberships[0].organization_id;
   const [{ data: organization }, { data: profile }] = await Promise.all([
     supabase
       .from("organizations")
       .select("id, organization_number, organization_name, email, phone_number, address, tin, bin, status, created_at")
       .eq("id", organizationId)
       .single(),
-    supabase.from("profiles").select("full_name").eq("id", user.id).single(),
+    supabase.from("profiles").select("full_name, created_at, updated_at").eq("id", user.id).single(),
   ]);
 
   if (!organization) {
     return <WorkspaceError title="Organization unavailable" message="Your organization could not be found." />;
   }
 
-  const errorMessage = params.error === "required" ? "Please complete all required fields." : params.error;
+  const errorMessage =
+    params.error === "organization-required"
+      ? "Organization name, email, phone, and address are required."
+      : params.error === "user-required"
+        ? "Your full name is required."
+        : params.error;
 
   return (
     <WorkspaceShell active="system">
@@ -101,7 +101,8 @@ export default async function SystemPage({ searchParams }: { searchParams: Promi
         </div>
       </header>
 
-      {params.saved === "1" && <div className="form-success" role="status">System information updated successfully.</div>}
+      {params.saved === "organization" && <div className="form-success" role="status">Organization information updated successfully.</div>}
+      {params.saved === "user" && <div className="form-success" role="status">User information updated successfully.</div>}
       {errorMessage && <div className="form-error" role="alert">{errorMessage}</div>}
 
       <section className="welcome-card" aria-labelledby="workspace-title">
@@ -124,7 +125,7 @@ export default async function SystemPage({ searchParams }: { searchParams: Promi
       </section>
 
       <section className="data-card form-panel">
-        <form action={updateSystemProfile} className="form">
+        <form action={updateOrganization} className="form">
           <label>Organization name<span className="required-mark">*</span><input name="organization_name" required defaultValue={organization.organization_name} autoComplete="organization" /></label>
           <div className="info-grid">
             <label>Email<span className="required-mark">*</span><input name="email" required type="email" defaultValue={organization.email} autoComplete="email" /></label>
@@ -139,7 +140,6 @@ export default async function SystemPage({ searchParams }: { searchParams: Promi
             <div className="info-item"><span>Organization number</span><strong>#{organization.organization_number}</strong></div>
             <div className="info-item"><span>Status</span><strong className="status-badge">{organization.status}</strong></div>
           </div>
-          <input type="hidden" name="full_name" value={profile?.full_name || user.email || "User"} />
           <button className="primary-button" type="submit">Save organization</button>
         </form>
       </section>
@@ -152,13 +152,7 @@ export default async function SystemPage({ searchParams }: { searchParams: Promi
       </section>
 
       <section className="data-card form-panel">
-        <form action={updateSystemProfile} className="form">
-          <input type="hidden" name="organization_name" value={organization.organization_name} />
-          <input type="hidden" name="email" value={organization.email} />
-          <input type="hidden" name="phone_number" value={organization.phone_number} />
-          <input type="hidden" name="address" value={organization.address} />
-          <input type="hidden" name="tin" value={organization.tin || ""} />
-          <input type="hidden" name="bin" value={organization.bin || ""} />
+        <form action={updateCurrentUser} className="form">
           <label>Full name<span className="required-mark">*</span><input name="full_name" required defaultValue={profile?.full_name || ""} autoComplete="name" /></label>
           <div className="info-grid">
             <div className="info-item"><span>Email</span><strong>{user.email || "Not available"}</strong></div>
@@ -169,8 +163,12 @@ export default async function SystemPage({ searchParams }: { searchParams: Promi
       </section>
 
       <section className="section-heading">
-        <div><h2>Organization details</h2><p className="muted">Reference information from the organization record.</p></div>
+        <div>
+          <h2>Organization details</h2>
+          <p className="muted">Reference information from the organization record.</p>
+        </div>
       </section>
+
       <section className="info-grid" aria-label="Organization details">
         <InfoItem label="Organization Name" value={organization.organization_name} />
         <InfoItem label="Email" value={organization.email} />
