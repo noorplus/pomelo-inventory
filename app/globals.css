@@ -261,3 +261,47 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .info-item { padding: 10px 11px; }
   .empty-state { padding: 11px; }
 }
+
+
+/* Module polish */
+.page-count {
+  display: inline-flex; align-items: center; min-height: 28px; padding: 5px 9px;
+  border: 1px solid var(--border); border-radius: 999px; background: #fff;
+  color: #475467; font-size: 10px; font-weight: 800; white-space: nowrap;
+}
+.form-panel { margin-bottom: 2px; }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 11px; }
+.panel-heading h2 { margin: 0 0 2px; font-size: 13px; }
+.panel-heading p { margin: 0; font-size: 10px; line-height: 1.45; }
+.required-mark { margin-left: 3px; color: var(--danger); }
+.form-hint {
+  margin-top: 9px; padding: 8px 10px; border: 1px solid #dbeafe; border-radius: 7px;
+  background: var(--primary-soft); color: #1d4ed8; font-size: 10px; line-height: 1.4;
+}
+.table-scroll { overflow-x: auto; }
+.table-card table { min-width: 680px; }
+.table-card .numeric { text-align: right; }
+.mono { font-variant-numeric: tabular-nums; }
+.price-input { position: relative; display: flex; align-items: center; }
+.price-input > span {
+  position: absolute; left: 10px; z-index: 1; color: #667085; font-size: 12px; font-weight: 700;
+  pointer-events: none;
+}
+.price-input input { padding-left: 25px; }
+.price-value { font-variant-numeric: tabular-nums; font-weight: 700; color: #344054; }
+.truncate-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.contact-form .contact-address { grid-column: 1 / 3; }
+.contact-form .primary-button { align-self: end; }
+.data-card .form-panel { margin-bottom: 0; }
+
+@media (max-width: 900px) {
+  .page-count { font-size: 9px; }
+  .contact-form .contact-address { grid-column: auto; }
+}
+@media (max-width: 620px) {
+  .topbar-org { max-width: 52%; }
+  .page-count { display: none; }
+  .panel-heading { align-items: flex-start; }
+  .table-card table { min-width: 640px; }
+  .truncate-cell { max-width: 180px; }
+}
