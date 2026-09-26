@@ -215,7 +215,6 @@ button { -webkit-tap-highlight-color: transparent; }
   --radius-lg: 10px;
 }
 ::selection { background: #dbeafe; color: #172033; }
-button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
   outline: 0; box-shadow: var(--focus-ring);
 }
@@ -401,10 +400,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .sortable-header a:hover { color: var(--foreground); background: #eef2f6; }
 
 
-/* Sortable data-table headers */
-.sortable-header { padding: 0 !important; }
-.sortable-header a { display: block; padding: 8px 11px; color: inherit; }
-.sortable-header a:hover { color: var(--foreground); background: #eef2f6; }
+
 
 
 /* Skeleton loading */
