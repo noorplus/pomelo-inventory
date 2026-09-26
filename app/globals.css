@@ -313,3 +313,41 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+
+/* Mobile header navigation and profile menu */
+.mobile-header-controls { display: none; }
+.mobile-profile { position: relative; }
+.mobile-profile summary { list-style: none; cursor: pointer; }
+.mobile-profile summary::-webkit-details-marker { display: none; }
+.profile-trigger { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #344054; border-radius: 50%; background: #1f2937; }
+.profile-trigger .avatar { width: 26px; height: 26px; background: #334155; }
+.profile-popover {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: min(280px, calc(100vw - 20px));
+  display: grid; gap: 4px; padding: 12px; border: 1px solid var(--border); border-radius: 9px;
+  background: #fff; color: var(--foreground); box-shadow: var(--shadow-md);
+}
+.profile-heading { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+.profile-popover strong { font-size: 12px; overflow-wrap: anywhere; }
+.profile-popover > span { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+.profile-divider { height: 1px; margin: 5px 0; background: var(--border); }
+.profile-popover .ghost-button { width: 100%; border-color: #d0d5dd; background: #fff; color: #344054; }
+.profile-popover .ghost-button:hover { background: #f8fafc; }
+@media (max-width: 900px) {
+  .sidebar-header { width: 100%; }
+  .mobile-header-controls { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }
+  .mobile-header-controls .brand { flex: 1; justify-content: center; }
+  .mobile-header-controls .brand-mark { flex: 0 0 auto; }
+  .mobile-menu { position: relative; }
+  .mobile-menu .mobile-nav {
+    position: absolute; left: 0; top: calc(100% + 7px); z-index: 25; width: min(250px, calc(100vw - 16px));
+    margin: 0; padding: 7px; border: 1px solid #344054; border-radius: 9px;
+    background: var(--sidebar); box-shadow: 0 10px 24px rgba(0,0,0,.22);
+  }
+  .mobile-menu .mobile-nav a { min-height: 38px; }
+  .sidebar-footer { display: none; }
+}
+@media (max-width: 620px) {
+  .mobile-header-controls .brand { justify-content: center; font-size: 13px; }
+  .profile-popover { width: min(270px, calc(100vw - 16px)); }
+}
