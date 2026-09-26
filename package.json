@@ -15,7 +15,8 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "@supabase/ssr": "0.7.0",
-    "@supabase/supabase-js": "2.57.0"
+    "@supabase/supabase-js": "2.57.0",
+    "@vercel/functions": "^3.9.9"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
