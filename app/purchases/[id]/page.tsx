@@ -78,6 +78,7 @@ export default async function PurchaseDetailPage({
             initialDate={purchase.invoice_date}
             initialNotes={purchase.notes || ""}
             initialItems={(items ?? []).map((item) => ({
+              id: item.id,
               product_id: item.product_id,
               quantity: Number(item.quantity),
               unit_price: Number(item.unit_price),
