@@ -15,7 +15,7 @@ export default function CreateOrganizationPage() {
     (async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (!active) return;
-      if (userError || !user) { router.replace("/auth/login"); return; }
+      if (userError || !user) { router.replace("/login"); return; }
       const { data: memberships, error: membershipError } = await supabase.from("organization_users").select("organization_id").eq("user_id", user.id).limit(1);
       if (!active) return;
       if (membershipError) { setError(membershipError.message); setLoading(false); return; }
