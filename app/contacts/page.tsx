@@ -19,7 +19,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
     .eq("organization_id", organizationId).order(sort, { ascending: direction === "asc" });
 
   if (search) {
-    const escaped = search.replace(/[,]/g, "");
+    const escaped = search.replace(/[\\%,_]/g, (character) => `\\${character}`).replace(/,/g, "");
     query = query.or(`name.ilike.%${escaped}%,phone.ilike.%${escaped}%,email.ilike.%${escaped}%,address.ilike.%${escaped}%`);
   }
   if (status) query = query.eq("status", status);
