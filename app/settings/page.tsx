@@ -47,7 +47,7 @@ export async function updateCurrentUser(formData: FormData) {
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string; edit?: string }> }) {
   const params = await searchParams;
   const { supabase, user, organization, profile } = await getWorkspaceContext();
-  const { organizationId, organizationIds } = await getWorkspaceMembership();
+  const { organizationId } = await getWorkspaceMembership();
 
   // View-first cards; edit forms open only for fields the database lets
   // members write (org profile columns, own full_name). System-managed
@@ -99,11 +99,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <section className="section-heading">
         <div>
           <h2>01 · Workspace</h2>
-          <p className="muted">The organization you are currently working in.</p>
+          <p className="muted">Your organization workspace.</p>
         </div>
-        <Link className="secondary-button" href="/organization">
-          ⇄ Switch Workspace ({organizationIds.length})
-        </Link>
       </section>
 
       <section className="welcome-card" aria-label="Current workspace">
@@ -113,8 +110,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           <p>Organization #{organization.organization_number} · {organization.status}</p>
         </div>
         <div className="org-number">
-          <span>You belong to</span>
-          <strong>{organizationIds.length} workspace{organizationIds.length === 1 ? "" : "s"}</strong>
+          <span>Organization ID</span>
+          <strong>#{organization.organization_number}</strong>
         </div>
       </section>
 

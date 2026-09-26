@@ -35,10 +35,7 @@ const sections: readonly NavSection[] = [
   },
   {
     label: "SYSTEM",
-    items: [
-      ["organizations", "/organization", "⇄", "Organizations"],
-      ["settings", "/settings", "⚙", "Settings"],
-    ],
+    items: [["settings", "/settings", "⚙", "Settings"]],
   },
 ];
 
@@ -61,7 +58,7 @@ function NavLinks({ active, className }: { active: string; className: string }) 
 }
 
 type Props = {
-  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases" | "sales" | "inventory" | "accounting" | "reports" | "organizations";
+  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases" | "sales" | "inventory" | "accounting" | "reports";
   children: React.ReactNode;
 };
 
@@ -113,7 +110,6 @@ export default async function WorkspaceShell({ active, children }: Props) {
               <span>{user.email}</span>
             </div>
           </div>
-          <Link className="filter-clear" href="/organization" title="Switch workspace">⇄ Switch</Link>
           <SignOutButton />
         </div>
       </aside>
