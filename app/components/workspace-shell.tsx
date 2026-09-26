@@ -8,10 +8,11 @@ const nav = [
   ["contacts", "/contacts", "◎", "Contacts"],
   ["uom", "/uom", "◈", "UoM"],
   ["products", "/products", "▦", "Products"],
+  ["purchases", "/purchases", "↥", "Purchases"],
 ] as const;
 
 type Props = {
-  active: "dashboard" | "settings" | "uom" | "products" | "contacts";
+  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases";
   children: React.ReactNode;
 };
 
