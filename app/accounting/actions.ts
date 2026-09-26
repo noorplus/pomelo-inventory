@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
-import { nextExpenseNo } from "@/lib/services/expenses";
-import { nextPaymentNo } from "@/lib/services/payments";
+import { nextExpenseNoResilient } from "@/lib/services/expenses";
+import { nextPaymentNoResilient } from "@/lib/services/payments";
 
 function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
@@ -30,7 +30,7 @@ export async function createPayment(formData: FormData) {
 
     // Serialized server-side numbering: count-then-insert would collide
     // under concurrent creates (unique payment_no).
-    const paymentNo = await nextPaymentNo(supabase, organizationId);
+    const paymentNo = await nextPaymentNoResilient(supabase, organizationId);
 
     const { data: payment, error } = await supabase
       .from("payments")
@@ -124,7 +124,7 @@ export async function createExpense(formData: FormData) {
     if (!description) throw new Error("Expense description is required.");
     if (isNaN(amount) || amount <= 0) throw new Error("Amount must be greater than zero.");
 
-    const expenseNo = await nextExpenseNo(supabase, organizationId);
+    const expenseNo = await nextExpenseNoResilient(supabase, organizationId);
 
     const { data: expense, error } = await supabase
       .from("expenses")
