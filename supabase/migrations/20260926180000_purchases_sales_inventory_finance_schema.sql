@@ -553,7 +553,7 @@ create policy "purchase_items_insert_draft" on public.purchase_items for insert 
     where ou.organization_id = purchase_items.organization_id and ou.user_id = (select auth.uid()) and p.status = 'Draft'
   )
 );
-create policy "purchase_items_update_draft" on public.purchase_items for update to authenticated using (
+create policy "purchase_items_update_draft" on public.purchase_items for update to authenticated using (exists (
   select 1 from public.organization_users ou
   join public.purchases p on p.id = purchase_items.purchase_id and p.organization_id = purchase_items.organization_id
   where ou.organization_id = purchase_items.organization_id and ou.user_id = (select auth.uid()) and p.status = 'Draft'
@@ -594,7 +594,7 @@ create policy "sale_items_insert_draft" on public.sale_items for insert to authe
     where ou.organization_id = sale_items.organization_id and ou.user_id = (select auth.uid()) and s.status = 'Draft'
   )
 );
-create policy "sale_items_update_draft" on public.sale_items for update to authenticated using (
+create policy "sale_items_update_draft" on public.sale_items for update to authenticated using (exists (
   select 1 from public.organization_users ou
   join public.sales s on s.id = sale_items.sale_id and s.organization_id = sale_items.organization_id
   where ou.organization_id = sale_items.organization_id and ou.user_id = (select auth.uid()) and s.status = 'Draft'
