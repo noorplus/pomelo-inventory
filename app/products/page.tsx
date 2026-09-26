@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CsvActions from "@/app/components/csv-actions";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
@@ -18,21 +19,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const [{ data: units, error: unitsError }, productsResult] = await Promise.all([
     supabase.from("units_of_measure").select("id, name").eq("organization_id", organizationId).order("name"),
     (async () => {
-      let query = supabase
-        .from("products")
-        .select("id, product_name, retail_price, status, uom_id")
-        .eq("organization_id", organizationId);
-
+      let query = supabase.from("products").select("id, product_name, retail_price, status, uom_id").eq("organization_id", organizationId);
       if (search) query = query.ilike("product_name", `%${search.replace(/[\\%_]/g, "\\$&")}%`);
       if (selectedUom) query = query.eq("uom_id", selectedUom);
       if (status) query = query.eq("status", status);
-
-      if (sort !== "uom_id") {
-        query = query.order(sort, { ascending: direction === "asc" });
-      } else {
-        query = query.order("product_name");
-      }
-
+      if (sort !== "uom_id") query = query.order(sort, { ascending: direction === "asc" });
+      else query = query.order("product_name");
       return query;
     })(),
   ]);
@@ -48,12 +40,20 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   }
 
   const error = productsResult.error || unitsError;
+  const exportParams = new URLSearchParams();
+  if (search) exportParams.set("search", search);
+  if (selectedUom) exportParams.set("uom_id", selectedUom);
+  if (status) exportParams.set("status", status);
+  const exportUrl = `/products/export${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
 
   return (
     <WorkspaceShell active="products">
       <section className="module-toolbar">
         <div><h1>Products</h1><p className="muted">Products, units, and current retail prices.</p></div>
-        <Link className="primary-button" href="/products/new">+ Add Product</Link>
+        <div className="module-actions">
+          <Link className="primary-button" href="/products/new">+ Add Product</Link>
+          <CsvActions exportUrl={exportUrl} importUrl="/products/import" />
+        </div>
       </section>
       <section className="filter-card" aria-label="Product filters">
         <form className="contact-filter" method="get">
