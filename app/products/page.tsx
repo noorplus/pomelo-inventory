@@ -8,10 +8,7 @@ export const dynamic = "force-dynamic";
 type SearchParams = { search?: string; uom_id?: string; status?: string; sort?: string; direction?: string };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
-  if (!accessToken) return null;
+  const { supabase, organizationId, user } = await getWorkspaceContext();
   const params = await searchParams;
   const search = String(params.search || "").trim();
   const selectedUom = String(params.uom_id || "").trim();
@@ -20,7 +17,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const direction = params.direction === "desc" ? "desc" : "asc";
 
   const [unitsResult, productsResult] = await Promise.all([
-    getCachedUnitsOfMeasure(organizationId, accessToken),
+    getCachedUnitsOfMeasure(supabase, organizationId, user.id),
     (async () => {
       let query = supabase
         .from("products")
