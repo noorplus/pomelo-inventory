@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
+import { ServiceError } from "@/lib/services/common";
 import { createPurchaseDraft, deletePurchaseDraft, updatePurchaseDraft } from "@/lib/services/purchases";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type PurchaseItemInput = {
   id?: string;
@@ -56,8 +58,139 @@ function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
 }
 
+function isMissingRpc(error: unknown): boolean {
+  return error instanceof ServiceError && error.code === "PGRST202";
+}
+
+// Legacy direct-write paths. Used only when the live database predates the
+// draft RPC migration: they preserve the exact previously-working behavior
+// (client totals, compensating delete on create failure). Once migrations
+// apply, the atomic RPC path above is used and these go dormant.
+async function legacyCreatePurchase(
+  supabase: SupabaseClient,
+  organizationId: string,
+  userId: string,
+  contactId: string,
+  invoiceDate: string | null,
+  notes: string | null,
+  items: PurchaseItemInput[],
+): Promise<string> {
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+  const totalDiscount = items.reduce((sum, item) => sum + (item.discount || 0), 0);
+  const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
+  const total = subtotal - totalDiscount + totalTax;
+
+  const { data: purchase, error: purchaseError } = await supabase
+    .from("purchases")
+    .insert({
+      organization_id: organizationId,
+      contact_id: contactId,
+      invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
+      status: "Draft",
+      invoice_no: "000000", // Automatically replaced by trigger set_purchase_invoice_no
+      subtotal,
+      discount: totalDiscount,
+      tax: totalTax,
+      total,
+      notes,
+      created_by: userId,
+    })
+    .select("id")
+    .single();
+
+  if (purchaseError) throw new Error(purchaseError.message);
+  const purchaseId = purchase.id as string;
+
+  const { error: itemsError } = await supabase.from("purchase_items").insert(
+    items.map((item) => ({
+      organization_id: organizationId,
+      purchase_id: purchaseId,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      discount: item.discount || 0,
+      tax: item.tax || 0,
+      line_total: item.quantity * item.unit_price - (item.discount || 0) + (item.tax || 0),
+      created_by: userId,
+    })),
+  );
+  if (itemsError) {
+    await supabase.from("purchases").delete().eq("id", purchaseId);
+    throw new Error(itemsError.message);
+  }
+  return purchaseId;
+}
+
+async function legacyUpdatePurchase(
+  supabase: SupabaseClient,
+  organizationId: string,
+  userId: string,
+  purchaseId: string,
+  contactId: string,
+  invoiceDate: string | null,
+  notes: string | null,
+  items: PurchaseItemInput[],
+): Promise<void> {
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+  const totalDiscount = items.reduce((sum, item) => sum + (item.discount || 0), 0);
+  const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
+  const total = subtotal - totalDiscount + totalTax;
+
+  const { error: purchaseError } = await supabase
+    .from("purchases")
+    .update({
+      contact_id: contactId,
+      invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
+      subtotal,
+      discount: totalDiscount,
+      tax: totalTax,
+      total,
+      notes,
+    })
+    .eq("id", purchaseId)
+    .eq("organization_id", organizationId)
+    .eq("status", "Draft");
+
+  if (purchaseError) throw new Error(purchaseError.message);
+
+  await supabase
+    .from("purchase_items")
+    .delete()
+    .eq("purchase_id", purchaseId)
+    .eq("organization_id", organizationId);
+
+  const { error: itemsError } = await supabase.from("purchase_items").insert(
+    items.map((item) => ({
+      organization_id: organizationId,
+      purchase_id: purchaseId,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      discount: item.discount || 0,
+      tax: item.tax || 0,
+      line_total: item.quantity * item.unit_price - (item.discount || 0) + (item.tax || 0),
+      created_by: userId,
+    })),
+  );
+  if (itemsError) throw new Error(itemsError.message);
+}
+
+async function legacyDeletePurchase(
+  supabase: SupabaseClient,
+  organizationId: string,
+  purchaseId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("purchases")
+    .delete()
+    .eq("id", purchaseId)
+    .eq("organization_id", organizationId)
+    .eq("status", "Draft");
+  if (error) throw new Error(error.message);
+}
+
 export async function createPurchase(formData: FormData) {
-  const { supabase, organizationId } = await getWorkspaceMembership();
+  const { supabase, organizationId, user } = await getWorkspaceMembership();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
@@ -68,14 +201,19 @@ export async function createPurchase(formData: FormData) {
     if (!contactId) throw new Error("Please select a supplier contact.");
     const items = parseItems(formData);
 
-    // Single atomic transaction server-side: header + lines, server totals.
-    ({ purchase_id: purchaseId } = await createPurchaseDraft(supabase, {
-      organizationId,
-      contactId,
-      invoiceDate,
-      notes,
-      items,
-    }));
+    try {
+      // Single atomic transaction server-side: header + lines, server totals.
+      ({ purchase_id: purchaseId } = await createPurchaseDraft(supabase, {
+        organizationId,
+        contactId,
+        invoiceDate,
+        notes,
+        items,
+      }));
+    } catch (error) {
+      if (!isMissingRpc(error)) throw error;
+      purchaseId = await legacyCreatePurchase(supabase, organizationId, user.id, contactId, invoiceDate, notes, items);
+    }
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/new", error.message);
     errorRedirect("/purchases/new", "Unable to create purchase.");
@@ -85,7 +223,7 @@ export async function createPurchase(formData: FormData) {
 }
 
 export async function updatePurchase(formData: FormData) {
-  const { supabase } = await getWorkspaceMembership();
+  const { supabase, organizationId, user } = await getWorkspaceMembership();
   const purchaseId = String(formData.get("purchase_id") || "").trim();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
@@ -96,14 +234,19 @@ export async function updatePurchase(formData: FormData) {
     if (!contactId) throw new Error("Please select a supplier contact.");
     const items = parseItems(formData);
 
-    // Single atomic transaction server-side; line creators stay immutable.
-    await updatePurchaseDraft(supabase, {
-      purchaseId,
-      contactId,
-      invoiceDate,
-      notes,
-      items,
-    });
+    try {
+      // Single atomic transaction server-side; line creators stay immutable.
+      await updatePurchaseDraft(supabase, {
+        purchaseId,
+        contactId,
+        invoiceDate,
+        notes,
+        items,
+      });
+    } catch (error) {
+      if (!isMissingRpc(error)) throw error;
+      await legacyUpdatePurchase(supabase, organizationId, user.id, purchaseId, contactId, invoiceDate, notes, items);
+    }
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
     errorRedirect("/purchases/" + purchaseId, "Unable to update purchase.");
@@ -131,11 +274,16 @@ export async function cancelPurchase(formData: FormData) {
 }
 
 export async function deletePurchase(formData: FormData) {
-  const { supabase } = await getWorkspaceMembership();
+  const { supabase, organizationId } = await getWorkspaceMembership();
   const purchaseId = String(formData.get("purchase_id") || "").trim();
 
   try {
-    await deletePurchaseDraft(supabase, purchaseId);
+    try {
+      await deletePurchaseDraft(supabase, purchaseId);
+    } catch (error) {
+      if (!isMissingRpc(error)) throw error;
+      await legacyDeletePurchase(supabase, organizationId, purchaseId);
+    }
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
     errorRedirect("/purchases/" + purchaseId, "Unable to delete purchase.");
