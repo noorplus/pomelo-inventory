@@ -3,6 +3,7 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
 export async function updateOrganization(formData: FormData) {
+  "use server";
   const { supabase, organizationId } = await getWorkspaceMembership();
   const organizationName = String(formData.get("organization_name") || "").trim();
   const email = String(formData.get("email") || "").trim();
@@ -26,6 +27,7 @@ export async function updateOrganization(formData: FormData) {
 }
 
 export async function updateCurrentUser(formData: FormData) {
+  "use server";
   const { supabase, user } = await getWorkspaceMembership();
   const fullName = String(formData.get("full_name") || "").trim();
 
