@@ -1,5 +1,5 @@
-import WorkspaceLoading from "@/app/components/workspace-loading";
+import PageSkeleton from "@/app/components/page-skeleton";
 
 export default function Loading() {
-  return <WorkspaceLoading />;
+  return <PageSkeleton variant="dashboard" />;
 }
