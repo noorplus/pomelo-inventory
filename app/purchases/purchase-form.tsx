@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 type Product = { id: string; product_name: string; retail_price: number; uom_id: string };
 type Contact = { id: string; id_no: number; name: string; phone: string | null };
-type Item = { product_id: string; quantity: number; unit_price: number; discount: number; tax: number };
+type Item = { id?: string; product_id: string; quantity: number; unit_price: number; discount: number; tax: number };
 
 type Props = {
   products: Product[];
