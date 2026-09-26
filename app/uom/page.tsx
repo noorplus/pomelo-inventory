@@ -8,15 +8,12 @@ import { getCachedUnitsOfMeasure } from "@/lib/cache/reference-data";
 export const dynamic = "force-dynamic";
 
 export default async function UomPage() {
-  const { supabase, organizationId } = await getWorkspaceContext();
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
-  if (!accessToken) return null;
+  const { supabase, organizationId, user } = await getWorkspaceContext();
 
   let units: Awaited<ReturnType<typeof getCachedUnitsOfMeasure>> = [];
   let error: Error | null = null;
   try {
-    units = await getCachedUnitsOfMeasure(organizationId, accessToken);
+    units = await getCachedUnitsOfMeasure(supabase, organizationId, user.id);
   } catch (caught) {
     error = caught instanceof Error ? caught : new Error("Unable to load units.");
   }
