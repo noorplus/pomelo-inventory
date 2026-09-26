@@ -10,7 +10,7 @@ export default async function WorkspaceShell({ active, children }: Props) {
   const { user, organization, profile } = await getWorkspaceContext();
 
   const nav = [
-    ["system", "/", "⌂", "System"],
+    ["system", "/system", "⌂", "System"],
     ["contacts", "/contacts", "◎", "Contacts"],
     ["uom", "/uom", "◈", "UoM"],
     ["products", "/products", "▦", "Products"],
