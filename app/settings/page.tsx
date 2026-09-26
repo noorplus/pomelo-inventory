@@ -47,10 +47,23 @@ export async function updateCurrentUser(formData: FormData) {
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const params = await searchParams;
   const { supabase, user, organization, profile } = await getWorkspaceContext();
+  const { organizationId, organizationIds } = await getWorkspaceMembership();
 
   if (!organization) {
     return <WorkspaceError title="Organization unavailable" message="Your organization could not be found." />;
   }
+
+  const [
+    { count: productsCount },
+    { count: contactsCount },
+    { count: purchasesCount },
+    { count: salesCount },
+  ] = await Promise.all([
+    supabase.from("products").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("contacts").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("purchases").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+    supabase.from("sales").select("id", { count: "exact", head: true }).eq("organization_id", organizationId),
+  ]);
 
   const errorMessage =
     params.error === "organization-required"
@@ -87,6 +100,54 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           <span>Organization ID</span>
           <strong>#{organization.organization_number}</strong>
         </div>
+      </section>
+
+      <section className="section-heading">
+        <div>
+          <h2>Workspace</h2>
+          <p className="muted">The organization you are currently working in.</p>
+        </div>
+        <Link className="secondary-button" href="/organization">
+          ⇄ Switch Workspace ({organizationIds.length})
+        </Link>
+      </section>
+
+      <section className="welcome-card" aria-label="Current workspace">
+        <div>
+          <span className="section-kicker">ACTIVE WORKSPACE</span>
+          <h2>{organization.organization_name}</h2>
+          <p>Organization #{organization.organization_number} · {organization.status}</p>
+        </div>
+        <div className="org-number">
+          <span>You belong to</span>
+          <strong>{organizationIds.length} workspace{organizationIds.length === 1 ? "" : "s"}</strong>
+        </div>
+      </section>
+
+      <section className="section-heading">
+        <div>
+          <h2>Workspace Data</h2>
+          <p className="muted">Live record counts across your modules.</p>
+        </div>
+      </section>
+
+      <section className="summary-grid" aria-label="Workspace data overview">
+        <Link className="summary-card" href="/products">
+          <span>Products</span>
+          <strong>{productsCount ?? 0}</strong>
+        </Link>
+        <Link className="summary-card" href="/contacts">
+          <span>Contacts</span>
+          <strong>{contactsCount ?? 0}</strong>
+        </Link>
+        <Link className="summary-card" href="/purchases">
+          <span>Purchases</span>
+          <strong>{purchasesCount ?? 0}</strong>
+        </Link>
+        <Link className="summary-card" href="/sales">
+          <span>Sales</span>
+          <strong>{salesCount ?? 0}</strong>
+        </Link>
       </section>
 
       <section className="section-heading">

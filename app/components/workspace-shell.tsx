@@ -2,21 +2,66 @@ import Link from "next/link";
 import { SignOutButton } from "@/app/components/sign-out-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
-const nav = [
-  ["dashboard", "/", "⌂", "Dashboard"],
-  ["products", "/products", "▦", "Products"],
-  ["inventory", "/inventory", "▤", "Inventory"],
-  ["purchases", "/purchases", "↥", "Purchases"],
-  ["sales", "/sales", "↧", "Sales"],
-  ["accounting", "/accounting", "❖", "Accounting"],
-  ["contacts", "/contacts", "◎", "Contacts"],
-  ["reports", "/reports", "▣", "Reports"],
-  ["uom", "/uom", "◈", "UoM"],
-  ["settings", "/settings", "⚙", "Settings"],
-] as const;
+type NavItem = readonly [key: string, href: string, icon: string, label: string];
+type NavSection = { label: string; items: readonly NavItem[] };
+
+const sections: readonly NavSection[] = [
+  {
+    label: "OVERVIEW",
+    items: [
+      ["dashboard", "/", "⌂", "Dashboard"],
+      ["reports", "/reports", "▣", "Reports"],
+    ],
+  },
+  {
+    label: "OPERATIONS",
+    items: [
+      ["purchases", "/purchases", "↥", "Purchases"],
+      ["sales", "/sales", "↧", "Sales"],
+      ["inventory", "/inventory", "▤", "Inventory"],
+    ],
+  },
+  {
+    label: "FINANCE",
+    items: [["accounting", "/accounting", "❖", "Accounting"]],
+  },
+  {
+    label: "MASTERS",
+    items: [
+      ["products", "/products", "▦", "Products"],
+      ["contacts", "/contacts", "◎", "Contacts"],
+      ["uom", "/uom", "◈", "UoM"],
+    ],
+  },
+  {
+    label: "SYSTEM",
+    items: [
+      ["organizations", "/organization", "⇄", "Organizations"],
+      ["settings", "/settings", "⚙", "Settings"],
+    ],
+  },
+];
+
+function NavLinks({ active, className }: { active: string; className: string }) {
+  return (
+    <nav className={className} aria-label="Main navigation">
+      {sections.map((section) => (
+        <div key={section.label} className="nav-section">
+          <p className="nav-section-label">{section.label}</p>
+          {section.items.map(([key, href, icon, label]) => (
+            <Link key={key} className={active === key ? "active" : ""} href={href}>
+              <span>{icon}</span>
+              {label}
+            </Link>
+          ))}
+        </div>
+      ))}
+    </nav>
+  );
+}
 
 type Props = {
-  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases" | "sales" | "inventory" | "accounting" | "reports";
+  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases" | "sales" | "inventory" | "accounting" | "reports" | "organizations";
   children: React.ReactNode;
 };
 
@@ -38,13 +83,7 @@ export default async function WorkspaceShell({ active, children }: Props) {
           <div className="mobile-header-controls">
             <details className="mobile-menu">
               <summary aria-label="Open navigation menu">☰</summary>
-              <nav className="nav mobile-nav" aria-label="Main navigation">
-                {nav.map(([key, href, icon, label]) => (
-                  <Link key={key} className={active === key ? "active" : ""} href={href}>
-                    <span>{icon}</span>{label}
-                  </Link>
-                ))}
-              </nav>
+              <NavLinks active={active} className="nav mobile-nav" />
             </details>
             <div className="brand">
               <span className="brand-mark">P</span>
@@ -65,13 +104,7 @@ export default async function WorkspaceShell({ active, children }: Props) {
           </div>
         </div>
         <div className="workspace-label">WORKSPACE</div>
-        <nav className="nav desktop-nav" aria-label="Main navigation">
-          {nav.map(([key, href, icon, label]) => (
-            <Link key={key} className={active === key ? "active" : ""} href={href}>
-              <span>{icon}</span>{label}
-            </Link>
-          ))}
-        </nav>
+        <NavLinks active={active} className="nav desktop-nav" />
         <div className="sidebar-footer">
           <div className="sidebar-user">
             <div className="avatar">{initials || "U"}</div>

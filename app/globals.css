@@ -332,6 +332,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .profile-divider { height: 1px; margin: 5px 0; background: var(--border); }
 .profile-popover .ghost-button { width: 100%; border-color: #d0d5dd; background: #fff; color: #344054; }
 .profile-popover .ghost-button:hover { background: #f8fafc; }
+
+/* Grouped navigation sections (desktop sidebar + mobile menu) */
+.nav-section { display: grid; gap: 2px; }
+.nav-section-label {
+  margin: 10px 9px 3px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--sidebar-muted);
+}
+.nav-section:first-child .nav-section-label { margin-top: 2px; }
+.mobile-menu .mobile-nav .nav-section-label { color: #8b98ad; }
 @media (max-width: 900px) {
   .sidebar-header { width: 100%; }
   .mobile-header-controls { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 8px; }

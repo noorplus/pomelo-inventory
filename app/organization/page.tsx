@@ -33,7 +33,7 @@ export default async function OrganizationPage({ searchParams }: { searchParams:
     .order("organization_name");
 
   return (
-    <WorkspaceShell active="settings">
+    <WorkspaceShell active="organizations">
       <section className="form-page">
         <div className="form-page-header">
           <div>
