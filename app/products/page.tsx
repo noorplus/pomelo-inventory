@@ -16,7 +16,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const sort = ["product_name", "uom_id", "retail_price", "status"].includes(params.sort || "") ? String(params.sort) : "product_name";
   const direction = params.direction === "desc" ? "desc" : "asc";
 
-  const [{ data: units, error: unitsError }, productsResult] = await Promise.all([
+  const [unitsResult, productsResult] = await Promise.all([
     getCachedUnitsOfMeasure(organizationId, accessToken),
     (async () => {
       let query = supabase
@@ -38,7 +38,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     })(),
   ]);
 
-  const unitMap = new Map((units ?? []).map((unit) => [unit.id, unit.name]));
+  const units = unitsResult;
+  const unitMap = new Map(units.map((unit) => [unit.id, unit.name]));
   let products = productsResult.data ?? [];
 
   if (sort === "uom_id") {
@@ -48,7 +49,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     });
   }
 
-  const error = productsResult.error || unitsError;
+  const error = productsResult.error;
 
   return (
     <WorkspaceShell active="products">
