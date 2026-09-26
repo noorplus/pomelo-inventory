@@ -28,6 +28,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     supabase.from("products").select("id, product_name, retail_price, status, created_at, uom_id").eq("organization_id", organizationId).order("product_name"),
   ]);
 
+  const unitMap = new Map((units ?? []).map((unit) => [unit.id, unit.name]));
+
   const filteredProducts = (productsResult.data ?? []).filter((product) => {
     const matchesSearch = !search || product.product_name.toLowerCase().includes(search.toLowerCase());
     const matchesUom = !selectedUom || product.uom_id === selectedUom;
@@ -43,8 +45,6 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
     return direction === "asc" ? comparison : -comparison;
   });
   const error = productsResult.error || unitsError;
-  const unitMap = new Map((units ?? []).map((unit) => [unit.id, unit.name]));
-
   return (
     <WorkspaceShell active="products">
       <section className="module-toolbar">
@@ -76,6 +76,19 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       )}
     </WorkspaceShell>
   );
+}
+
+
+function SortableHeader({ label, field, search, uomId, status, sort, direction, className = "" }: { label: string; field: string; search: string; uomId: string; status: string; sort: string; direction: string; className?: string }) {
+  const nextDirection = sort === field && direction === "asc" ? "desc" : "asc";
+  const query = new URLSearchParams();
+  if (search) query.set("search", search);
+  if (uomId) query.set("uom_id", uomId);
+  if (status) query.set("status", status);
+  query.set("sort", field);
+  query.set("direction", nextDirection);
+  const indicator = sort === field ? (direction === "asc" ? " ↑" : " ↓") : "";
+  return <th className={"sortable-header " + className}><Link href={"/products?" + query.toString()}>{label}{indicator}</Link></th>;
 }
 
 function EmptyState({ icon, title, text }: { icon: string; title: string; text: string }) {
