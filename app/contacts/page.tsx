@@ -62,7 +62,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
               <SortableHeader label="Email" field="email" search={search} status={status} sort={sort} direction={direction} />
               <SortableHeader label="Address" field="address" search={search} status={status} sort={sort} direction={direction} />
               <SortableHeader label="Status" field="status" search={search} status={status} sort={sort} direction={direction} /></tr></thead>
-            <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><strong>{contact.name}</strong></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td></tr>)}</tbody>
+            <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><Link href={"/contacts/" + contact.id}><strong>{contact.name}</strong></Link></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td></tr>)}</tbody>
           </table></div>
           {!contacts?.length && <EmptyState icon="◎" title="No contacts found" text={search || status ? "Try changing your filters." : "Add your first customer or supplier contact."} />}
           <Pager
