@@ -18,6 +18,7 @@ type Props = {
   paymentAmount: number;
   candidates: InvoiceCandidate[];
   action: (formData: FormData) => Promise<void>;
+  initialTargetId?: string;
 };
 
 export default function PaymentAllocator({
@@ -26,12 +27,17 @@ export default function PaymentAllocator({
   paymentAmount,
   candidates,
   action,
+  initialTargetId,
 }: Props) {
   const [allocations, setAllocations] = useState<Record<string, number>>(() => {
-    // Initial auto-allocation attempt if candidates exist
+    // Initial auto-allocation: a pre-selected target (from a Pay link) is
+    // filled first, then any remainder flows to the other candidates.
+    const ordered = initialTargetId
+      ? [...candidates.filter((c) => c.id === initialTargetId), ...candidates.filter((c) => c.id !== initialTargetId)]
+      : candidates;
     let remaining = paymentAmount;
     const initial: Record<string, number> = {};
-    for (const c of candidates) {
+    for (const c of ordered) {
       if (remaining <= 0) break;
       const alloc = Math.min(remaining, c.outstanding);
       if (alloc > 0) {

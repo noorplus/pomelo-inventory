@@ -18,6 +18,14 @@ export async function createPayment(formData: FormData) {
   const paymentMethod = String(formData.get("payment_method") || "Cash").trim();
   const referenceNo = String(formData.get("reference_no") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
+  const targetKind = String(formData.get("target_kind") || "").trim().toLowerCase();
+  const targetId = String(formData.get("target_id") || "").trim();
+  const target =
+    ["sale", "purchase", "expense"].includes(targetKind) && /^[0-9a-f-]{36}$/i.test(targetId)
+      ? `?target=${targetKind}:${targetId}`
+      : "";
+  const newPath =
+    "/accounting/payments/new" + (target ? `?target_kind=${targetKind}&target_id=${targetId}` : "");
 
   let paymentId = "";
 
@@ -64,11 +72,11 @@ export async function createPayment(formData: FormData) {
 
     if (!paymentId) throw new Error("Unable to create payment.");
   } catch (error) {
-    if (error instanceof Error && error.message) errorRedirect("/accounting/payments/new", error.message);
-    errorRedirect("/accounting/payments/new", "Unable to create payment.");
+    if (error instanceof Error && error.message) errorRedirect(newPath, error.message);
+    errorRedirect(newPath, "Unable to create payment.");
   }
 
-  redirect("/accounting/payments/" + paymentId);
+  redirect("/accounting/payments/" + paymentId + target);
 }
 
 export async function confirmPaymentAction(formData: FormData) {

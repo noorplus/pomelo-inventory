@@ -10,6 +10,11 @@ type SearchParams = {
   type?: string;
   contact_id?: string;
   amount?: string;
+  sale_id?: string;
+  purchase_id?: string;
+  expense_id?: string;
+  target_kind?: string;
+  target_id?: string;
 };
 
 export default async function NewPaymentPage({
@@ -24,6 +29,24 @@ export default async function NewPaymentPage({
   const defaultContactId = query.contact_id || "";
   const defaultAmount = query.amount || "";
   const error = query.error ? decodeURIComponent(query.error) : "";
+
+  // Deep-link target: explicit target_* wins, legacy single-id params
+  // (sale_id / purchase_id / expense_id) are translated for older links.
+  const rawKind = String(query.target_kind || "").trim().toLowerCase();
+  const rawId = String(
+    query.target_id || query.sale_id || query.purchase_id || query.expense_id || "",
+  ).trim();
+  const targetKind = ["sale", "purchase", "expense"].includes(rawKind)
+    ? rawKind
+    : query.sale_id
+      ? "sale"
+      : query.purchase_id
+        ? "purchase"
+        : query.expense_id
+          ? "expense"
+          : "";
+  const targetId = /^[0-9a-f-]{36}$/i.test(rawId) ? rawId : "";
+  const hasTarget = targetKind !== "" && targetId !== "";
 
   const { data: contacts } = await supabase
     .from("contacts")
@@ -50,8 +73,17 @@ export default async function NewPaymentPage({
         </div>
 
         {error && <div className="form-error" role="alert">{error}</div>}
+        {hasTarget && (
+          <p className="form-hint">This payment will pre-allocate to the selected {targetKind} on the next step. You can still adjust amounts there.</p>
+        )}
 
         <form action={createPayment} className="purchase-form">
+          {hasTarget && (
+            <>
+              <input type="hidden" name="target_kind" value={targetKind} />
+              <input type="hidden" name="target_id" value={targetId} />
+            </>
+          )}
           <section className="data-card">
             <div className="form-section-heading">
               <div>

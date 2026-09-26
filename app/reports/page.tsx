@@ -106,6 +106,8 @@ const sumConfirmedBy = (
 
 type DueRow = {
   kind: string;
+  docId: string;
+  contactId: string | null;
   ref: string;
   contact: string;
   date: string;
@@ -114,6 +116,17 @@ type DueRow = {
   settled: number;
   returned: number;
   outstanding: number;
+};
+
+// One-click pay deep-link: prefilled draft + pre-selected allocation target.
+const payHref = (r: DueRow): string => {
+  const q = new URLSearchParams();
+  q.set("type", r.kind === "Sale" ? "In" : "Out");
+  if (r.contactId) q.set("contact_id", r.contactId);
+  q.set("amount", r.outstanding.toFixed(2));
+  q.set("target_kind", r.kind.toLowerCase());
+  q.set("target_id", r.docId);
+  return `/accounting/payments/new?${q.toString()}`;
 };
 
 export default async function ReportsPage({
@@ -149,27 +162,28 @@ export default async function ReportsPage({
       total?: unknown;
       amount?: unknown;
       status: string;
+      contact_id?: string | null;
       contacts: JoinedName;
     };
     const [{ data: salesRaw }, { data: purchasesRaw }, { data: expensesRaw }] =
       await Promise.all([
         supabase
           .from("sales")
-          .select("id, invoice_no, invoice_date, total, status, contacts(name)")
+          .select("id, invoice_no, invoice_date, total, status, contact_id, contacts(name)")
           .eq("organization_id", organizationId)
           .eq("status", "Confirmed")
           .order("invoice_date", { ascending: true })
           .limit(200),
         supabase
           .from("purchases")
-          .select("id, invoice_no, invoice_date, total, status, contacts(name)")
+          .select("id, invoice_no, invoice_date, total, status, contact_id, contacts(name)")
           .eq("organization_id", organizationId)
           .eq("status", "Confirmed")
           .order("invoice_date", { ascending: true })
           .limit(200),
         supabase
           .from("expenses")
-          .select("id, expense_no, expense_date, amount, status, contacts(name)")
+          .select("id, expense_no, expense_date, amount, status, contact_id, contacts(name)")
           .eq("organization_id", organizationId)
           .eq("status", "Confirmed")
           .order("expense_date", { ascending: true })
@@ -255,6 +269,8 @@ export default async function ReportsPage({
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Sale",
+        docId: s.id,
+        contactId: s.contact_id || null,
         ref: `#${s.invoice_no}`,
         contact: joinedName(s.contacts),
         date: s.invoice_date || "",
@@ -274,6 +290,8 @@ export default async function ReportsPage({
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Purchase",
+        docId: p.id,
+        contactId: p.contact_id || null,
         ref: `#${p.invoice_no}`,
         contact: joinedName(p.contacts),
         date: p.invoice_date || "",
@@ -292,6 +310,8 @@ export default async function ReportsPage({
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Expense",
+        docId: e.id,
+        contactId: e.contact_id || null,
         ref: e.expense_no || "",
         contact: joinedName(e.contacts),
         date: e.expense_date || "",
@@ -1114,6 +1134,7 @@ export default async function ReportsPage({
                     <th className="numeric">Settled</th>
                     <th className="numeric">Returned</th>
                     <th className="numeric">Outstanding</th>
+                    <th className="numeric">Pay</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1133,6 +1154,11 @@ export default async function ReportsPage({
                       <td className="numeric">{money(r.returned)}</td>
                       <td className="numeric">
                         <strong>{money(r.outstanding)}</strong>
+                      </td>
+                      <td className="numeric">
+                        <Link className="secondary-button pager-button" href={payHref(r)}>
+                          Pay ৳{r.outstanding.toFixed(0)}
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -1186,6 +1212,7 @@ export default async function ReportsPage({
                     <th className="numeric">Settled</th>
                     <th className="numeric">Returned</th>
                     <th className="numeric">Outstanding</th>
+                    <th className="numeric">Pay</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1205,6 +1232,11 @@ export default async function ReportsPage({
                       <td className="numeric">{money(r.returned)}</td>
                       <td className="numeric">
                         <strong>{money(r.outstanding)}</strong>
+                      </td>
+                      <td className="numeric">
+                        <Link className="secondary-button pager-button" href={payHref(r)}>
+                          Pay ৳{r.outstanding.toFixed(0)}
+                        </Link>
                       </td>
                     </tr>
                   ))}

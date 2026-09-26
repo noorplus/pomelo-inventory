@@ -13,7 +13,7 @@ import PaymentAllocator from "./payment-allocator";
 export const dynamic = "force-dynamic";
 
 type Params = { id: string };
-type SearchParams = { error?: string };
+type SearchParams = { error?: string; target?: string };
 
 export default async function PaymentDetailPage({
   params,
@@ -28,6 +28,11 @@ export default async function PaymentDetailPage({
   const error = query.error ? decodeURIComponent(query.error) : "";
 
   const orgName = organization?.organization_name || "Pomelo Inventory";
+
+  // Deep-link pre-selection (?target=sale:<uuid>): the allocator fills this
+  // candidate first. Silently ignored when it isn't a current candidate.
+  const targetMatch = /^(sale|purchase|expense):([0-9a-f-]{36})$/i.exec(String(query.target || "").trim());
+  const initialTargetId = targetMatch ? targetMatch[2] : undefined;
 
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
@@ -364,6 +369,7 @@ export default async function PaymentDetailPage({
             paymentAmount={Number(payment.amount)}
             candidates={candidates}
             action={confirmPaymentAction}
+            initialTargetId={initialTargetId}
           />
         )}
 
