@@ -39,12 +39,12 @@ export async function updateCurrentUser(formData: FormData) {
     .update({ full_name: fullName })
     .eq("id", user.id);
 
-  if (error) redirect("/?error=" + encodeURIComponent(error.message));
+  if (error) redirect("/settings?error=" + encodeURIComponent(error.message));
 
   redirect("/settings?saved=user");
 }
 
-export default async function SystemPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const params = await searchParams;
   const { supabase, user, organization, profile } = await getWorkspaceContext();
 
