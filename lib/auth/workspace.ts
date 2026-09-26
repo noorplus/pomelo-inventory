@@ -28,5 +28,5 @@ export const getWorkspaceContext = cache(async () => {
     accessToken,
   );
 
-  return { supabase, user, organizationId, organization, profile };
+  return { supabase, user, organizationId, organization, profile, accessToken };
 });
