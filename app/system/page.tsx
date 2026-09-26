@@ -38,14 +38,12 @@ export async function updateCurrentUser(formData: FormData) {
 
   if (error) redirect("/system?error=" + encodeURIComponent(error.message));
 
-  revalidatePath("/");
-  revalidatePath("/system");
   redirect("/system?saved=user");
 }
 
 export default async function SystemPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const params = await searchParams;
-  const { supabase, user, organizationId, organization, profile } = await getWorkspaceContext();
+  const { supabase, user, organization, profile } = await getWorkspaceContext();
 
   if (!organization) {
     return <WorkspaceError title="Organization unavailable" message="Your organization could not be found." />;
