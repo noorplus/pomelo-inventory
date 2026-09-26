@@ -2,7 +2,7 @@ import { SignOutButton } from "@/app/components/sign-out-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 type Props = {
-  active: "system" | "uom" | "products" | "contacts";
+  active: "dashboard" | "settings" | "uom" | "products" | "contacts";
   children: React.ReactNode;
 };
 
