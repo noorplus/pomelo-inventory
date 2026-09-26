@@ -13,7 +13,7 @@ export async function updateOrganization(formData: FormData) {
   const bin = String(formData.get("bin") || "").trim() || null;
 
   if (!organizationName || !email || !phoneNumber || !address) {
-    redirect("/system?error=organization-required");
+    redirect("/?error=organization-required");
   }
 
   const { error } = await supabase
@@ -21,9 +21,9 @@ export async function updateOrganization(formData: FormData) {
     .update({ organization_name: organizationName, email, phone_number: phoneNumber, address, tin, bin })
     .eq("id", organizationId);
 
-  if (error) redirect("/system?error=" + encodeURIComponent(error.message));
+  if (error) redirect("/?error=" + encodeURIComponent(error.message));
 
-  redirect("/system?saved=organization");
+  redirect("/?saved=organization");
 }
 
 export async function updateCurrentUser(formData: FormData) {
@@ -31,16 +31,16 @@ export async function updateCurrentUser(formData: FormData) {
   const { supabase, user } = await getWorkspaceMembership();
   const fullName = String(formData.get("full_name") || "").trim();
 
-  if (!fullName) redirect("/system?error=user-required");
+  if (!fullName) redirect("/?error=user-required");
 
   const { error } = await supabase
     .from("profiles")
     .update({ full_name: fullName })
     .eq("id", user.id);
 
-  if (error) redirect("/system?error=" + encodeURIComponent(error.message));
+  if (error) redirect("/?error=" + encodeURIComponent(error.message));
 
-  redirect("/system?saved=user");
+  redirect("/?saved=user");
 }
 
 export default async function SystemPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
@@ -159,5 +159,5 @@ function InfoItem({ label, value, wide = false, badge = false }: { label: string
 }
 
 function WorkspaceError({ title, message }: { title: string; message: string }) {
-  return <main className="auth-shell"><section className="auth-card"><div className="auth-brand"><span className="brand-mark">P</span><span>Pomelo Inventory</span></div><p className="eyebrow">WORKSPACE ERROR</p><h1>{title}</h1><p className="form-error" role="alert">{message}</p><a className="secondary-button" href="/auth/login">Return to sign in</a></section></main>;
+  return <main className="auth-shell"><section className="auth-card"><div className="auth-brand"><span className="brand-mark">P</span><span>Pomelo Inventory</span></div><p className="eyebrow">WORKSPACE ERROR</p><h1>{title}</h1><p className="form-error" role="alert">{message}</p><a className="secondary-button" href="/login">Return to sign in</a></section></main>;
 }
