@@ -23,11 +23,7 @@ export default function LoginPage() {
     setLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
+    if (error) { setError(error.message); setLoading(false); return; }
     router.replace("/");
     router.refresh();
   }
@@ -35,12 +31,13 @@ export default function LoginPage() {
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <div className="auth-brand">Pomelo Inventory</div>
+        <div className="auth-brand"><span className="brand-mark">P</span><span>Pomelo Inventory</span></div>
+        <p className="eyebrow">WELCOME BACK</p>
         <h1>Sign in</h1>
-        <p className="muted">Access your inventory workspace.</p>
+        <p className="muted">Access your inventory workspace securely.</p>
         <form onSubmit={submit} className="form">
-          <label>Email<input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-          <label>Password<input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+          <label>Email<input type="email" required autoComplete="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+          <label>Password<input type="password" required autoComplete="current-password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
           {error && <div className="form-error" role="alert">{error}</div>}
           <button className="primary-button" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</button>
         </form>
