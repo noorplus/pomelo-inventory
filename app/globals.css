@@ -351,3 +351,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .mobile-header-controls .brand { justify-content: center; font-size: 13px; }
   .profile-popover { width: min(270px, calc(100vw - 16px)); }
 }
+
+.product-form-page { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.product-form-page .primary-button { grid-column: 1 / -1; justify-self: start; min-width: 130px; }
+@media (min-width: 701px) {
+  .contact-filter:has(label:nth-child(3)) { grid-template-columns: minmax(220px,1fr) 160px 160px auto auto; }
+}
+@media (max-width: 700px) {
+  .product-form-page { grid-template-columns: 1fr; }
+  .product-form-page .primary-button { grid-column: auto; }
+}
