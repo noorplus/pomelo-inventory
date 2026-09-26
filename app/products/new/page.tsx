@@ -3,21 +3,23 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
+import { getCachedUnitsOfMeasure } from "@/lib/cache/reference-data";
 
 export const dynamic = "force-dynamic";
 
 type SearchParams = { error?: string };
 
 export default async function NewProductPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, accessToken } = await getWorkspaceContext();
   const params = await searchParams;
 
-  const { data: units, error: unitsError } = await supabase
-    .from("units_of_measure")
-    .select("id, name")
-    .eq("organization_id", organizationId)
-    .eq("status", "Active")
-    .order("name");
+  let units: Awaited<ReturnType<typeof getCachedUnitsOfMeasure>> = [];
+  let unitsError: Error | null = null;
+  try {
+    units = (await getCachedUnitsOfMeasure(organizationId, accessToken)).filter((unit) => unit.status === "Active");
+  } catch (error) {
+    unitsError = error instanceof Error ? error : new Error("Unable to load units of measure.");
+  }
 
   const errorMessage = params.error ? decodeURIComponent(params.error) : "";
 
