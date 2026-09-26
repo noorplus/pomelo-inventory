@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     else if (statusText !== "Active" && statusText !== "Inactive") errors.push(`Row ${line}: Status must be Active or Inactive.`);
     else {
       seenNames.add(key);
-      valid.push({ organization_id: organizationId, product_name: productName, uom_id: unitMap.get(uomName.toLowerCase())!, retail_price: price, status: statusText, created_by: user.id });
+      valid.push({ organization_id: organizationId, product_name: productName, uom_id: unitMap.get(uomName.toLowerCase())!, retail_price: price, status: statusText as "Active" | "Inactive", created_by: user.id });
     }
   });
 
