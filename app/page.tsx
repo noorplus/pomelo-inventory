@@ -1,3 +1,4 @@
+import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
@@ -55,21 +56,21 @@ export default async function DashboardPage() {
       </section>
 
       <section className="dashboard-grid" aria-label="Inventory overview">
-        <a className="dashboard-stat-card" href="/products">
+        <Link className="dashboard-stat-card" href="/products">
           <span className="section-kicker">PRODUCTS</span>
           <strong>{productsCount ?? 0}</strong>
           <span>Manage products</span>
-        </a>
-        <a className="dashboard-stat-card" href="/contacts">
+        </Link>
+        <Link className="dashboard-stat-card" href="/contacts">
           <span className="section-kicker">CONTACTS</span>
           <strong>{contactsCount ?? 0}</strong>
           <span>Manage contacts</span>
-        </a>
-        <a className="dashboard-stat-card" href="/uom">
+        </Link>
+        <Link className="dashboard-stat-card" href="/uom">
           <span className="section-kicker">UNITS</span>
           <strong>{uomCount ?? 0}</strong>
           <span>Manage units of measure</span>
-        </a>
+        </Link>
       </section>
 
       <section className="section-heading">
@@ -80,10 +81,10 @@ export default async function DashboardPage() {
       </section>
 
       <section className="quick-actions">
-        <a className="secondary-button" href="/products/new">+ Add product</a>
-        <a className="secondary-button" href="/contacts/new">+ Add contact</a>
-        <a className="secondary-button" href="/uom">Manage UoM</a>
-        <a className="secondary-button" href="/settings">Organization settings</a>
+        <Link className="secondary-button" href="/products/new">+ Add product</Link>
+        <Link className="secondary-button" href="/contacts/new">+ Add contact</Link>
+        <Link className="secondary-button" href="/uom">Manage UoM</Link>
+        <Link className="secondary-button" href="/settings">Organization settings</Link>
       </section>
     </WorkspaceShell>
   );
