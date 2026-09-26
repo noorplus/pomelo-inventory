@@ -1033,6 +1033,16 @@ begin
     raise exception 'Purchase inventory ledger is missing';
   end if;
 
+  if (
+    select count(*)
+    from public.account_transactions
+    where organization_id = v_org
+      and reference_type = 'Purchase'
+      and reference_id = p_purchase_id
+  ) <> 2 then
+    raise exception 'Purchase accounting ledger is incomplete';
+  end if;
+
   if exists (
     select 1
     from (
@@ -1270,6 +1280,16 @@ begin
     raise exception 'Sale inventory ledger is missing';
   end if;
 
+  if (
+    select count(*)
+    from public.account_transactions
+    where organization_id = v_org
+      and reference_type = 'Sale'
+      and reference_id = p_sale_id
+  ) <> 2 then
+    raise exception 'Sale accounting ledger is incomplete';
+  end if;
+
   if exists (
     select 1
     from (
@@ -1443,13 +1463,14 @@ begin
     raise exception 'Expense cannot be cancelled while confirmed payments are allocated to it';
   end if;
 
-  if not exists (
-    select 1 from public.account_transactions
+  if (
+    select count(*)
+    from public.account_transactions
     where organization_id = v_org
       and reference_type = 'Expense'
       and reference_id = p_expense_id
-  ) then
-    raise exception 'Expense accounting ledger is missing';
+  ) <> 2 then
+    raise exception 'Expense accounting ledger is incomplete';
   end if;
 
   insert into public.account_transactions (
@@ -1523,7 +1544,12 @@ begin
     raise exception 'A confirmed payment must have at least one allocation';
   end if;
 
-  select count(*), count(distinct coalesce(x.sale_id::text, x.purchase_id::text, x.expense_id::text))
+  select count(*),
+         count(distinct case
+           when x.sale_id is not null then 'sale:' || x.sale_id::text
+           when x.purchase_id is not null then 'purchase:' || x.purchase_id::text
+           when x.expense_id is not null then 'expense:' || x.expense_id::text
+         end)
     into v_count, v_key_count
   from jsonb_to_recordset(p_allocations) as x(
     sale_id uuid,
@@ -1741,12 +1767,23 @@ begin
 
   if v_status <> 'Confirmed' then raise exception 'Only Confirmed payments can be cancelled'; end if;
 
-  if not exists (
-    select 1 from public.payment_allocations
+  if (
+    select coalesce(sum(allocated_amount), 0)
+    from public.payment_allocations
     where organization_id = v_org
       and payment_id = p_payment_id
-  ) then
-    raise exception 'Payment allocation ledger is missing';
+  ) <> v_amount then
+    raise exception 'Payment allocation ledger is incomplete';
+  end if;
+
+  if (
+    select count(*)
+    from public.account_transactions
+    where organization_id = v_org
+      and reference_type = 'Payment'
+      and reference_id = p_payment_id
+  ) <> 2 then
+    raise exception 'Payment accounting ledger is incomplete';
   end if;
 
   if v_type = 'In' then
@@ -1916,7 +1953,7 @@ comment on function public.cancel_sale(uuid) is 'Atomically cancels a Confirmed 
 comment on function public.confirm_expense(uuid) is 'Atomically confirms a Draft expense and creates expense/payable accounting entries.';
 comment on function public.cancel_expense(uuid) is 'Atomically cancels a Confirmed expense after blocking active confirmed payment allocations.';
 comment on function public.confirm_payment(uuid, jsonb) is 'Atomically confirms a Draft payment with validated full-amount allocations and accounting entries.';
-comment on function public.cancel_payment(uuid) is 'Atomically cancels a Confirmed payment. Existing allocations remain as audit history but cease to count because outstanding sums only include Confirmed payments.';
+comment on function public.cancel_payment(uuid) is 'Atomically cancels a Confirmed payment after validating its complete allocation and accounting ledger. Existing allocations remain as audit history but cease to count because outstanding sums only include Confirmed payments.';
 comment on function public.purchase_outstanding(uuid) is 'Returns confirmed payment allocation balance due for a Confirmed purchase.';
 comment on function public.sale_outstanding(uuid) is 'Returns confirmed payment allocation balance due for a Confirmed sale.';
 comment on function public.expense_outstanding(uuid) is 'Returns confirmed payment allocation balance due for a Confirmed expense.';
