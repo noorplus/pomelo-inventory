@@ -9,6 +9,15 @@
 -- the payment service and a confirmed allocation blocks purchase cancellation.
 --
 -- No new tables are introduced.
+--
+-- NOTE (2026-09-27 hardening, logic below unchanged): DROP-before-redefine.
+-- PostgreSQL identifies a function by (name, argument types) and
+-- CREATE OR REPLACE cannot change the return type, so redefining the frozen
+-- confirm_/cancel_purchase(uuid) variants would abort this file on a database
+-- where they already exist. Dropping those two first makes the file apply
+-- cleanly in sequence.
+drop function if exists public.confirm_purchase(uuid);
+drop function if exists public.cancel_purchase(uuid);
 
 create or replace function public.create_purchase_draft(
   p_organization_id uuid,

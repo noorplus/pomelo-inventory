@@ -12,6 +12,20 @@
 --   * Financial/inventory reversal through append-only ledgers
 --
 -- No tables are added. Existing frozen schema remains unchanged.
+--
+-- NOTE (2026-09-27 hardening, logic below unchanged): DROP-before-redefine.
+-- PostgreSQL identifies a function by (name, argument types) and
+-- CREATE OR REPLACE cannot change the return type, so redefining the
+-- confirm_/cancel_ variants created by the preceding migration would abort
+-- this file. Dropping those same-signature variants first makes the file
+-- apply cleanly in sequence; everything dropped is recreated below.
+drop function if exists public.confirm_purchase(uuid);
+drop function if exists public.cancel_purchase(uuid);
+drop function if exists public.confirm_sale(uuid);
+drop function if exists public.cancel_sale(uuid);
+drop function if exists public.confirm_expense(uuid);
+drop function if exists public.cancel_expense(uuid);
+drop function if exists public.cancel_payment(uuid);
 
 create or replace function public.confirm_purchase(p_purchase_id uuid)
 returns void

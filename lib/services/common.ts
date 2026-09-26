@@ -32,6 +32,24 @@ export function toServiceError(error: unknown, fallback: string): ServiceError {
 
 export async function callRpc<T>(db: Db, fn: string, args: Record<string, unknown>, fallback: string): Promise<T> {
   const { data, error } = await db.rpc(fn, args);
-  if (error) throw toServiceError(error, fallback);
+  if (error) {
+    const code = typeof error.code === "string" ? error.code : "";
+    const raw = typeof error.message === "string" ? error.message : "";
+    // PostgREST schema cache only knows functions that exist in the LIVE
+    // database. This means a repo migration was never applied there.
+    if (code === "PGRST202" || /schema cache/i.test(raw)) {
+      throw new ServiceError(
+        `Database update pending: the live database does not have ${fn} yet. Apply the pending Supabase migrations, wait about a minute, then retry.`,
+        "PGRST202",
+      );
+    }
+    if (code === "42501" || /permission denied/i.test(raw)) {
+      throw new ServiceError(
+        `Database permission pending: the live database blocked ${fn}. Apply the pending Supabase migrations, then retry.`,
+        code || "42501",
+      );
+    }
+    throw toServiceError(error, fallback);
+  }
   return data as T;
 }

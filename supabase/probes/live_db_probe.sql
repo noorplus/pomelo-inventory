@@ -27,6 +27,7 @@ where n.nspname = 'public'
     'create_purchase_draft', 'update_purchase_draft', 'delete_purchase_draft',
     'purchase_outstanding', 'sale_outstanding', 'expense_outstanding',
     'next_payment_no', 'next_expense_no',
+    'record_stock_adjustment', 'return_purchase_items', 'return_sale_items',
     'next_purchase_invoice_no', 'next_sales_invoice_no',
     'create_organization'
   )
