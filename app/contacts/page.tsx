@@ -1,5 +1,7 @@
 import Link from "next/link";
+import CsvActions from "@/app/components/csv-actions";
 import WorkspaceShell from "@/app/components/workspace-shell";
+
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 export const dynamic = "force-dynamic";
@@ -14,9 +16,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const sort = ["id_no", "name", "phone", "email", "address", "status"].includes(params.sort || "") ? String(params.sort) : "id_no";
   const direction = params.direction === "desc" ? "desc" : "asc";
 
-  let query = supabase.from("contacts")
-    .select("id, id_no, name, phone, email, address, status")
-    .eq("organization_id", organizationId).order(sort, { ascending: direction === "asc" });
+  let query = supabase.from("contacts").select("id, id_no, name, phone, email, address, status").eq("organization_id", organizationId).order(sort, { ascending: direction === "asc" });
 
   if (search) {
     const escaped = search.replace(/[\\%,_]/g, (character) => `\\${character}`).replace(/,/g, "");
@@ -25,12 +25,19 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   if (status) query = query.eq("status", status);
 
   const { data: contacts, error } = await query;
+  const exportParams = new URLSearchParams();
+  if (search) exportParams.set("search", search);
+  if (status) exportParams.set("status", status);
+  const exportUrl = `/contacts/export${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
 
   return (
     <WorkspaceShell active="contacts">
       <section className="module-toolbar">
         <div><h1>Contacts</h1><p className="muted">Customers, suppliers, and other business contacts.</p></div>
-        <Link className="primary-button" href="/contacts/new">+ Add Contact</Link>
+        <div className="module-actions">
+          <Link className="primary-button" href="/contacts/new">+ Add Contact</Link>
+          <CsvActions exportUrl={exportUrl} importUrl="/contacts/import" />
+        </div>
       </section>
 
       <section className="filter-card" aria-label="Contact filters">
