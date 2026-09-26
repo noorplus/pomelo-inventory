@@ -1,7 +1,7 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
-import { cancelPurchase, confirmPurchase, updatePurchase } from "@/app/purchases/actions";
+import { cancelPurchase, confirmPurchase, deletePurchase, updatePurchase } from "@/app/purchases/actions";
 import PurchaseForm from "@/app/purchases/purchase-form";
 
 export const dynamic = "force-dynamic";
@@ -89,7 +89,10 @@ export default async function PurchaseDetailPage({
           />
           <section className="action-card">
             <div><strong>Ready to confirm?</strong><p className="muted">Make sure the items and totals are correct. Confirmation is a financial and inventory operation.</p></div>
-            <form action={confirmPurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="primary-button" type="submit">Confirm Purchase</button></form>
+            <div className="module-actions">
+              <form action={deletePurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="secondary-button" type="submit">Delete Draft</button></form>
+              <form action={confirmPurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="primary-button" type="submit">Confirm Purchase</button></form>
+            </div>
           </section>
         </section>
       </WorkspaceShell>
