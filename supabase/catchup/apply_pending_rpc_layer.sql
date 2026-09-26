@@ -5005,3 +5005,13 @@ grant execute on function public.create_purchase_draft(uuid, uuid, date, text, j
 grant execute on function public.update_purchase_draft(uuid, uuid, date, text, jsonb) to authenticated;
 grant execute on function public.create_sale_draft(uuid, uuid, date, text, jsonb) to authenticated;
 grant execute on function public.update_sale_draft(uuid, uuid, date, text, jsonb) to authenticated;
+
+-- ================= 20260927150000_contact_counters_rls.sql =================
+-- Pomelo Inventory - RLS on the contact counter table
+-- Repository migration only. Do NOT apply to Supabase unless explicitly requested.
+--
+-- public.contact_id_counters is fully revoked from anon/authenticated (only
+-- SECURITY DEFINER internals touch it), but it never got ENABLE ROW LEVEL
+-- SECURITY, which the Supabase security advisor flags. Enabling RLS with no
+-- policies and no grants changes nothing functionally. No new tables.
+alter table public.contact_id_counters enable row level security;
