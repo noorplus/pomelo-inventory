@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 type SearchParams = { search?: string; uom_id?: string; status?: string; sort?: string; direction?: string };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { supabase, organizationId, accessToken } = await getWorkspaceContext();
+  const { supabase, organizationId } = await getWorkspaceContext();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) return null;
   const params = await searchParams;
   const search = String(params.search || "").trim();
   const selectedUom = String(params.uom_id || "").trim();
