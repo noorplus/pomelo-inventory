@@ -2,7 +2,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-export const getWorkspaceContext = cache(async () => {
+export const getWorkspaceMembership = cache(async () => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -16,7 +16,15 @@ export const getWorkspaceContext = cache(async () => {
 
   if (!memberships?.length) redirect("/organization/create");
 
-  const organizationId = memberships[0].organization_id;
+  return {
+    supabase,
+    user,
+    organizationId: memberships[0].organization_id,
+  };
+});
+
+export const getWorkspaceContext = cache(async () => {
+  const { supabase, user, organizationId } = await getWorkspaceMembership();
 
   const [{ data: organization }, { data: profile }] = await Promise.all([
     supabase
