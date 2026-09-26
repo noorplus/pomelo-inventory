@@ -4,15 +4,18 @@ import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 const nav = [
   ["dashboard", "/", "⌂", "Dashboard"],
-  ["settings", "/settings", "⚙", "Settings"],
+  ["products", "/products", "▦", "Products"],
+  ["inventory", "/inventory", "▤", "Inventory"],
+  ["purchases", "/purchases", "↥", "Purchases"],
+  ["sales", "/sales", "↧", "Sales"],
+  ["accounting", "/accounting", "❖", "Accounting"],
   ["contacts", "/contacts", "◎", "Contacts"],
   ["uom", "/uom", "◈", "UoM"],
-  ["products", "/products", "▦", "Products"],
-  ["purchases", "/purchases", "↥", "Purchases"],
+  ["settings", "/settings", "⚙", "Settings"],
 ] as const;
 
 type Props = {
-  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases";
+  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases" | "sales" | "inventory" | "accounting";
   children: React.ReactNode;
 };
 

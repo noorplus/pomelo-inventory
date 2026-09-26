@@ -11,7 +11,7 @@ export function SignOutButton() {
   async function signOut() {
     setLoading(true);
     await createClient().auth.signOut();
-    router.replace("/auth/login");
+    router.replace("/login");
     router.refresh();
   }
 

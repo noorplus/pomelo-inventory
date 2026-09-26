@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
 
-type PurchaseItemInput = {
+type SaleItemInput = {
   id?: string;
   product_id: string;
   quantity: number;
@@ -12,14 +12,14 @@ type PurchaseItemInput = {
   tax?: number;
 };
 
-function parseItems(formData: FormData): PurchaseItemInput[] {
+function parseItems(formData: FormData): SaleItemInput[] {
   const raw = String(formData.get("items_json") || "[]");
   let items: unknown;
 
   try {
     items = JSON.parse(raw);
   } catch {
-    throw new Error("Invalid purchase items.");
+    throw new Error("Invalid sale items.");
   }
 
   if (!Array.isArray(items) || !items.length) {
@@ -55,16 +55,16 @@ function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
 }
 
-export async function createPurchase(formData: FormData) {
+export async function createSale(formData: FormData) {
   const { supabase, organizationId, user } = await getWorkspaceMembership();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
 
-  let purchaseId = "";
+  let saleId = "";
 
   try {
-    if (!contactId) throw new Error("Please select a supplier contact.");
+    if (!contactId) throw new Error("Please select a customer.");
     const items = parseItems(formData);
 
     const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
@@ -72,14 +72,14 @@ export async function createPurchase(formData: FormData) {
     const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
     const total = subtotal - totalDiscount + totalTax;
 
-    const { data: purchase, error: purchaseError } = await supabase
-      .from("purchases")
+    const { data: sale, error: saleError } = await supabase
+      .from("sales")
       .insert({
         organization_id: organizationId,
         contact_id: contactId,
         invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
         status: "Draft",
-        invoice_no: "000000", // Automatically replaced by trigger set_purchase_invoice_no
+        invoice_no: "000000",
         subtotal,
         discount: totalDiscount,
         tax: totalTax,
@@ -90,12 +90,12 @@ export async function createPurchase(formData: FormData) {
       .select("id")
       .single();
 
-    if (purchaseError) throw new Error(purchaseError.message);
-    purchaseId = purchase.id;
+    if (saleError) throw new Error(saleError.message);
+    saleId = sale.id;
 
     const itemsToInsert = items.map((item) => ({
       organization_id: organizationId,
-      purchase_id: purchaseId,
+      sale_id: saleId,
       product_id: item.product_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
@@ -105,29 +105,29 @@ export async function createPurchase(formData: FormData) {
       created_by: user.id,
     }));
 
-    const { error: itemsError } = await supabase.from("purchase_items").insert(itemsToInsert);
+    const { error: itemsError } = await supabase.from("sale_items").insert(itemsToInsert);
     if (itemsError) {
-      await supabase.from("purchases").delete().eq("id", purchaseId);
+      await supabase.from("sales").delete().eq("id", saleId);
       throw new Error(itemsError.message);
     }
   } catch (error) {
-    if (error instanceof Error && error.message) errorRedirect("/purchases/new", error.message);
-    errorRedirect("/purchases/new", "Unable to create purchase.");
+    if (error instanceof Error && error.message) errorRedirect("/sales/new", error.message);
+    errorRedirect("/sales/new", "Unable to create sale.");
   }
 
-  redirect("/purchases/" + purchaseId);
+  redirect("/sales/" + saleId);
 }
 
-export async function updatePurchase(formData: FormData) {
+export async function updateSale(formData: FormData) {
   const { supabase, organizationId, user } = await getWorkspaceMembership();
-  const purchaseId = String(formData.get("purchase_id") || "").trim();
+  const saleId = String(formData.get("sale_id") || "").trim();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
 
   try {
-    if (!purchaseId) throw new Error("Missing purchase ID.");
-    if (!contactId) throw new Error("Please select a supplier contact.");
+    if (!saleId) throw new Error("Missing sale ID.");
+    if (!contactId) throw new Error("Please select a customer.");
     const items = parseItems(formData);
 
     const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
@@ -135,8 +135,8 @@ export async function updatePurchase(formData: FormData) {
     const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
     const total = subtotal - totalDiscount + totalTax;
 
-    const { error: purchaseError } = await supabase
-      .from("purchases")
+    const { error: saleError } = await supabase
+      .from("sales")
       .update({
         contact_id: contactId,
         invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
@@ -146,21 +146,17 @@ export async function updatePurchase(formData: FormData) {
         total,
         notes,
       })
-      .eq("id", purchaseId)
+      .eq("id", saleId)
       .eq("organization_id", organizationId)
       .eq("status", "Draft");
 
-    if (purchaseError) throw new Error(purchaseError.message);
+    if (saleError) throw new Error(saleError.message);
 
-    await supabase
-      .from("purchase_items")
-      .delete()
-      .eq("purchase_id", purchaseId)
-      .eq("organization_id", organizationId);
+    await supabase.from("sale_items").delete().eq("sale_id", saleId).eq("organization_id", organizationId);
 
     const itemsToInsert = items.map((item) => ({
       organization_id: organizationId,
-      purchase_id: purchaseId,
+      sale_id: saleId,
       product_id: item.product_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
@@ -170,45 +166,45 @@ export async function updatePurchase(formData: FormData) {
       created_by: user.id,
     }));
 
-    const { error: itemsError } = await supabase.from("purchase_items").insert(itemsToInsert);
+    const { error: itemsError } = await supabase.from("sale_items").insert(itemsToInsert);
     if (itemsError) throw new Error(itemsError.message);
   } catch (error) {
-    if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
-    errorRedirect("/purchases/" + purchaseId, "Unable to update purchase.");
+    if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
+    errorRedirect("/sales/" + saleId, "Unable to update sale.");
   }
 
-  redirect("/purchases/" + purchaseId);
+  redirect("/sales/" + saleId);
 }
 
-export async function confirmPurchase(formData: FormData) {
+export async function confirmSale(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
-  const purchaseId = String(formData.get("purchase_id") || "").trim();
+  const saleId = String(formData.get("sale_id") || "").trim();
 
-  const { error } = await supabase.rpc("confirm_purchase", { p_purchase_id: purchaseId });
-  if (error) errorRedirect("/purchases/" + purchaseId, error.message);
-  redirect("/purchases/" + purchaseId);
+  const { error } = await supabase.rpc("confirm_sale", { p_sale_id: saleId });
+  if (error) errorRedirect("/sales/" + saleId, error.message);
+  redirect("/sales/" + saleId);
 }
 
-export async function cancelPurchase(formData: FormData) {
+export async function cancelSale(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
-  const purchaseId = String(formData.get("purchase_id") || "").trim();
+  const saleId = String(formData.get("sale_id") || "").trim();
 
-  const { error } = await supabase.rpc("cancel_purchase", { p_purchase_id: purchaseId });
-  if (error) errorRedirect("/purchases/" + purchaseId, error.message);
-  redirect("/purchases/" + purchaseId);
+  const { error } = await supabase.rpc("cancel_sale", { p_sale_id: saleId });
+  if (error) errorRedirect("/sales/" + saleId, error.message);
+  redirect("/sales/" + saleId);
 }
 
-export async function deletePurchase(formData: FormData) {
+export async function deleteSale(formData: FormData) {
   const { supabase, organizationId } = await getWorkspaceMembership();
-  const purchaseId = String(formData.get("purchase_id") || "").trim();
+  const saleId = String(formData.get("sale_id") || "").trim();
 
   const { error } = await supabase
-    .from("purchases")
+    .from("sales")
     .delete()
-    .eq("id", purchaseId)
+    .eq("id", saleId)
     .eq("organization_id", organizationId)
     .eq("status", "Draft");
 
-  if (error) errorRedirect("/purchases/" + purchaseId, error.message);
-  redirect("/purchases");
+  if (error) errorRedirect("/sales/" + saleId, error.message);
+  redirect("/sales");
 }
