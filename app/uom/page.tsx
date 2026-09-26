@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { updateTag } from "next/cache";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { getCachedUnitsOfMeasure } from "@/lib/cache/reference-data";
@@ -54,8 +55,10 @@ async function createUom(formData: FormData) {
   if (!memberships?.length) redirect("/organization/create");
   const name = String(formData.get("name") || "").trim();
   if (!name) return;
-  const { error } = await supabase.from("units_of_measure").insert({ organization_id: memberships[0].organization_id, name, created_by: user.id });
+  const organizationId = memberships[0].organization_id;
+  const { error } = await supabase.from("units_of_measure").insert({ organization_id: organizationId, name, created_by: user.id });
   if (error) return;
+  updateTag(`uom:${organizationId}`);
   redirect("/uom");
 }
 
