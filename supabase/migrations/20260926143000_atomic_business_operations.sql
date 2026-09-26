@@ -7,7 +7,7 @@ CREATE OR REPLACE FUNCTION public.cancel_expense(p_expense_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -81,7 +81,7 @@ CREATE OR REPLACE FUNCTION public.cancel_payment(p_payment_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -172,7 +172,7 @@ CREATE OR REPLACE FUNCTION public.cancel_purchase(p_purchase_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -314,7 +314,7 @@ CREATE OR REPLACE FUNCTION public.cancel_sale(p_sale_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -449,7 +449,7 @@ CREATE OR REPLACE FUNCTION public.confirm_expense(p_expense_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -511,7 +511,7 @@ CREATE OR REPLACE FUNCTION public.confirm_payment(p_payment_id uuid, p_allocatio
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -749,7 +749,7 @@ CREATE OR REPLACE FUNCTION public.confirm_purchase(p_purchase_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -872,7 +872,7 @@ CREATE OR REPLACE FUNCTION public.confirm_sale(p_sale_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
   v_org uuid;
@@ -981,7 +981,7 @@ CREATE OR REPLACE FUNCTION public.rpc_assert_member(p_organization_id uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO ''
-AS $function$;
+AS $function$
 declare
   v_user uuid := (select auth.uid());
 begin
