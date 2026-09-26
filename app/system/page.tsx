@@ -1,27 +1,9 @@
-'use server';
-
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import WorkspaceShell from "@/app/components/workspace-shell";
-import { createClient } from "@/lib/supabase/server";
-
-async function getMembership() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
-
-  const { data: memberships, error } = await supabase
-    .from("organization_users")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1);
-
-  if (error || !memberships?.length) redirect("/organization/create");
-  return { supabase, user, organizationId: memberships[0].organization_id };
-}
+import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
 export async function updateOrganization(formData: FormData) {
-  const { supabase, organizationId } = await getMembership();
+  const { supabase, organizationId } = await getWorkspaceMembership();
   const organizationName = String(formData.get("organization_name") || "").trim();
   const email = String(formData.get("email") || "").trim();
   const phoneNumber = String(formData.get("phone_number") || "").trim();
@@ -40,13 +22,11 @@ export async function updateOrganization(formData: FormData) {
 
   if (error) redirect("/system?error=" + encodeURIComponent(error.message));
 
-  revalidatePath("/");
-  revalidatePath("/system");
   redirect("/system?saved=organization");
 }
 
 export async function updateCurrentUser(formData: FormData) {
-  const { supabase, user } = await getMembership();
+  const { supabase, user } = await getWorkspaceMembership();
   const fullName = String(formData.get("full_name") || "").trim();
 
   if (!fullName) redirect("/system?error=user-required");
@@ -65,16 +45,7 @@ export async function updateCurrentUser(formData: FormData) {
 
 export default async function SystemPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const params = await searchParams;
-  const { supabase, user, organizationId } = await getMembership();
-
-  const [{ data: organization }, { data: profile }] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select("id, organization_number, organization_name, email, phone_number, address, tin, bin, status, created_at")
-      .eq("id", organizationId)
-      .single(),
-    supabase.from("profiles").select("full_name, created_at, updated_at").eq("id", user.id).single(),
-  ]);
+  const { supabase, user, organizationId, organization, profile } = await getWorkspaceContext();
 
   if (!organization) {
     return <WorkspaceError title="Organization unavailable" message="Your organization could not be found." />;
