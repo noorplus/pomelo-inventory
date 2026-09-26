@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 type UnitOfMeasure = {
   id: string;
   name: string;
@@ -14,7 +16,8 @@ const UOM_TTL_MS = 60_000;
 const uomCache = new Map<string, CacheEntry>();
 
 function cacheKey(organizationId: string, accessToken: string) {
-  return `${organizationId}:${accessToken}`;
+  const tokenHash = createHash("sha256").update(accessToken).digest("hex");
+  return `${organizationId}:${tokenHash}`;
 }
 
 export async function getCachedUnitsOfMeasure(
