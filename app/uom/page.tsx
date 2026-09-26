@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
