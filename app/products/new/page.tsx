@@ -10,16 +10,13 @@ export const dynamic = "force-dynamic";
 type SearchParams = { error?: string };
 
 export default async function NewProductPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { supabase, organizationId } = await getWorkspaceContext();
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
-  if (!accessToken) return null;
+  const { supabase, organizationId, user } = await getWorkspaceContext();
   const params = await searchParams;
 
   let units: Awaited<ReturnType<typeof getCachedUnitsOfMeasure>> = [];
   let unitsError: Error | null = null;
   try {
-    units = (await getCachedUnitsOfMeasure(organizationId, accessToken)).filter((unit) => unit.status === "Active");
+    units = (await getCachedUnitsOfMeasure(supabase, organizationId, user.id)).filter((unit) => unit.status === "Active");
   } catch (error) {
     unitsError = error instanceof Error ? error : new Error("Unable to load units of measure.");
   }
