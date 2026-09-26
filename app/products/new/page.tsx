@@ -10,7 +10,10 @@ export const dynamic = "force-dynamic";
 type SearchParams = { error?: string };
 
 export default async function NewProductPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { supabase, organizationId, accessToken } = await getWorkspaceContext();
+  const { supabase, organizationId } = await getWorkspaceContext();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) return null;
   const params = await searchParams;
 
   let units: Awaited<ReturnType<typeof getCachedUnitsOfMeasure>> = [];
