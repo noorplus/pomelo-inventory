@@ -835,7 +835,7 @@ create or replace function public.rpc_assert_member(p_organization_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -857,13 +857,13 @@ begin
 end;
 $func$;
 
-revoke all on function public.rpc_assert_member(uuid) from public;
+revoke all on function public.rpc_assert_member(uuid) from public, anon, authenticated;
 
 create or replace function public.confirm_purchase(p_purchase_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -985,7 +985,7 @@ create or replace function public.cancel_purchase(p_purchase_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -1031,6 +1031,29 @@ begin
       and movement_type = 'Purchase'
   ) then
     raise exception 'Purchase inventory ledger is missing';
+  end if;
+
+  if exists (
+    select 1
+    from (
+      select product_id, sum(quantity) as quantity
+      from public.purchase_items
+      where purchase_id = p_purchase_id and organization_id = v_org
+      group by product_id
+    ) i
+    full join (
+      select product_id, sum(quantity) as quantity
+      from public.inventory_movements
+      where organization_id = v_org
+        and reference_type = 'Purchase'
+        and reference_id = p_purchase_id
+        and movement_direction = 'In'
+        and movement_type = 'Purchase'
+      group by product_id
+    ) m using (product_id)
+    where coalesce(i.quantity, 0) <> coalesce(m.quantity, 0)
+  ) then
+    raise exception 'Purchase inventory ledger does not match purchase items';
   end if;
 
   for r in
@@ -1093,7 +1116,7 @@ create or replace function public.confirm_sale(p_sale_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -1201,7 +1224,7 @@ create or replace function public.cancel_sale(p_sale_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -1245,6 +1268,29 @@ begin
       and movement_type = 'Sale'
   ) then
     raise exception 'Sale inventory ledger is missing';
+  end if;
+
+  if exists (
+    select 1
+    from (
+      select product_id, sum(quantity) as quantity
+      from public.sale_items
+      where sale_id = p_sale_id and organization_id = v_org
+      group by product_id
+    ) i
+    full join (
+      select product_id, sum(quantity) as quantity
+      from public.inventory_movements
+      where organization_id = v_org
+        and reference_type = 'Sale'
+        and reference_id = p_sale_id
+        and movement_direction = 'Out'
+        and movement_type = 'Sale'
+      group by product_id
+    ) m using (product_id)
+    where coalesce(i.quantity, 0) <> coalesce(m.quantity, 0)
+  ) then
+    raise exception 'Sale inventory ledger does not match sale items';
   end if;
 
   for r in
@@ -1302,7 +1348,7 @@ create or replace function public.confirm_expense(p_expense_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -1363,7 +1409,7 @@ create or replace function public.cancel_expense(p_expense_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -1438,7 +1484,7 @@ create or replace function public.confirm_payment(
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -1447,6 +1493,7 @@ declare
   v_type public.payment_type;
   v_amount numeric(18,4);
   v_contact uuid;
+  v_payment_contact uuid;
   v_method public.payment_method;
   v_payment_no text;
   v_alloc_sum numeric(18,4);
@@ -1463,7 +1510,7 @@ begin
   end if;
 
   select organization_id, status, payment_type, amount, contact_id, payment_method, payment_no
-    into v_org, v_status, v_type, v_amount, v_contact, v_method, v_payment_no
+    into v_org, v_status, v_type, v_amount, v_payment_contact, v_method, v_payment_no
   from public.payments
   where id = p_payment_id
   for update;
@@ -1547,9 +1594,8 @@ begin
 
       if not found then raise exception 'Target Sale must be Confirmed and belong to the same organization'; end if;
 
-      if (select p.contact_id from public.payments p where p.id = p_payment_id) is not null
-         and v_contact <> (select p.contact_id from public.payments p where p.id = p_payment_id) then
-        raise exception 'Payment contact does not match Sale contact';
+      if v_payment_contact is null or v_contact <> v_payment_contact then
+        raise exception 'Payment contact must match Sale contact';
       end if;
 
       select coalesce(sum(pa.allocated_amount), 0)
@@ -1571,8 +1617,8 @@ begin
 
       if not found then raise exception 'Target Purchase must be Confirmed and belong to the same organization'; end if;
 
-      if v_contact <> (select p.contact_id from public.payments p where p.id = p_payment_id) then
-        raise exception 'Payment contact does not match Purchase contact';
+      if v_payment_contact is null or v_contact <> v_payment_contact then
+        raise exception 'Payment contact must match Purchase contact';
       end if;
 
       select coalesce(sum(pa.allocated_amount), 0)
@@ -1595,9 +1641,8 @@ begin
       if not found then raise exception 'Target Expense must be Confirmed and belong to the same organization'; end if;
 
       if v_contact is not null
-         and (select p.contact_id from public.payments p where p.id = p_payment_id) is not null
-         and v_contact <> (select p.contact_id from public.payments p where p.id = p_payment_id) then
-        raise exception 'Payment contact does not match Expense contact';
+         and (v_payment_contact is null or v_contact <> v_payment_contact) then
+        raise exception 'Payment contact must match Expense contact when the expense has a contact';
       end if;
 
       select coalesce(sum(pa.allocated_amount), 0)
@@ -1633,11 +1678,11 @@ begin
     )
     values
       (v_org, now(), 'Payment In - ' || v_method::text,
-       'Payment', p_payment_id, (select contact_id from public.payments where id = p_payment_id),
+       'Payment', p_payment_id, v_payment_contact,
        'Payment received - ' || v_payment_no,
        v_amount, 0, v_user),
       (v_org, now(), 'Payment In - Receivable Settlement',
-       'Payment', p_payment_id, (select contact_id from public.payments where id = p_payment_id),
+       'Payment', p_payment_id, v_payment_contact,
        'Receivable settlement - ' || v_payment_no,
        0, v_amount, v_user);
   else
@@ -1648,11 +1693,11 @@ begin
     )
     values
       (v_org, now(), 'Payment Out - Payable Settlement',
-       'Payment', p_payment_id, (select contact_id from public.payments where id = p_payment_id),
+       'Payment', p_payment_id, v_payment_contact,
        'Payable settlement - ' || v_payment_no,
        v_amount, 0, v_user),
       (v_org, now(), 'Payment Out - ' || v_method::text,
-       'Payment', p_payment_id, (select contact_id from public.payments where id = p_payment_id),
+       'Payment', p_payment_id, v_payment_contact,
        'Payment made - ' || v_payment_no,
        0, v_amount, v_user);
   end if;
@@ -1671,7 +1716,7 @@ create or replace function public.cancel_payment(p_payment_id uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
@@ -1750,7 +1795,7 @@ create or replace function public.purchase_outstanding(p_purchase_id uuid)
 returns numeric
 language plpgsql
 security invoker
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_org uuid;
@@ -1781,7 +1826,7 @@ create or replace function public.sale_outstanding(p_sale_id uuid)
 returns numeric
 language plpgsql
 security invoker
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_org uuid;
@@ -1812,7 +1857,7 @@ create or replace function public.expense_outstanding(p_expense_id uuid)
 returns numeric
 language plpgsql
 security invoker
-set search_path = public, pg_temp
+set search_path = ''
 as $func$
 declare
   v_org uuid;
@@ -1876,3 +1921,8 @@ comment on function public.purchase_outstanding(uuid) is 'Returns confirmed paym
 comment on function public.sale_outstanding(uuid) is 'Returns confirmed payment allocation balance due for a Confirmed sale.';
 comment on function public.expense_outstanding(uuid) is 'Returns confirmed payment allocation balance due for a Confirmed expense.';
 
+
+
+-- Workflow layer is frozen with the schema migration.
+-- Future changes to business rules must be introduced deliberately; do not edit
+-- already-deployed migration history in place after this migration is applied.
