@@ -8,10 +8,6 @@ export const getWorkspaceContext = cache(async () => {
 
   if (!user) redirect("/auth/login");
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const accessToken = sessionData.session?.access_token;
-  if (!accessToken) redirect("/auth/login");
-
   const { data: memberships } = await supabase
     .from("organization_users")
     .select("organization_id")
@@ -31,5 +27,5 @@ export const getWorkspaceContext = cache(async () => {
     supabase.from("profiles").select("full_name").eq("id", user.id).single(),
   ]);
 
-  return { supabase, user, organizationId, organization, profile, accessToken };
+  return { supabase, user, organizationId, organization, profile };
 });
