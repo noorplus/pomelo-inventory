@@ -17,24 +17,36 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
 
   const [{ data: units, error: unitsError }, productsResult] = await Promise.all([
     supabase.from("units_of_measure").select("id, name").eq("organization_id", organizationId).order("name"),
-    supabase.from("products").select("id, product_name, retail_price, status, created_at, uom_id").eq("organization_id", organizationId).order("product_name"),
+    (async () => {
+      let query = supabase
+        .from("products")
+        .select("id, product_name, retail_price, status, created_at, uom_id")
+        .eq("organization_id", organizationId);
+
+      if (search) query = query.ilike("product_name", `%${search.replace(/[\\%_]/g, "\\$&")}%`);
+      if (selectedUom) query = query.eq("uom_id", selectedUom);
+      if (status) query = query.eq("status", status);
+
+      if (sort !== "uom_id") {
+        query = query.order(sort, { ascending: direction === "asc" });
+      } else {
+        query = query.order("product_name");
+      }
+
+      return query;
+    })(),
   ]);
 
   const unitMap = new Map((units ?? []).map((unit) => [unit.id, unit.name]));
-  const filteredProducts = (productsResult.data ?? []).filter((product) => {
-    const matchesSearch = !search || product.product_name.toLowerCase().includes(search.toLowerCase());
-    const matchesUom = !selectedUom || product.uom_id === selectedUom;
-    const matchesStatus = !status || product.status === status;
-    return matchesSearch && matchesUom && matchesStatus;
-  });
-  const products = [...filteredProducts].sort((a, b) => {
-    let comparison = 0;
-    if (sort === "product_name") comparison = a.product_name.localeCompare(b.product_name);
-    else if (sort === "uom_id") comparison = (unitMap.get(a.uom_id) || "").localeCompare(unitMap.get(b.uom_id) || "");
-    else if (sort === "retail_price") comparison = Number(a.retail_price) - Number(b.retail_price);
-    else if (sort === "status") comparison = a.status.localeCompare(b.status);
-    return direction === "asc" ? comparison : -comparison;
-  });
+  let products = productsResult.data ?? [];
+
+  if (sort === "uom_id") {
+    products = [...products].sort((a, b) => {
+      const comparison = (unitMap.get(a.uom_id) || "").localeCompare(unitMap.get(b.uom_id) || "");
+      return direction === "asc" ? comparison : -comparison;
+    });
+  }
+
   const error = productsResult.error || unitsError;
 
   return (
