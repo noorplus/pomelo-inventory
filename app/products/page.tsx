@@ -5,7 +5,7 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = { search?: string; uom_id?: string; status?: string };
+type SearchParams = { search?: string; uom_id?: string; status?: string; sort?: string; direction?: string };
 
 export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const supabase = await createClient();
@@ -20,17 +20,27 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
   const search = String(params.search || "").trim();
   const selectedUom = String(params.uom_id || "").trim();
   const status = params.status === "Inactive" ? "Inactive" : params.status === "Active" ? "Active" : "";
+  const sort = ["product_name", "uom_id", "retail_price", "status"].includes(params.sort || "") ? String(params.sort) : "product_name";
+  const direction = params.direction === "desc" ? "desc" : "asc";
 
   const [{ data: units, error: unitsError }, productsResult] = await Promise.all([
     supabase.from("units_of_measure").select("id, name").eq("organization_id", organizationId).order("name"),
     supabase.from("products").select("id, product_name, retail_price, status, created_at, uom_id").eq("organization_id", organizationId).order("product_name"),
   ]);
 
-  const products = (productsResult.data ?? []).filter((product) => {
+  const filteredProducts = (productsResult.data ?? []).filter((product) => {
     const matchesSearch = !search || product.product_name.toLowerCase().includes(search.toLowerCase());
     const matchesUom = !selectedUom || product.uom_id === selectedUom;
     const matchesStatus = !status || product.status === status;
     return matchesSearch && matchesUom && matchesStatus;
+  });
+  const products = [...filteredProducts].sort((a, b) => {
+    let comparison = 0;
+    if (sort === "product_name") comparison = a.product_name.localeCompare(b.product_name);
+    else if (sort === "uom_id") comparison = (unitMap.get(a.uom_id) || "").localeCompare(unitMap.get(b.uom_id) || "");
+    else if (sort === "retail_price") comparison = Number(a.retail_price) - Number(b.retail_price);
+    else if (sort === "status") comparison = a.status.localeCompare(b.status);
+    return direction === "asc" ? comparison : -comparison;
   });
   const error = productsResult.error || unitsError;
   const unitMap = new Map((units ?? []).map((unit) => [unit.id, unit.name]));
@@ -55,7 +65,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load products: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{products.length} product{products.length === 1 ? "" : "s"}</strong>{(search || selectedUom || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table><thead><tr><th>Product</th><th>UoM</th><th className="numeric">Retail price</th><th>Status</th></tr></thead>
+          <div className="table-scroll"><table><thead><tr><SortableHeader label="Product" field="product_name" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} />
+              <SortableHeader label="UoM" field="uom_id" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} />
+              <SortableHeader label="Retail price" field="retail_price" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} className="numeric" />
+              <SortableHeader label="Status" field="status" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} /></tr></thead>
             <tbody>{products.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{unitMap.get(product.uom_id) || "—"}</td><td className="numeric"><span className="price-value">৳{Number(product.retail_price).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></td><td><span className="status-badge">{product.status}</span></td></tr>)}</tbody>
           </table></div>
           {!products.length && <EmptyState icon="▦" title="No products found" text={search || selectedUom || status ? "Try changing your filters." : "Add your first product."} />}
