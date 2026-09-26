@@ -113,12 +113,17 @@ export default function PurchaseForm({
                   const lineTotal = base - Number(item.discount || 0) + Number(item.tax || 0);
                   const prod = products.find((p) => p.id === item.product_id);
                   const currentStock = prod?.stock_quantity ?? 0;
+                  // A product picked in another row is hidden here, so the
+                  // same product cannot be selected twice in one document.
+                  const availableProducts = products.filter(
+                    (p) => p.id === item.product_id || !items.some((other, oi) => oi !== index && other.product_id === p.id),
+                  );
                   return (
                     <tr key={index}>
                       <td>
                         <select value={item.product_id} onChange={(event) => selectProduct(index, event.target.value)} required aria-label="Product">
                           <option value="" disabled>Select product</option>
-                          {products.map((product) => <option key={product.id} value={product.id}>{product.product_name} (Stock: {product.stock_quantity ?? 0})</option>)}
+                          {availableProducts.map((product) => <option key={product.id} value={product.id}>{product.product_name} (Stock: {product.stock_quantity ?? 0})</option>)}
                         </select>
                         {item.product_id && (
                           <span style={{ fontSize: "10px", color: "var(--muted)", display: "block", marginTop: "2px" }}>

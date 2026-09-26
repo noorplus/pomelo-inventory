@@ -182,6 +182,11 @@ export default function SalesForm({
                 const availableStock = prod?.stock_quantity ?? 0;
                 const isOutOfStock = availableStock <= 0;
                 const isInsufficient = item.quantity > availableStock;
+                // A product picked in another row is hidden here, so the
+                // same product cannot be selected twice in one document.
+                const availableProducts = products.filter(
+                  (p) => p.id === item.product_id || !items.some((other, oi) => oi !== index && other.product_id === p.id),
+                );
 
                 return (
                   <tr key={index}>
@@ -191,7 +196,7 @@ export default function SalesForm({
                         onChange={(e) => updateItem(index, { product_id: e.target.value })}
                         required
                       >
-                        {products.map((p) => (
+                        {availableProducts.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.product_name} (Stock: {p.stock_quantity ?? 0})
                           </option>
