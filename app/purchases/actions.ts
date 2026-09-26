@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
 
 type PurchaseItemInput = {
+  id?: string;
   product_id: string;
   quantity: number;
   unit_price: number;
@@ -28,6 +29,7 @@ function parseItems(formData: FormData): PurchaseItemInput[] {
   return items.map((item) => {
     const value = item as Record<string, unknown>;
     return {
+      id: value.id ? String(value.id) : undefined,
       product_id: String(value.product_id || ""),
       quantity: Number(value.quantity),
       unit_price: Number(value.unit_price),
@@ -108,4 +110,13 @@ export async function cancelPurchase(formData: FormData) {
   const { error } = await supabase.rpc("cancel_purchase", { p_purchase_id: purchaseId });
   if (error) errorRedirect("/purchases/" + purchaseId, error.message);
   redirect("/purchases/" + purchaseId);
+}
+
+export async function deletePurchase(formData: FormData) {
+  const { supabase } = await getWorkspaceMembership();
+  const purchaseId = String(formData.get("purchase_id") || "").trim();
+
+  const { error } = await supabase.rpc("delete_purchase_draft", { p_purchase_id: purchaseId });
+  if (error) errorRedirect("/purchases/" + purchaseId, error.message);
+  redirect("/purchases");
 }
