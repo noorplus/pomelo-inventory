@@ -1,12 +1,14 @@
 import Link from "next/link";
 import CsvActions from "@/app/components/csv-actions";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import Pager from "@/app/components/pager";
 
 import { getWorkspaceContext } from "@/lib/auth/workspace";
+import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = { search?: string; status?: string; sort?: string; direction?: string };
+type SearchParams = { search?: string; status?: string; sort?: string; direction?: string; page?: string };
 
 export default async function ContactsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const { supabase, organizationId } = await getWorkspaceContext();
@@ -15,8 +17,10 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   const status = params.status === "Inactive" ? "Inactive" : params.status === "Active" ? "Active" : "";
   const sort = ["id_no", "name", "phone", "email", "address", "status"].includes(params.sort || "") ? String(params.sort) : "id_no";
   const direction = params.direction === "desc" ? "desc" : "asc";
+  const page = parsePageParam(params.page);
+  const { from, to } = pageRange(page);
 
-  let query = supabase.from("contacts").select("id, id_no, name, phone, email, address, status").eq("organization_id", organizationId).order(sort, { ascending: direction === "asc" });
+  let query = supabase.from("contacts").select("id, id_no, name, phone, email, address, status", { count: "exact" }).eq("organization_id", organizationId).order(sort, { ascending: direction === "asc" }).range(from, to);
 
   if (search) {
     const escaped = search.replace(/[\\%,_]/g, (character) => `\\${character}`).replace(/,/g, "");
@@ -24,7 +28,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   }
   if (status) query = query.eq("status", status);
 
-  const { data: contacts, error } = await query;
+  const { data: contacts, error, count } = await query;
   const exportParams = new URLSearchParams();
   if (search) exportParams.set("search", search);
   if (status) exportParams.set("status", status);
@@ -61,6 +65,14 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
             <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><strong>{contact.name}</strong></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td></tr>)}</tbody>
           </table></div>
           {!contacts?.length && <EmptyState icon="◎" title="No contacts found" text={search || status ? "Try changing your filters." : "Add your first customer or supplier contact."} />}
+          <Pager
+            basePath="/contacts"
+            params={{ search: search || undefined, status: status || undefined, sort, direction }}
+            page={page}
+            shown={contacts?.length ?? 0}
+            total={count}
+            pageSize={PAGE_SIZE}
+          />
         </section>
       )}
     </WorkspaceShell>

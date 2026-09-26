@@ -13,8 +13,8 @@ export default async function NewPurchasePage({ searchParams }: { searchParams: 
   const params = await searchParams;
 
   const [{ data: contacts, error: contactsError }, { data: products, error: productsError }] = await Promise.all([
-    supabase.from("contacts").select("id, id_no, name, phone").eq("organization_id", organizationId).eq("status", "Active").order("name"),
-    supabase.from("products").select("id, product_name, retail_price, uom_id").eq("organization_id", organizationId).eq("status", "Active").order("product_name"),
+    supabase.from("contacts").select("id, id_no, name, phone").eq("organization_id", organizationId).eq("status", "Active").order("name").limit(500),
+    supabase.from("products").select("id, product_name, retail_price, uom_id").eq("organization_id", organizationId).eq("status", "Active").order("product_name").limit(500),
   ]);
 
   const error = contactsError?.message || productsError?.message || (params.error ? decodeURIComponent(params.error) : "");

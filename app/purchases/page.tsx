@@ -1,10 +1,12 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import Pager from "@/app/components/pager";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
+import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = { search?: string; status?: string; sort?: string; direction?: string };
+type SearchParams = { search?: string; status?: string; sort?: string; direction?: string; page?: string };
 
 export default async function PurchasesPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const { supabase, organizationId } = await getWorkspaceContext();
@@ -13,17 +15,20 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
   const status = ["Draft", "Confirmed", "Cancelled"].includes(String(params.status)) ? String(params.status) : "";
   const sort = ["invoice_no", "invoice_date", "total", "status"].includes(String(params.sort)) ? String(params.sort) : "invoice_date";
   const direction = params.direction === "asc" ? "asc" : "desc";
+  const page = parsePageParam(params.page);
+  const { from, to } = pageRange(page);
 
   let query = supabase
     .from("purchases")
-    .select("id, invoice_no, invoice_date, contact_id, total, status, contacts(name)")
+    .select("id, invoice_no, invoice_date, contact_id, total, status, contacts(name)", { count: "exact" })
     .eq("organization_id", organizationId)
-    .order(sort, { ascending: direction === "asc" });
+    .order(sort, { ascending: direction === "asc" })
+    .range(from, to);
 
   if (search) query = query.ilike("invoice_no", "%" + search.replace(/[\\%_]/g, "\\$&") + "%");
   if (status) query = query.eq("status", status);
 
-  const { data: purchases, error } = await query;
+  const { data: purchases, error, count } = await query;
 
   return (
     <WorkspaceShell active="purchases">
@@ -62,6 +67,14 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
             </tr>;
           })}</tbody></table></div>
           {!purchases?.length && <div className="empty-state"><div className="empty-icon">↥</div><div><h2>No purchases found</h2><p>{search || status ? "Try changing your filters." : "Create your first purchase invoice."}</p></div></div>}
+          <Pager
+            basePath="/purchases"
+            params={{ search: search || undefined, status: status || undefined, sort, direction }}
+            page={page}
+            shown={purchases?.length ?? 0}
+            total={count}
+            pageSize={PAGE_SIZE}
+          />
         </section>
       )}
     </WorkspaceShell>

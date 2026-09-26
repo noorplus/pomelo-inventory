@@ -13,6 +13,19 @@ export type PaymentAllocationInput = {
 // Payment Out -> Purchases/Expenses only; allocations must equal the full
 // payment amount and must not exceed any target's outstanding balance.
 
+// Serialized numbering (see 20260927100000_payment_expense_numbering.sql).
+// Never compute payment numbers client-side via count-then-insert: concurrent
+// creates would collide on the unique constraint.
+export async function nextPaymentNo(db: Db, organizationId: string): Promise<string> {
+  const data = await callRpc<string>(
+    db,
+    "next_payment_no",
+    { p_organization_id: organizationId },
+    "Unable to generate payment number.",
+  );
+  return data;
+}
+
 export async function confirmPayment(db: Db, paymentId: string, allocations: PaymentAllocationInput[]): Promise<string> {
   const data = await callRpc<string>(
     db,
