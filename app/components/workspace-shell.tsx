@@ -10,12 +10,13 @@ const nav = [
   ["sales", "/sales", "↧", "Sales"],
   ["accounting", "/accounting", "❖", "Accounting"],
   ["contacts", "/contacts", "◎", "Contacts"],
+  ["reports", "/reports", "▣", "Reports"],
   ["uom", "/uom", "◈", "UoM"],
   ["settings", "/settings", "⚙", "Settings"],
 ] as const;
 
 type Props = {
-  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases" | "sales" | "inventory" | "accounting";
+  active: "dashboard" | "settings" | "uom" | "products" | "contacts" | "purchases" | "sales" | "inventory" | "accounting" | "reports";
   children: React.ReactNode;
 };
 
@@ -79,6 +80,7 @@ export default async function WorkspaceShell({ active, children }: Props) {
               <span>{user.email}</span>
             </div>
           </div>
+          <Link className="filter-clear" href="/organization" title="Switch workspace">⇄ Switch</Link>
           <SignOutButton />
         </div>
       </aside>

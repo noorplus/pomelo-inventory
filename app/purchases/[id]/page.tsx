@@ -3,7 +3,7 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 import InvoiceDocument from "@/app/components/invoice-document";
 import PrintButton from "@/app/components/print-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
-import { cancelPurchase, confirmPurchase, deletePurchase, updatePurchase } from "@/app/purchases/actions";
+import { cancelPurchase, clonePurchase, confirmPurchase, deletePurchase, updatePurchase } from "@/app/purchases/actions";
 import PurchaseForm from "@/app/purchases/purchase-form";
 
 export const dynamic = "force-dynamic";
@@ -108,7 +108,7 @@ export default async function PurchaseDetailPage({
       <section className="form-page">
         <div className="form-page-header">
           <div><p className="eyebrow">PURCHASE • {purchase.status.toUpperCase()}</p><h1>Purchase {purchase.invoice_no}</h1><p className="muted">{purchase.invoice_date} · {contact?.name || "Unknown contact"}</p></div>
-          <div className="module-actions"><PrintButton /><Link className="secondary-button" href="/purchases">Back to Purchases</Link>{purchase.status === "Confirmed" && <form action={cancelPurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="secondary-button" type="submit">Cancel Purchase</button></form>}</div>
+          <div className="module-actions"><PrintButton /><Link className="secondary-button" href="/purchases">Back to Purchases</Link><form action={clonePurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="secondary-button" type="submit">⧉ Clone as Draft</button></form>{purchase.status === "Confirmed" && <Link className="secondary-button" href={`/purchases/${purchase.id}/return`}>+ Record Return</Link>}{purchase.status === "Confirmed" && <form action={cancelPurchase}><input type="hidden" name="purchase_id" value={purchase.id} /><button className="secondary-button" type="submit">Cancel Purchase</button></form>}</div>
         </div>
 
         {error && <div className="form-error" role="alert">{error}</div>}

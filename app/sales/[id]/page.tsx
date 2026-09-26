@@ -3,7 +3,7 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 import InvoiceDocument from "@/app/components/invoice-document";
 import PrintButton from "@/app/components/print-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
-import { cancelSale, confirmSale, deleteSale, updateSale } from "@/app/sales/actions";
+import { cancelSale, cloneSale, confirmSale, deleteSale, updateSale } from "@/app/sales/actions";
 import SalesForm from "@/app/sales/sales-form";
 
 export const dynamic = "force-dynamic";
@@ -134,9 +134,12 @@ export default async function SaleDetailPage({
               <h1>Edit Sale {sale.invoice_no}</h1>
               <p className="muted">Drafts can be edited. Confirming will deduct stock and record accounts receivable.</p>
             </div>
-            <Link className="secondary-button" href="/sales">
-              Back to Sales
-            </Link>
+            <div className="module-actions">
+              <PrintButton label="🖨 Print Quotation" />
+              <Link className="secondary-button" href="/sales">
+                Back to Sales
+              </Link>
+            </div>
           </div>
 
           <SalesForm
@@ -179,6 +182,40 @@ export default async function SaleDetailPage({
               </form>
             </div>
           </section>
+
+          <div className="print-area">
+            <InvoiceDocument
+              orgName={orgName}
+              orgPhone={organization?.phone_number}
+              orgEmail={organization?.email}
+              orgAddress={organization?.address}
+              title="QUOTATION"
+              docNo={"#" + sale.invoice_no}
+              date={sale.invoice_date}
+              status="Draft"
+              partyLabel="Customer"
+              partyName={contact?.name || "—"}
+              partyPhone={contact?.phone}
+              partyEmail={contact?.email}
+              lines={(items ?? []).map((item) => {
+                const product = Array.isArray(item.products) ? item.products[0] : item.products;
+                return {
+                  name: product?.product_name || "—",
+                  qty: Number(item.quantity),
+                  unitPrice: Number(item.unit_price),
+                  discount: Number(item.discount),
+                  tax: Number(item.tax),
+                  total: Number(item.line_total),
+                };
+              })}
+              lineMode="items"
+              subtotal={Number(sale.subtotal)}
+              discount={Number(sale.discount)}
+              tax={Number(sale.tax)}
+              total={Number(sale.total)}
+              notes={sale.notes}
+            />
+          </div>
         </section>
       </WorkspaceShell>
     );
@@ -203,6 +240,17 @@ export default async function SaleDetailPage({
             <Link className="secondary-button" href="/sales">
               Back to Sales
             </Link>
+            <form action={cloneSale}>
+              <input type="hidden" name="sale_id" value={sale.id} />
+              <button className="secondary-button" type="submit">
+                ⧉ Clone as Draft
+              </button>
+            </form>
+            {sale.status === "Confirmed" && (
+              <Link className="secondary-button" href={`/sales/${sale.id}/return`}>
+                + Record Return
+              </Link>
+            )}
             {sale.status === "Confirmed" && (
               <form action={cancelSale}>
                 <input type="hidden" name="sale_id" value={sale.id} />

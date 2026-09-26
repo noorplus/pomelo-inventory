@@ -108,6 +108,9 @@ export default async function InventoryPage({
           <p className="muted">Real-time stock on hand, inventory movements, stock receipts, and warehouse dispatch.</p>
         </div>
         <div className="module-actions">
+          <Link className="secondary-button" href="/inventory/adjust">
+            ⇄ Adjust Stock
+          </Link>
           <Link className="secondary-button" href="/purchases/new">
             + Receive Stock (Purchase)
           </Link>
@@ -181,6 +184,7 @@ export default async function InventoryPage({
               <span>
                 Total warehouse balance: <strong>{totalUnits.toLocaleString("en-BD")} units</strong>
               </span>
+              <Link className="filter-clear" href="/inventory/export">⇩ Export CSV</Link>
             </div>
             <div className="table-scroll">
               <table>

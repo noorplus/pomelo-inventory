@@ -54,6 +54,10 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   ]);
 
   const confirmedSalesTotal = (confirmedTotals ?? []).reduce((sum, s) => sum + Number(s.total || 0), 0);
+  const exportParams = new URLSearchParams();
+  if (search) exportParams.set("search", search);
+  if (status) exportParams.set("status", status);
+  const exportUrl = `/sales/export${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
 
   return (
     <WorkspaceShell active="sales">
@@ -64,6 +68,9 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
           <p className="muted">Manage customer invoices, stock dispatch, accounts receivable, and payment allocations.</p>
         </div>
         <div className="module-actions">
+          <Link className="secondary-button" href={exportUrl}>
+            ⇩ Export CSV
+          </Link>
           <Link className="primary-button" href="/sales/new">
             + New Sale
           </Link>

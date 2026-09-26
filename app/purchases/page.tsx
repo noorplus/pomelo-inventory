@@ -29,12 +29,16 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
   if (status) query = query.eq("status", status);
 
   const { data: purchases, error, count } = await query;
+  const exportParams = new URLSearchParams();
+  if (search) exportParams.set("search", search);
+  if (status) exportParams.set("status", status);
+  const exportUrl = `/purchases/export${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
 
   return (
     <WorkspaceShell active="purchases">
       <section className="module-toolbar">
         <div><h1>Purchases</h1><p className="muted">Purchase invoices, stock receipts, payables, and lifecycle status.</p></div>
-        <div className="module-actions"><Link className="primary-button" href="/purchases/new">+ New Purchase</Link></div>
+        <div className="module-actions"><Link className="secondary-button" href={exportUrl}>⇩ Export CSV</Link><Link className="primary-button" href="/purchases/new">+ New Purchase</Link></div>
       </section>
 
       <section className="filter-card" aria-label="Purchase filters">

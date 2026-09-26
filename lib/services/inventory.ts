@@ -1,4 +1,4 @@
-import { toServiceError, type Db } from "./common";
+import { callRpc, toServiceError, type Db } from "./common";
 
 export type StockRow = {
   product_id: string;
@@ -58,4 +58,61 @@ export async function listInventoryMovements(
   const { data, error } = await query;
   if (error) throw toServiceError(error, "Unable to load inventory movements.");
   return (data ?? []) as InventoryMovementRow[];
+}
+
+export type StockAdjustmentInput = {
+  organizationId: string;
+  productId: string;
+  quantity: number;
+  direction: "In" | "Out";
+  movementType: "Opening" | "Adjustment";
+  unitCost?: number | null;
+};
+
+export type ReturnLineInput = {
+  product_id: string;
+  quantity: number;
+};
+
+// Opening / Adjustment corrections (see
+// 20260927110000_inventory_adjustments_returns.sql). Never drive stock
+// negative on Out adjustments; one atomic transaction per call.
+export async function recordStockAdjustment(db: Db, input: StockAdjustmentInput): Promise<string> {
+  const data = await callRpc<string>(
+    db,
+    "record_stock_adjustment",
+    {
+      p_organization_id: input.organizationId,
+      p_product_id: input.productId,
+      p_quantity: input.quantity,
+      p_direction: input.direction,
+      p_movement_type: input.movementType,
+      p_unit_cost: input.unitCost ?? null,
+    },
+    "Unable to record stock adjustment.",
+  );
+  return data;
+}
+
+// Quantity-based returns against Confirmed invoices. Blocked while confirmed
+// payments are allocated; returns accumulate until the invoiced quantity is
+// fully returned. Returns the reversed financial amount.
+export async function returnPurchaseItems(db: Db, purchaseId: string, lines: ReturnLineInput[]): Promise<number> {
+  const data = await callRpc<number | string>(
+    db,
+    "return_purchase_items",
+    { p_purchase_id: purchaseId, p_lines: lines },
+    "Unable to return purchase items.",
+  );
+  return Number(data);
+}
+
+export async function returnSaleItems(db: Db, saleId: string, lines: ReturnLineInput[]): Promise<number> {
+  const data = await callRpc<number | string>(
+    db,
+    "return_sale_items",
+    { p_sale_id: saleId, p_lines: lines },
+    "Unable to return sale items.",
+  );
+  return Number(data);
 }

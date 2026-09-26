@@ -212,3 +212,77 @@ export async function deletePurchase(formData: FormData) {
   if (error) errorRedirect("/purchases/" + purchaseId, error.message);
   redirect("/purchases");
 }
+
+export async function clonePurchase(formData: FormData) {
+  const { supabase, organizationId, user } = await getWorkspaceMembership();
+  const sourceId = String(formData.get("purchase_id") || "").trim();
+
+  let newId = "";
+
+  try {
+    if (!sourceId) throw new Error("Missing purchase ID.");
+
+    const [{ data: source, error: sourceError }, { data: sourceItems, error: itemsError }] = await Promise.all([
+      supabase
+        .from("purchases")
+        .select("contact_id, subtotal, discount, tax, total, notes")
+        .eq("id", sourceId)
+        .eq("organization_id", organizationId)
+        .single(),
+      supabase
+        .from("purchase_items")
+        .select("product_id, quantity, unit_price, discount, tax, line_total")
+        .eq("purchase_id", sourceId)
+        .eq("organization_id", organizationId),
+    ]);
+
+    if (sourceError || !source) throw new Error("Source purchase not found.");
+    if (itemsError) throw new Error(itemsError.message);
+    if (!sourceItems?.length) throw new Error("Source purchase has no items to clone.");
+
+    const { data: created, error: createError } = await supabase
+      .from("purchases")
+      .insert({
+        organization_id: organizationId,
+        contact_id: source.contact_id,
+        invoice_date: new Date().toISOString().split("T")[0],
+        status: "Draft",
+        invoice_no: "000000", // Automatically replaced by trigger set_purchase_invoice_no
+        subtotal: source.subtotal,
+        discount: source.discount,
+        tax: source.tax,
+        total: source.total,
+        notes: source.notes,
+        created_by: user.id,
+      })
+      .select("id")
+      .single();
+
+    if (createError) throw new Error(createError.message);
+    newId = created.id;
+
+    const { error: linesError } = await supabase.from("purchase_items").insert(
+      sourceItems.map((item) => ({
+        organization_id: organizationId,
+        purchase_id: newId,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        discount: item.discount,
+        tax: item.tax,
+        line_total: item.line_total,
+        created_by: user.id,
+      })),
+    );
+
+    if (linesError) {
+      await supabase.from("purchases").delete().eq("id", newId);
+      throw new Error(linesError.message);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message) errorRedirect("/purchases/" + sourceId, error.message);
+    errorRedirect("/purchases/" + sourceId, "Unable to clone purchase.");
+  }
+
+  redirect("/purchases/" + newId);
+}

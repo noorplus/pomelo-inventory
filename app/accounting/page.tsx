@@ -177,6 +177,7 @@ export default async function AccountingPage({
           <div className="table-meta">
             <strong>{payments?.length ?? 0} payment(s)</strong>
             <span>Recorded customer collections and vendor payouts</span>
+            <Link className="filter-clear" href="/accounting/export?scope=payments">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
             <table>
@@ -258,6 +259,7 @@ export default async function AccountingPage({
           <div className="table-meta">
             <strong>{expenses?.length ?? 0} expense(s)</strong>
             <span>Operating and capital expenses</span>
+            <Link className="filter-clear" href="/accounting/export?scope=expenses">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
             <table>
@@ -386,6 +388,7 @@ export default async function AccountingPage({
           <div className="table-meta">
             <strong>{ledger?.length ?? 0} transaction(s)</strong>
             <span>Double-entry accounting journal entries</span>
+            <Link className="filter-clear" href="/accounting/export?scope=ledger">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
             <table>
