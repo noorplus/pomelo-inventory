@@ -1,4 +1,5 @@
-import { createHash } from "node:crypto";
+import { getCache } from "@vercel/functions";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type UnitOfMeasure = {
   id: string;
@@ -7,42 +8,24 @@ type UnitOfMeasure = {
   created_at?: string;
 };
 
-type CacheEntry = {
-  expiresAt: number;
-  units: UnitOfMeasure[];
-};
+function cacheKey(organizationId: string, userId: string) {
+  return `pomelo:uom:${organizationId}:${userId}`;
+}
 
-const UOM_TTL_MS = 60_000;
-const uomCache = new Map<string, CacheEntry>();
-
-function cacheKey(organizationId: string, accessToken: string) {
-  const tokenHash = createHash("sha256").update(accessToken).digest("hex");
-  return `${organizationId}:${tokenHash}`;
+function cacheTag(organizationId: string, userId: string) {
+  return `pomelo-uom-${organizationId}-${userId}`;
 }
 
 export async function getCachedUnitsOfMeasure(
+  supabase: SupabaseClient,
   organizationId: string,
-  accessToken: string,
+  userId: string,
 ) {
-  const key = cacheKey(organizationId, accessToken);
-  const now = Date.now();
-  const cached = uomCache.get(key);
+  const cache = getCache();
+  const key = cacheKey(organizationId, userId);
+  const cached = await cache.get(key) as UnitOfMeasure[] | undefined;
 
-  if (cached && cached.expiresAt > now) {
-    return cached.units;
-  }
-
-  if (cached) uomCache.delete(key);
-
-  const { createClient: createSupabaseClient } = await import("@supabase/supabase-js");
-  const supabase = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      auth: { persistSession: false, autoRefreshToken: false },
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-    },
-  );
+  if (cached) return cached;
 
   const { data, error } = await supabase
     .from("units_of_measure")
@@ -53,14 +36,18 @@ export async function getCachedUnitsOfMeasure(
   if (error) throw new Error(error.message);
 
   const units = data ?? [];
-  uomCache.set(key, { units, expiresAt: now + UOM_TTL_MS });
+  await cache.set(key, units, {
+    ttl: 60,
+    tags: [cacheTag(organizationId, userId)],
+    name: "organization-uom",
+  });
 
   return units;
 }
 
-export function invalidateCachedUnitsOfMeasure(
+export async function invalidateCachedUnitsOfMeasure(
   organizationId: string,
-  accessToken: string,
+  userId: string,
 ) {
-  uomCache.delete(cacheKey(organizationId, accessToken));
+  await getCache().expireTag(cacheTag(organizationId, userId));
 }
