@@ -11,10 +11,11 @@ export async function nextExpenseNo(db: Db, organizationId: string): Promise<str
   return data;
 }
 
-// Resilient numbering: prefers the serialized RPC, but falls back to the
-// legacy count-based number when the live database predates the numbering
-// migration (PGRST202). See nextPaymentNoResilient for the rationale.
-export async function nextExpenseNoResilient(db: Db, organizationId: string): Promise<string> {
+// Resilient numbering: prefers the serialized RPC, but falls back to a
+// count-based number when the live database predates the numbering
+// migration (PGRST202). The caller retries with a growing attempt offset on
+// unique violations. See nextPaymentNoResilient for the rationale.
+export async function nextExpenseNoResilient(db: Db, organizationId: string, attempt = 0): Promise<string> {
   try {
     return await nextExpenseNo(db, organizationId);
   } catch (error) {
@@ -24,7 +25,7 @@ export async function nextExpenseNoResilient(db: Db, organizationId: string): Pr
       .select("id", { count: "exact", head: true })
       .eq("organization_id", organizationId);
     if (countError) throw toServiceError(countError, "Unable to generate expense number.");
-    return `EXP-${String((count ?? 0) + 1).padStart(6, "0")}`;
+    return `EXP-${String((count ?? 0) + 1 + attempt).padStart(6, "0")}`;
   }
 }
 

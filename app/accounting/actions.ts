@@ -28,30 +28,41 @@ export async function createPayment(formData: FormData) {
       throw new Error("Invalid payment method.");
     }
 
-    // Serialized server-side numbering: count-then-insert would collide
-    // under concurrent creates (unique payment_no).
-    const paymentNo = await nextPaymentNoResilient(supabase, organizationId);
+    // Numbering retries on unique violations: after deleted rows or under
+    // concurrent creates a candidate number may already exist, so each retry
+    // advances it. (The serialized RPC path never collides, so this loop
+    // exits on the first try once migrations are applied.)
+    for (let attempt = 0; attempt < 8 && !paymentId; attempt++) {
+      const paymentNo = await nextPaymentNoResilient(supabase, organizationId, attempt);
 
-    const { data: payment, error } = await supabase
-      .from("payments")
-      .insert({
-        organization_id: organizationId,
-        payment_no: paymentNo,
-        payment_date: paymentDate,
-        payment_type: paymentType as "In" | "Out",
-        contact_id: contactId,
-        amount,
-        payment_method: paymentMethod as "Cash" | "Bank" | "Mobile Banking" | "Card" | "Other",
-        reference_no: referenceNo,
-        status: "Draft",
-        notes,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
+      const { data: payment, error } = await supabase
+        .from("payments")
+        .insert({
+          organization_id: organizationId,
+          payment_no: paymentNo,
+          payment_date: paymentDate,
+          payment_type: paymentType as "In" | "Out",
+          contact_id: contactId,
+          amount,
+          payment_method: paymentMethod as "Cash" | "Bank" | "Mobile Banking" | "Card" | "Other",
+          reference_no: referenceNo,
+          status: "Draft",
+          notes,
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
 
-    if (error) throw new Error(error.message);
-    paymentId = payment.id;
+      if (!error) {
+        paymentId = payment.id;
+      } else if (error.code === "23505" && attempt < 7) {
+        continue;
+      } else {
+        throw new Error(error.message);
+      }
+    }
+
+    if (!paymentId) throw new Error("Unable to create payment.");
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/accounting/payments/new", error.message);
     errorRedirect("/accounting/payments/new", "Unable to create payment.");
@@ -124,27 +135,36 @@ export async function createExpense(formData: FormData) {
     if (!description) throw new Error("Expense description is required.");
     if (isNaN(amount) || amount <= 0) throw new Error("Amount must be greater than zero.");
 
-    const expenseNo = await nextExpenseNoResilient(supabase, organizationId);
+    for (let attempt = 0; attempt < 8 && !expenseId; attempt++) {
+      const expenseNo = await nextExpenseNoResilient(supabase, organizationId, attempt);
 
-    const { data: expense, error } = await supabase
-      .from("expenses")
-      .insert({
-        organization_id: organizationId,
-        expense_no: expenseNo,
-        expense_date: expenseDate,
-        expense_category_id: categoryId,
-        contact_id: contactId,
-        description,
-        amount,
-        status: "Draft",
-        notes,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
+      const { data: expense, error } = await supabase
+        .from("expenses")
+        .insert({
+          organization_id: organizationId,
+          expense_no: expenseNo,
+          expense_date: expenseDate,
+          expense_category_id: categoryId,
+          contact_id: contactId,
+          description,
+          amount,
+          status: "Draft",
+          notes,
+          created_by: user.id,
+        })
+        .select("id")
+        .single();
 
-    if (error) throw new Error(error.message);
-    expenseId = expense.id;
+      if (!error) {
+        expenseId = expense.id;
+      } else if (error.code === "23505" && attempt < 7) {
+        continue;
+      } else {
+        throw new Error(error.message);
+      }
+    }
+
+    if (!expenseId) throw new Error("Unable to create expense.");
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/accounting/expenses/new", error.message);
     errorRedirect("/accounting/expenses/new", "Unable to create expense.");

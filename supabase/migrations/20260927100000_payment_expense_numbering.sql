@@ -2,12 +2,12 @@
 -- Repository migration only. Do NOT apply to Supabase unless explicitly requested.
 --
 -- The application previously generated payment_no / expense_no client-side via
--- count-then-insert (PAY-000001 / EXP-000001). Under concurrent creates two
--- transactions compute the same number and the second fails on the unique
--- constraint. These RPCs serialize numbering per organization by taking a row
--- lock on the organization before counting, so concurrent creates get distinct
--- numbers. Gaps may occur on rollback; numbers are never reused while the
--- referenced row still exists. No new tables.
+-- count-then-insert (PAY-000001 / EXP-000001). That breaks two ways: concurrent
+-- creates compute the same number, and deleted rows make count + 1 reuse an
+-- existing number (unique violation). These RPCs serialize numbering per
+-- organization by taking a row lock before reading the current MAXIMUM numeric
+-- suffix, so numbers stay ahead of every existing row even after deletes.
+-- Gaps may occur on rollback. No new tables.
 
 create or replace function public.next_payment_no(p_organization_id uuid)
 returns text
@@ -17,7 +17,7 @@ set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
-  v_count integer;
+  v_max integer;
 begin
   if v_user is null then
     raise exception 'Authentication required';
@@ -37,11 +37,13 @@ begin
     raise exception 'Organization not found';
   end if;
 
-  select count(*) into v_count
-  from public.payments
-  where organization_id = p_organization_id;
+  select coalesce(max(substring(p.payment_no from '([0-9]+)$')::integer), 0)
+    into v_max
+  from public.payments p
+  where p.organization_id = p_organization_id
+    and p.payment_no ~ '[0-9]+$';
 
-  return 'PAY-' || lpad((v_count + 1)::text, 6, '0');
+  return 'PAY-' || lpad((v_max + 1)::text, 6, '0');
 end;
 $func$;
 
@@ -53,7 +55,7 @@ set search_path = ''
 as $func$
 declare
   v_user uuid := (select auth.uid());
-  v_count integer;
+  v_max integer;
 begin
   if v_user is null then
     raise exception 'Authentication required';
@@ -73,11 +75,13 @@ begin
     raise exception 'Organization not found';
   end if;
 
-  select count(*) into v_count
-  from public.expenses
-  where organization_id = p_organization_id;
+  select coalesce(max(substring(e.expense_no from '([0-9]+)$')::integer), 0)
+    into v_max
+  from public.expenses e
+  where e.organization_id = p_organization_id
+    and e.expense_no ~ '[0-9]+$';
 
-  return 'EXP-' || lpad((v_count + 1)::text, 6, '0');
+  return 'EXP-' || lpad((v_max + 1)::text, 6, '0');
 end;
 $func$;
 
