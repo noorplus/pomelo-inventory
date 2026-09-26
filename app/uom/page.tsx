@@ -2,17 +2,20 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
+import { getCachedUnitsOfMeasure } from "@/lib/cache/reference-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function UomPage() {
-  const { supabase, organizationId } = await getWorkspaceContext();
+  const { supabase, organizationId, accessToken } = await getWorkspaceContext();
 
-  const { data: units, error } = await supabase
-    .from("units_of_measure")
-    .select("id, name, status, created_at")
-    .eq("organization_id", organizationId)
-    .order("name");
+  let units: Awaited<ReturnType<typeof getCachedUnitsOfMeasure>> = [];
+  let error: Error | null = null;
+  try {
+    units = await getCachedUnitsOfMeasure(organizationId, accessToken);
+  } catch (caught) {
+    error = caught instanceof Error ? caught : new Error("Unable to load units.");
+  }
 
   return (
     <WorkspaceShell active="uom">
