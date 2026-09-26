@@ -393,3 +393,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .filter-clear { min-height:30px; }
   .table-meta { min-height:34px; }
 }
+
+
+/* Sortable data-table headers */
+.sortable-header { padding: 0 !important; }
+.sortable-header a { display: block; padding: 8px 11px; color: inherit; }
+.sortable-header a:hover { color: var(--foreground); background: #eef2f6; }
