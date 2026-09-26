@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
+import { createSaleDraft, deleteSaleDraft, updateSaleDraft } from "@/lib/services/sales";
 
 type SaleItemInput = {
   id?: string;
@@ -56,7 +57,7 @@ function errorRedirect(path: string, message: string): never {
 }
 
 export async function createSale(formData: FormData) {
-  const { supabase, organizationId, user } = await getWorkspaceMembership();
+  const { supabase, organizationId } = await getWorkspaceMembership();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
@@ -67,49 +68,14 @@ export async function createSale(formData: FormData) {
     if (!contactId) throw new Error("Please select a customer.");
     const items = parseItems(formData);
 
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-    const totalDiscount = items.reduce((sum, item) => sum + (item.discount || 0), 0);
-    const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
-    const total = subtotal - totalDiscount + totalTax;
-
-    const { data: sale, error: saleError } = await supabase
-      .from("sales")
-      .insert({
-        organization_id: organizationId,
-        contact_id: contactId,
-        invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
-        status: "Draft",
-        invoice_no: "000000",
-        subtotal,
-        discount: totalDiscount,
-        tax: totalTax,
-        total,
-        notes,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
-
-    if (saleError) throw new Error(saleError.message);
-    saleId = sale.id;
-
-    const itemsToInsert = items.map((item) => ({
-      organization_id: organizationId,
-      sale_id: saleId,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      discount: item.discount || 0,
-      tax: item.tax || 0,
-      line_total: item.quantity * item.unit_price - (item.discount || 0) + (item.tax || 0),
-      created_by: user.id,
+    // Single atomic transaction server-side: header + lines, server totals.
+    ({ sale_id: saleId } = await createSaleDraft(supabase, {
+      organizationId,
+      contactId,
+      invoiceDate,
+      notes,
+      items,
     }));
-
-    const { error: itemsError } = await supabase.from("sale_items").insert(itemsToInsert);
-    if (itemsError) {
-      await supabase.from("sales").delete().eq("id", saleId);
-      throw new Error(itemsError.message);
-    }
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/new", error.message);
     errorRedirect("/sales/new", "Unable to create sale.");
@@ -119,7 +85,7 @@ export async function createSale(formData: FormData) {
 }
 
 export async function updateSale(formData: FormData) {
-  const { supabase, organizationId, user } = await getWorkspaceMembership();
+  const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
@@ -130,44 +96,14 @@ export async function updateSale(formData: FormData) {
     if (!contactId) throw new Error("Please select a customer.");
     const items = parseItems(formData);
 
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-    const totalDiscount = items.reduce((sum, item) => sum + (item.discount || 0), 0);
-    const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
-    const total = subtotal - totalDiscount + totalTax;
-
-    const { error: saleError } = await supabase
-      .from("sales")
-      .update({
-        contact_id: contactId,
-        invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
-        subtotal,
-        discount: totalDiscount,
-        tax: totalTax,
-        total,
-        notes,
-      })
-      .eq("id", saleId)
-      .eq("organization_id", organizationId)
-      .eq("status", "Draft");
-
-    if (saleError) throw new Error(saleError.message);
-
-    await supabase.from("sale_items").delete().eq("sale_id", saleId).eq("organization_id", organizationId);
-
-    const itemsToInsert = items.map((item) => ({
-      organization_id: organizationId,
-      sale_id: saleId,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      discount: item.discount || 0,
-      tax: item.tax || 0,
-      line_total: item.quantity * item.unit_price - (item.discount || 0) + (item.tax || 0),
-      created_by: user.id,
-    }));
-
-    const { error: itemsError } = await supabase.from("sale_items").insert(itemsToInsert);
-    if (itemsError) throw new Error(itemsError.message);
+    // Single atomic transaction server-side; line creators stay immutable.
+    await updateSaleDraft(supabase, {
+      saleId,
+      contactId,
+      invoiceDate,
+      notes,
+      items,
+    });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to update sale.");
@@ -195,17 +131,15 @@ export async function cancelSale(formData: FormData) {
 }
 
 export async function deleteSale(formData: FormData) {
-  const { supabase, organizationId } = await getWorkspaceMembership();
+  const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
 
-  const { error } = await supabase
-    .from("sales")
-    .delete()
-    .eq("id", saleId)
-    .eq("organization_id", organizationId)
-    .eq("status", "Draft");
-
-  if (error) errorRedirect("/sales/" + saleId, error.message);
+  try {
+    await deleteSaleDraft(supabase, saleId);
+  } catch (error) {
+    if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
+    errorRedirect("/sales/" + saleId, "Unable to delete sale.");
+  }
   redirect("/sales");
 }
 

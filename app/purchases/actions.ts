@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
+import { createPurchaseDraft, deletePurchaseDraft, updatePurchaseDraft } from "@/lib/services/purchases";
 
 type PurchaseItemInput = {
   id?: string;
@@ -56,7 +57,7 @@ function errorRedirect(path: string, message: string): never {
 }
 
 export async function createPurchase(formData: FormData) {
-  const { supabase, organizationId, user } = await getWorkspaceMembership();
+  const { supabase, organizationId } = await getWorkspaceMembership();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
@@ -67,49 +68,14 @@ export async function createPurchase(formData: FormData) {
     if (!contactId) throw new Error("Please select a supplier contact.");
     const items = parseItems(formData);
 
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-    const totalDiscount = items.reduce((sum, item) => sum + (item.discount || 0), 0);
-    const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
-    const total = subtotal - totalDiscount + totalTax;
-
-    const { data: purchase, error: purchaseError } = await supabase
-      .from("purchases")
-      .insert({
-        organization_id: organizationId,
-        contact_id: contactId,
-        invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
-        status: "Draft",
-        invoice_no: "000000", // Automatically replaced by trigger set_purchase_invoice_no
-        subtotal,
-        discount: totalDiscount,
-        tax: totalTax,
-        total,
-        notes,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
-
-    if (purchaseError) throw new Error(purchaseError.message);
-    purchaseId = purchase.id;
-
-    const itemsToInsert = items.map((item) => ({
-      organization_id: organizationId,
-      purchase_id: purchaseId,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      discount: item.discount || 0,
-      tax: item.tax || 0,
-      line_total: item.quantity * item.unit_price - (item.discount || 0) + (item.tax || 0),
-      created_by: user.id,
+    // Single atomic transaction server-side: header + lines, server totals.
+    ({ purchase_id: purchaseId } = await createPurchaseDraft(supabase, {
+      organizationId,
+      contactId,
+      invoiceDate,
+      notes,
+      items,
     }));
-
-    const { error: itemsError } = await supabase.from("purchase_items").insert(itemsToInsert);
-    if (itemsError) {
-      await supabase.from("purchases").delete().eq("id", purchaseId);
-      throw new Error(itemsError.message);
-    }
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/new", error.message);
     errorRedirect("/purchases/new", "Unable to create purchase.");
@@ -119,7 +85,7 @@ export async function createPurchase(formData: FormData) {
 }
 
 export async function updatePurchase(formData: FormData) {
-  const { supabase, organizationId, user } = await getWorkspaceMembership();
+  const { supabase } = await getWorkspaceMembership();
   const purchaseId = String(formData.get("purchase_id") || "").trim();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
@@ -130,48 +96,14 @@ export async function updatePurchase(formData: FormData) {
     if (!contactId) throw new Error("Please select a supplier contact.");
     const items = parseItems(formData);
 
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
-    const totalDiscount = items.reduce((sum, item) => sum + (item.discount || 0), 0);
-    const totalTax = items.reduce((sum, item) => sum + (item.tax || 0), 0);
-    const total = subtotal - totalDiscount + totalTax;
-
-    const { error: purchaseError } = await supabase
-      .from("purchases")
-      .update({
-        contact_id: contactId,
-        invoice_date: invoiceDate || new Date().toISOString().split("T")[0],
-        subtotal,
-        discount: totalDiscount,
-        tax: totalTax,
-        total,
-        notes,
-      })
-      .eq("id", purchaseId)
-      .eq("organization_id", organizationId)
-      .eq("status", "Draft");
-
-    if (purchaseError) throw new Error(purchaseError.message);
-
-    await supabase
-      .from("purchase_items")
-      .delete()
-      .eq("purchase_id", purchaseId)
-      .eq("organization_id", organizationId);
-
-    const itemsToInsert = items.map((item) => ({
-      organization_id: organizationId,
-      purchase_id: purchaseId,
-      product_id: item.product_id,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      discount: item.discount || 0,
-      tax: item.tax || 0,
-      line_total: item.quantity * item.unit_price - (item.discount || 0) + (item.tax || 0),
-      created_by: user.id,
-    }));
-
-    const { error: itemsError } = await supabase.from("purchase_items").insert(itemsToInsert);
-    if (itemsError) throw new Error(itemsError.message);
+    // Single atomic transaction server-side; line creators stay immutable.
+    await updatePurchaseDraft(supabase, {
+      purchaseId,
+      contactId,
+      invoiceDate,
+      notes,
+      items,
+    });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
     errorRedirect("/purchases/" + purchaseId, "Unable to update purchase.");
@@ -199,17 +131,15 @@ export async function cancelPurchase(formData: FormData) {
 }
 
 export async function deletePurchase(formData: FormData) {
-  const { supabase, organizationId } = await getWorkspaceMembership();
+  const { supabase } = await getWorkspaceMembership();
   const purchaseId = String(formData.get("purchase_id") || "").trim();
 
-  const { error } = await supabase
-    .from("purchases")
-    .delete()
-    .eq("id", purchaseId)
-    .eq("organization_id", organizationId)
-    .eq("status", "Draft");
-
-  if (error) errorRedirect("/purchases/" + purchaseId, error.message);
+  try {
+    await deletePurchaseDraft(supabase, purchaseId);
+  } catch (error) {
+    if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
+    errorRedirect("/purchases/" + purchaseId, "Unable to delete purchase.");
+  }
   redirect("/purchases");
 }
 

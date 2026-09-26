@@ -92,11 +92,20 @@ export default async function PaymentDetailPage({
 
       if (salesList && salesList.length > 0) {
         const saleIds = salesList.map((s) => s.id);
-        const { data: allocList } = await supabase
-          .from("payment_allocations")
-          .select("sale_id, allocated_amount, payments!inner(status)")
-          .eq("organization_id", organizationId)
-          .in("sale_id", saleIds);
+        const [{ data: allocList }, { data: returnList }] = await Promise.all([
+          supabase
+            .from("payment_allocations")
+            .select("sale_id, allocated_amount, payments!inner(status)")
+            .eq("organization_id", organizationId)
+            .in("sale_id", saleIds),
+          supabase
+            .from("account_transactions")
+            .select("reference_id, credit")
+            .eq("organization_id", organizationId)
+            .eq("reference_type", "Sale")
+            .in("reference_id", saleIds)
+            .like("transaction_type", "Sale Return%"),
+        ]);
 
         const paidBySale = new Map<string, number>();
         (allocList ?? []).forEach((a) => {
@@ -106,11 +115,17 @@ export default async function PaymentDetailPage({
           }
         });
 
+        const returnedBySale = new Map<string, number>();
+        ((returnList ?? []) as { reference_id: string; credit: number }[]).forEach((r) => {
+          returnedBySale.set(r.reference_id, (returnedBySale.get(r.reference_id) || 0) + Number(r.credit || 0));
+        });
+
         candidates = salesList
           .map((s) => {
             const tot = Number(s.total || 0);
             const pd = paidBySale.get(s.id) || 0;
-            const outstanding = Math.max(0, tot - pd);
+            const ret = returnedBySale.get(s.id) || 0;
+            const outstanding = Math.max(0, tot - pd - ret);
             return {
               id: s.id,
               type: "sale" as const,
@@ -156,6 +171,7 @@ export default async function PaymentDetailPage({
       const [
         { data: purchaseAllocList },
         { data: expenseAllocList },
+        { data: purchaseReturnList },
       ] = await Promise.all([
         purchaseIds.length > 0
           ? supabase
@@ -171,6 +187,15 @@ export default async function PaymentDetailPage({
               .eq("organization_id", organizationId)
               .in("expense_id", expenseIds)
           : Promise.resolve({ data: [] }),
+        purchaseIds.length > 0
+          ? supabase
+              .from("account_transactions")
+              .select("reference_id, debit")
+              .eq("organization_id", organizationId)
+              .eq("reference_type", "Purchase")
+              .in("reference_id", purchaseIds)
+              .like("transaction_type", "Purchase Return%")
+          : Promise.resolve({ data: [] }),
       ]);
 
       const paidByPurchase = new Map<string, number>();
@@ -179,6 +204,11 @@ export default async function PaymentDetailPage({
         if (p?.status === "Confirmed" && a.purchase_id) {
           paidByPurchase.set(a.purchase_id, (paidByPurchase.get(a.purchase_id) || 0) + Number(a.allocated_amount));
         }
+      });
+
+      const returnedByPurchase = new Map<string, number>();
+      ((purchaseReturnList ?? []) as { reference_id: string; debit: number }[]).forEach((r) => {
+        returnedByPurchase.set(r.reference_id, (returnedByPurchase.get(r.reference_id) || 0) + Number(r.debit || 0));
       });
 
       const paidByExpense = new Map<string, number>();
@@ -193,7 +223,8 @@ export default async function PaymentDetailPage({
         .map((p) => {
           const tot = Number(p.total || 0);
           const pd = paidByPurchase.get(p.id) || 0;
-          const outstanding = Math.max(0, tot - pd);
+          const ret = returnedByPurchase.get(p.id) || 0;
+          const outstanding = Math.max(0, tot - pd - ret);
           return {
             id: p.id,
             type: "purchase" as const,

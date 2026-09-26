@@ -112,6 +112,7 @@ type DueRow = {
   days: number;
   total: number;
   settled: number;
+  returned: number;
   outstanding: number;
 };
 
@@ -211,11 +212,46 @@ export default async function ReportsPage({
     const purchasePaid = sumConfirmedBy((purchaseAllocsRaw ?? []) as AllocRow[], "purchase_id");
     const expensePaid = sumConfirmedBy((expenseAllocsRaw ?? []) as AllocRow[], "expense_id");
 
+    // Posted return reversals shrink the balance exactly like the
+    // returns-aware outstanding RPCs define it. Batched, never per-row.
+    type ReturnRow = { reference_id: string; debit?: unknown; credit?: unknown };
+    const sumReturnsBy = (rows: ReturnRow[], col: "debit" | "credit"): Map<string, number> => {
+      const m = new Map<string, number>();
+      for (const r of rows) {
+        if (!r.reference_id) continue;
+        m.set(r.reference_id, (m.get(r.reference_id) || 0) + num(col === "debit" ? r.debit : r.credit));
+      }
+      return m;
+    };
+    const [{ data: saleReturnsRaw }, { data: purchaseReturnsRaw }] = await Promise.all([
+      saleIds.length
+        ? supabase
+            .from("account_transactions")
+            .select("reference_id, credit")
+            .eq("organization_id", organizationId)
+            .eq("reference_type", "Sale")
+            .in("reference_id", saleIds)
+            .like("transaction_type", "Sale Return%")
+        : Promise.resolve({ data: [] as ReturnRow[] }),
+      purchaseIds.length
+        ? supabase
+            .from("account_transactions")
+            .select("reference_id, debit")
+            .eq("organization_id", organizationId)
+            .eq("reference_type", "Purchase")
+            .in("reference_id", purchaseIds)
+            .like("transaction_type", "Purchase Return%")
+        : Promise.resolve({ data: [] as ReturnRow[] }),
+    ]);
+    const saleReturned = sumReturnsBy((saleReturnsRaw ?? []) as ReturnRow[], "credit");
+    const purchaseReturned = sumReturnsBy((purchaseReturnsRaw ?? []) as ReturnRow[], "debit");
+
     const rows: DueRow[] = [];
     for (const s of sales) {
       const total = num(s.total);
       const settled = salePaid.get(s.id) || 0;
-      const outstanding = total - settled;
+      const returned = saleReturned.get(s.id) || 0;
+      const outstanding = Math.max(0, total - settled - returned);
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Sale",
@@ -225,6 +261,7 @@ export default async function ReportsPage({
         days: daysOverdue(s.invoice_date || ""),
         total,
         settled,
+        returned,
         outstanding,
       });
       dueReceivable += outstanding;
@@ -232,7 +269,8 @@ export default async function ReportsPage({
     for (const p of purchases) {
       const total = num(p.total);
       const settled = purchasePaid.get(p.id) || 0;
-      const outstanding = total - settled;
+      const returned = purchaseReturned.get(p.id) || 0;
+      const outstanding = Math.max(0, total - settled - returned);
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Purchase",
@@ -242,6 +280,7 @@ export default async function ReportsPage({
         days: daysOverdue(p.invoice_date || ""),
         total,
         settled,
+        returned,
         outstanding,
       });
       duePayable += outstanding;
@@ -249,7 +288,7 @@ export default async function ReportsPage({
     for (const e of expenses) {
       const total = num(e.amount);
       const settled = expensePaid.get(e.id) || 0;
-      const outstanding = total - settled;
+      const outstanding = Math.max(0, total - settled);
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Expense",
@@ -259,6 +298,7 @@ export default async function ReportsPage({
         days: daysOverdue(e.expense_date || ""),
         total,
         settled,
+        returned: 0,
         outstanding,
       });
       duePayable += outstanding;
@@ -964,15 +1004,31 @@ export default async function ReportsPage({
           .in("sale_id", effSaleIds)
       : { data: [] as AllocRow[] };
     const receivedBySale = sumConfirmedBy((effAllocsRaw ?? []) as AllocRow[], "sale_id");
+    const { data: effReturnsRaw } = effSaleIds.length
+      ? await supabase
+          .from("account_transactions")
+          .select("reference_id, credit")
+          .eq("organization_id", organizationId)
+          .eq("reference_type", "Sale")
+          .in("reference_id", effSaleIds)
+          .like("transaction_type", "Sale Return%")
+      : { data: [] as { reference_id: string; credit: unknown }[] };
+    const returnedBySale = new Map<string, number>();
+    for (const r of (effReturnsRaw ?? []) as { reference_id: string; credit: unknown }[]) {
+      if (!r.reference_id) continue;
+      returnedBySale.set(r.reference_id, (returnedBySale.get(r.reference_id) || 0) + num(r.credit));
+    }
     const byMonth = new Map<string, EffMonth>();
     for (const s of effSales) {
       const m = monthKey(s.invoice_date);
       if (!m) continue;
       const billed = num(s.total);
       const received = receivedBySale.get(s.id) || 0;
+      const returned = returnedBySale.get(s.id) || 0;
       const entry = byMonth.get(m) || { month: m, billed: 0, received: 0, outstanding: 0, pct: 0 };
       entry.billed += billed;
       entry.received += received;
+      entry.outstanding += Math.max(0, billed - received - returned);
       byMonth.set(m, entry);
       effBilled += billed;
       effReceived += received;
@@ -980,7 +1036,6 @@ export default async function ReportsPage({
     effMonths = Array.from(byMonth.values())
       .map((e) => ({
         ...e,
-        outstanding: e.billed - e.received,
         pct: e.billed ? (e.received / e.billed) * 100 : 0,
       }))
       .sort((a, b) => (a.month < b.month ? 1 : a.month > b.month ? -1 : 0));
@@ -1057,6 +1112,7 @@ export default async function ReportsPage({
                     <th className="numeric">Days Overdue</th>
                     <th className="numeric">Total</th>
                     <th className="numeric">Settled</th>
+                    <th className="numeric">Returned</th>
                     <th className="numeric">Outstanding</th>
                   </tr>
                 </thead>
@@ -1074,6 +1130,7 @@ export default async function ReportsPage({
                       <td className="numeric">{r.days}</td>
                       <td className="numeric">{money(r.total)}</td>
                       <td className="numeric">{money(r.settled)}</td>
+                      <td className="numeric">{money(r.returned)}</td>
                       <td className="numeric">
                         <strong>{money(r.outstanding)}</strong>
                       </td>
@@ -1127,6 +1184,7 @@ export default async function ReportsPage({
                     <th>Date</th>
                     <th className="numeric">Total</th>
                     <th className="numeric">Settled</th>
+                    <th className="numeric">Returned</th>
                     <th className="numeric">Outstanding</th>
                   </tr>
                 </thead>
@@ -1144,6 +1202,7 @@ export default async function ReportsPage({
                       <td>{r.date}</td>
                       <td className="numeric">{money(r.total)}</td>
                       <td className="numeric">{money(r.settled)}</td>
+                      <td className="numeric">{money(r.returned)}</td>
                       <td className="numeric">
                         <strong>{money(r.outstanding)}</strong>
                       </td>

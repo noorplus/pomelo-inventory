@@ -41,18 +41,22 @@ export default async function PurchaseDetailPage({
     );
   }
 
-  const [{ data: items, error: itemsError }, { data: contacts }, { data: products }, { data: allocations }] = await Promise.all([
+  const [{ data: items, error: itemsError }, { data: contacts }, { data: products }, { data: allocations }, { data: returns }] = await Promise.all([
     supabase.from("purchase_items").select("id, product_id, quantity, unit_price, discount, tax, line_total, products(product_name, retail_price, uom_id)").eq("organization_id", organizationId).eq("purchase_id", id).order("created_at"),
     supabase.from("contacts").select("id, id_no, name, phone").eq("organization_id", organizationId).eq("status", "Active").order("name").limit(500),
     supabase.from("products").select("id, product_name, retail_price, uom_id").eq("organization_id", organizationId).eq("status", "Active").order("product_name").limit(500),
     supabase.from("payment_allocations").select("allocated_amount, payments!inner(status)").eq("organization_id", organizationId).eq("purchase_id", id),
+    supabase.from("account_transactions").select("debit").eq("organization_id", organizationId).eq("reference_type", "Purchase").eq("reference_id", id).like("transaction_type", "Purchase Return%"),
   ]);
 
   const paid = (allocations ?? []).reduce((sum, allocation) => {
     const payment = Array.isArray(allocation.payments) ? allocation.payments[0] : allocation.payments;
     return payment?.status === "Confirmed" ? sum + Number(allocation.allocated_amount) : sum;
   }, 0);
-  const due = Math.max(0, Number(purchase.total) - paid);
+  // Net due: posted return reversals shrink the payable, matching the
+  // returns-aware purchase_outstanding() definition.
+  const returned = (returns ?? []).reduce((sum, r) => sum + Number(r.debit || 0), 0);
+  const due = Math.max(0, Number(purchase.total) - paid - returned);
   const contact = Array.isArray(purchase.contacts) ? purchase.contacts[0] : purchase.contacts;
   const error = query.error ? decodeURIComponent(query.error) : "";
 

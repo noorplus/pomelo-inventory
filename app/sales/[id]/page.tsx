@@ -56,6 +56,7 @@ export default async function SaleDetailPage({
     { data: products },
     { data: stockList },
     { data: allocations },
+    { data: returns },
   ] = await Promise.all([
     supabase
       .from("sale_items")
@@ -86,6 +87,13 @@ export default async function SaleDetailPage({
       .select("allocated_amount, payments!inner(id, payment_no, payment_date, status, payment_method)")
       .eq("organization_id", organizationId)
       .eq("sale_id", id),
+    supabase
+      .from("account_transactions")
+      .select("credit")
+      .eq("organization_id", organizationId)
+      .eq("reference_type", "Sale")
+      .eq("reference_id", id)
+      .like("transaction_type", "Sale Return%"),
   ]);
 
   const stockMap = new Map<string, number>();
@@ -101,7 +109,10 @@ export default async function SaleDetailPage({
     const payment = Array.isArray(allocation.payments) ? allocation.payments[0] : allocation.payments;
     return payment?.status === "Confirmed" ? sum + Number(allocation.allocated_amount) : sum;
   }, 0);
-  const due = Math.max(0, Number(sale.total) - paid);
+  // Net due: posted return reversals shrink the receivable, matching the
+  // returns-aware sale_outstanding() definition.
+  const returned = (returns ?? []).reduce((sum, r) => sum + Number(r.credit || 0), 0);
+  const due = Math.max(0, Number(sale.total) - paid - returned);
   const contact = Array.isArray(sale.contacts) ? sale.contacts[0] : sale.contacts;
   const error = query.error ? decodeURIComponent(query.error) : "";
 

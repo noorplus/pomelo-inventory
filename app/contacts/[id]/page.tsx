@@ -203,6 +203,8 @@ export default async function ContactLedgerPage({ params }: { params: Promise<Pa
     { data: saleAllocs },
     { data: purchaseAllocs },
     { data: expenseAllocs },
+    { data: saleReturns },
+    { data: purchaseReturns },
   ] = await Promise.all([
     saleIds.length
       ? supabase
@@ -224,6 +226,26 @@ export default async function ContactLedgerPage({ params }: { params: Promise<Pa
           .select("expense_id, allocated_amount, payments!inner(payment_no, payment_date, status)")
           .eq("organization_id", organizationId)
           .in("expense_id", expenseIds)
+      : Promise.resolve({ data: [] as unknown[] }),
+    // Posted return reversals shrink the balance exactly like the
+    // returns-aware outstanding RPCs define it.
+    saleIds.length
+      ? supabase
+          .from("account_transactions")
+          .select("reference_id, transaction_date, credit")
+          .eq("organization_id", organizationId)
+          .eq("reference_type", "Sale")
+          .in("reference_id", saleIds)
+          .like("transaction_type", "Sale Return%")
+      : Promise.resolve({ data: [] as unknown[] }),
+    purchaseIds.length
+      ? supabase
+          .from("account_transactions")
+          .select("reference_id, transaction_date, debit")
+          .eq("organization_id", organizationId)
+          .eq("reference_type", "Purchase")
+          .in("reference_id", purchaseIds)
+          .like("transaction_type", "Purchase Return%")
       : Promise.resolve({ data: [] as unknown[] }),
   ]);
 
@@ -247,6 +269,29 @@ export default async function ContactLedgerPage({ params }: { params: Promise<Pa
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
 
+  type ReturnRow = {
+    reference_id: string;
+    transaction_date: string;
+    debit?: number;
+    credit?: number;
+  };
+
+  const returnSettlements = (
+    rows: unknown,
+    keyPrefix: string,
+    refLabel: string,
+    hrefOf: (referenceId: string) => string,
+  ) =>
+    ((rows ?? []) as ReturnRow[])
+      .map((r, i) => ({
+        key: `${keyPrefix}-${i}`,
+        date: String(r.transaction_date).slice(0, 10),
+        ref: refLabel,
+        href: hrefOf(r.reference_id),
+        amount: Number(r.debit ?? r.credit ?? 0),
+      }))
+      .filter((r) => r.amount > 0);
+
   const receivable = buildStatement(
     (sales ?? []).map((s) => ({
       key: `sale-${s.id}`,
@@ -256,7 +301,10 @@ export default async function ContactLedgerPage({ params }: { params: Promise<Pa
       status: s.status,
       amount: Number(s.total),
     })),
-    confirmedSettlements(saleAllocs as AllocRow[], (a, i) => `salloc-${i}`, () => "/accounting?tab=payments"),
+    [
+      ...confirmedSettlements(saleAllocs as AllocRow[], (a, i) => `salloc-${i}`, () => "/accounting?tab=payments"),
+      ...returnSettlements(saleReturns, "sreturn", "Return", (referenceId) => `/sales/${referenceId}`),
+    ],
   );
 
   const payable = buildStatement(
@@ -281,6 +329,7 @@ export default async function ContactLedgerPage({ params }: { params: Promise<Pa
     [
       ...confirmedSettlements(purchaseAllocs as AllocRow[], (a, i) => `palloc-${i}`, () => "/accounting?tab=payments"),
       ...confirmedSettlements(expenseAllocs as AllocRow[], (a, i) => `ealloc-${i}`, () => "/accounting?tab=payments"),
+      ...returnSettlements(purchaseReturns, "preturn", "Return", (referenceId) => `/purchases/${referenceId}`),
     ],
   );
 
