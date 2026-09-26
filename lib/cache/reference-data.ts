@@ -19,36 +19,6 @@ function createTokenClient(accessToken: string) {
   );
 }
 
-export async function getCachedWorkspaceReferenceData(
-  organizationId: string,
-  userId: string,
-  accessToken: string,
-) {
-  const getCached = unstable_cache(
-    async (): Promise<WorkspaceReferenceData> => {
-      const supabase = createTokenClient(accessToken);
-
-      const [{ data: organization }, { data: profile }] = await Promise.all([
-        supabase
-          .from("organizations")
-          .select("id, organization_number, organization_name, email, phone_number, address, tin, bin, status, created_at")
-          .eq("id", organizationId)
-          .single(),
-        supabase.from("profiles").select("full_name").eq("id", userId).single(),
-      ]);
-
-      return { organization, profile };
-    },
-    ["workspace-reference", organizationId, userId, accessToken],
-    {
-      revalidate: 300,
-      tags: [`workspace-reference:${organizationId}:${userId}`],
-    },
-  );
-
-  return getCached();
-}
-
 export async function getCachedUnitsOfMeasure(
   organizationId: string,
   accessToken: string,
