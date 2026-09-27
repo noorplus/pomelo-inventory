@@ -1,3 +1,26 @@
+
+.purchase-form-polished :global(.data-card) {
+  min-width: 0;
+}
+.purchase-form-polished :global(.purchase-items-table) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.purchase-form-polished :global(.purchase-items-table table) {
+  min-width: 920px !important;
+  width: 100%;
+}
+.purchase-form-polished :global(.line-items-add-action) {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 /* New Purchase page visual refinement. Scoped to the Purchase form only. */
 .purchase-form-polished :global(.data-card){border-color:#dde3eb;box-shadow:0 1px 2px rgba(16,24,40,.035)}
 .purchase-form-polished :global(.form-section-heading){margin-bottom:11px}
@@ -30,7 +53,7 @@
 .purchase-form-polished :global(.primary-button){box-shadow:0 1px 2px rgba(37,99,235,.14)}
 @media (max-width: 620px) {
   .purchase-form-polished :global(.purchase-items-table) { overflow-x: auto; }
-  .purchase-form-polished :global(.purchase-items-table table) { display: table; width: 100%; min-width: 760px; }
+  .purchase-form-polished :global(.purchase-items-table table) { display: table; width: 100%; min-width: 920px !important; }
   .purchase-form-polished :global(.purchase-items-table thead) { display: table-header-group; }
   .purchase-form-polished :global(.purchase-items-table tbody) { display: table-row-group; }
   .purchase-form-polished :global(.purchase-items-table tr) { display: table-row; box-shadow: none; }
