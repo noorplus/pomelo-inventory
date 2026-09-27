@@ -61,8 +61,8 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
               <SortableHeader label="Phone" field="phone" search={search} status={status} sort={sort} direction={direction} />
               <SortableHeader label="Email" field="email" search={search} status={status} sort={sort} direction={direction} />
               <SortableHeader label="Address" field="address" search={search} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="Status" field="status" search={search} status={status} sort={sort} direction={direction} /></tr></thead>
-            <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><Link href={"/contacts/" + contact.id}><strong>{contact.name}</strong></Link></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td></tr>)}</tbody>
+              <SortableHeader label="Status" field="status" search={search} status={status} sort={sort} direction={direction} /><th>Action</th></tr></thead>
+            <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><Link href={"/contacts/" + contact.id}><strong>{contact.name}</strong></Link></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td><td><form action={toggleContactStatus}><input type="hidden" name="id" value={contact.id} /><input type="hidden" name="status" value={contact.status === "Active" ? "Inactive" : "Active"} /><button className="secondary-button table-action-button" type="submit">{contact.status === "Active" ? "Deactivate" : "Activate"}</button></form></td></tr>)}</tbody>
           </table></div>
           {!contacts?.length && <EmptyState icon="◎" title="No contacts found" text={search || status ? "Try changing your filters." : "Add your first customer or supplier contact."} />}
           <Pager
@@ -77,6 +77,15 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       )}
     </WorkspaceShell>
   );
+}
+
+async function toggleContactStatus(formData: FormData) {
+  "use server";
+  const { supabase, organizationId } = await getWorkspaceContext();
+  const id = String(formData.get("id") || "").trim();
+  const nextStatus = String(formData.get("status") || "").trim();
+  if (!id || !["Active", "Inactive"].includes(nextStatus)) return;
+  await supabase.from("contacts").update({ status: nextStatus }).eq("id", id).eq("organization_id", organizationId);
 }
 
 function SortableHeader({ label, field, search, status, sort, direction }: { label: string; field: string; search: string; status: string; sort: string; direction: string }) {

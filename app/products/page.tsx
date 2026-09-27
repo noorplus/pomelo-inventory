@@ -70,8 +70,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
           <div className="table-scroll"><table><thead><tr><SortableHeader label="Product" field="product_name" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} />
               <SortableHeader label="UoM" field="uom_id" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} />
               <SortableHeader label="Retail price" field="retail_price" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} className="numeric" />
-              <SortableHeader label="Status" field="status" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} /></tr></thead>
-            <tbody>{products.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{unitMap.get(product.uom_id) || "—"}</td><td className="numeric"><span className="price-value">৳{Number(product.retail_price).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></td><td><span className="status-badge">{product.status}</span></td></tr>)}</tbody>
+              <SortableHeader label="Status" field="status" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} /><th>Action</th></tr></thead>
+            <tbody>{products.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{unitMap.get(product.uom_id) || "—"}</td><td className="numeric"><span className="price-value">৳{Number(product.retail_price).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></td><td><span className="status-badge">{product.status}</span></td><td><form action={toggleProductStatus}><input type="hidden" name="id" value={product.id} /><input type="hidden" name="status" value={product.status === "Active" ? "Inactive" : "Active"} /><button className="secondary-button table-action-button" type="submit">{product.status === "Active" ? "Deactivate" : "Activate"}</button></form></td></tr>)}</tbody>
           </table></div>
           {!products.length && <EmptyState icon="▦" title="No products found" text={search || selectedUom || status ? "Try changing your filters." : "Add your first product."} />}
           <Pager
@@ -86,6 +86,18 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       )}
     </WorkspaceShell>
   );
+}
+
+async function toggleProductStatus(formData: FormData) {
+  "use server";
+  const { supabase, organizationId } = await getWorkspaceContext();
+  const id = String(formData.get("id") || "").trim();
+  const nextStatus = String(formData.get("status") || "").trim();
+  if (!id || !["Active", "Inactive"].includes(nextStatus)) return;
+  const { error } = await supabase.from("products").update({ status: nextStatus }).eq("id", id).eq("organization_id", organizationId);
+  if (!error) {
+    // The list is server-rendered, so revalidation is enough for the next request.
+  }
 }
 
 function SortableHeader({ label, field, search, uomId, status, sort, direction, className = "" }: { label: string; field: string; search: string; uomId: string; status: string; sort: string; direction: string; className?: string }) {

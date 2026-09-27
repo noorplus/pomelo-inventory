@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
@@ -31,14 +32,42 @@ export default async function UomPage() {
       <section className="section-heading"><div><h2>UoM list</h2><p className="muted">All units belonging to this organization.</p></div></section>
       {error ? <section className="form-error" role="alert">Unable to load units: {error.message}</section> : (
         <section className="table-card">
-          <div className="table-scroll"><table><thead><tr><th>Name</th><th>Status</th><th>Created</th></tr></thead>
-            <tbody>{units?.map((unit) => <tr key={unit.id}><td><strong>{unit.name}</strong></td><td><span className="status-badge">{unit.status}</span></td><td>{new Date(unit.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</td></tr>)}</tbody>
+          <div className="table-scroll"><table><thead><tr><th>Name</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+            <tbody>{units?.map((unit) => <tr key={unit.id}>
+              <td><strong>{unit.name}</strong></td>
+              <td><span className="status-badge">{unit.status}</span></td>
+              <td>{new Date(unit.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</td>
+              <td>
+                <form action={toggleUomStatus}>
+                  <input type="hidden" name="id" value={unit.id} />
+                  <input type="hidden" name="status" value={unit.status === "Active" ? "Inactive" : "Active"} />
+                  <button className="secondary-button table-action-button" type="submit">
+                    {unit.status === "Active" ? "Deactivate" : "Activate"}
+                  </button>
+                </form>
+              </td>
+            </tr>)}</tbody>
           </table></div>
           {!units?.length && <EmptyState icon="◈" title="No UoM yet" text="Add your first unit of measure above." />}
         </section>
       )}
     </WorkspaceShell>
   );
+}
+
+async function toggleUomStatus(formData: FormData) {
+  "use server";
+  const { supabase, organizationId } = await getWorkspaceMembership();
+  const id = String(formData.get("id") || "").trim();
+  const status = String(formData.get("status") || "").trim();
+  if (!id || !["Active", "Inactive"].includes(status)) return;
+  const { error } = await supabase
+    .from("units_of_measure")
+    .update({ status })
+    .eq("id", id)
+    .eq("organization_id", organizationId);
+  if (error) return;
+  revalidatePath("/uom");
 }
 
 async function createUom(formData: FormData) {

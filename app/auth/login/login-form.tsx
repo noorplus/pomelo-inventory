@@ -22,7 +22,12 @@ export default function LoginForm({ initialError = "" }: Props) {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (error) {
-      setError(error.message);
+      const message = error.message.toLowerCase().includes("invalid login credentials")
+      ? "Email or password is incorrect."
+      : error.message.toLowerCase().includes("email not confirmed")
+      ? "Please confirm your email address before signing in."
+      : "Unable to sign in. Please try again."; 
+    setError(message);
       setLoading(false);
       return;
     }

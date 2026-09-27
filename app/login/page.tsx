@@ -26,6 +26,7 @@ export default async function LoginPage({ searchParams }: Props) {
         <h1>Sign in</h1>
         <p className="muted">Access your inventory workspace securely.</p>
         <LoginForm initialError={getInitialError(error)} />
+        <p className="auth-link"><Link href="/forgot-password">Forgot your password?</Link></p>
         <p className="auth-link">New here? <Link href="/signup">Create an account</Link></p>
       </section>
     </main>

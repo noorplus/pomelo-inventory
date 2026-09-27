@@ -214,6 +214,22 @@ export async function deleteExpenseDraft(formData: FormData) {
   redirect("/accounting?tab=expenses");
 }
 
+export async function toggleExpenseCategoryStatus(formData: FormData) {
+  const { supabase, organizationId } = await getWorkspaceMembership();
+  const id = String(formData.get("id") || "").trim();
+  const status = String(formData.get("status") || "").trim();
+  if (!id || !["Active", "Inactive"].includes(status)) {
+    errorRedirect("/accounting?tab=categories", "Invalid category status.");
+  }
+  const { error } = await supabase
+    .from("expense_categories")
+    .update({ status })
+    .eq("id", id)
+    .eq("organization_id", organizationId);
+  if (error) errorRedirect("/accounting?tab=categories", "Unable to update category status.");
+  redirect("/accounting?tab=categories");
+}
+
 export async function createExpenseCategory(formData: FormData) {
   const { supabase, organizationId, user } = await getWorkspaceMembership();
   const name = String(formData.get("name") || "").trim();
