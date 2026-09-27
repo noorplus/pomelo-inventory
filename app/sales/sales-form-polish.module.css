@@ -1,0 +1,190 @@
+/* New Sales page visual refinement only. Layout and responsive structure remain unchanged. */
+.sales-form-polished :global(.data-card) {
+  border-color: #dde3eb;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .035);
+}
+
+.sales-form-polished :global(.form-section-heading) {
+  margin-bottom: 11px;
+}
+
+.sales-form-polished :global(.form-section-heading h2) {
+  color: #1d2939;
+  letter-spacing: -.012em;
+}
+
+.sales-form-polished :global(.form-grid label) {
+  color: #344054;
+}
+
+.sales-form-polished :global(.form-grid input),
+.sales-form-polished :global(.form-grid select),
+.sales-form-polished :global(.form-grid textarea) {
+  min-height: 37px;
+  border-color: #cfd6df;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+.sales-form-polished :global(.form-grid textarea) {
+  min-height: 68px;
+}
+
+.sales-form-polished :global(.form-grid input:focus),
+.sales-form-polished :global(.form-grid select:focus),
+.sales-form-polished :global(.form-grid textarea:focus) {
+  border-color: #7aa7f8;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
+}
+
+.sales-form-polished :global(.purchase-items-table) {
+  border: 1px solid #e1e6ed;
+  border-radius: 7px;
+}
+
+.sales-form-polished :global(.purchase-items-table table) {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.sales-form-polished :global(.purchase-items-table th) {
+  padding: 8px 9px;
+  background: #f8fafc;
+  color: #667085;
+  border-bottom: 1px solid #dfe5ec;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .055em;
+}
+
+.sales-form-polished :global(.purchase-items-table td) {
+  padding: 7px 9px;
+  border-bottom: 1px solid #edf0f4;
+  vertical-align: middle;
+}
+
+.sales-form-polished :global(.purchase-items-table tbody tr:last-child td) {
+  border-bottom: 0;
+}
+
+.sales-form-polished :global(.purchase-items-table tbody tr:hover td) {
+  background: #fbfcfe;
+}
+
+.sales-form-polished :global(.purchase-items-table select),
+.sales-form-polished :global(.purchase-items-table input) {
+  min-height: 36px;
+  border-color: #cfd6df;
+  color: #172033;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+.sales-form-polished :global(.purchase-items-table select:focus),
+.sales-form-polished :global(.purchase-items-table input:focus) {
+  border-color: #7aa7f8;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, .10);
+}
+
+.sales-form-polished :global(.purchase-items-table .compact-number) {
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-form-polished :global(.sale-stock-warning) {
+  margin-top: 3px;
+  color: var(--danger);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.sales-form-polished :global(.icon-button) {
+  width: 30px;
+  height: 30px;
+  border-color: #d9e0e8;
+  font-size: 16px;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.sales-form-polished :global(.icon-button:not(:disabled):hover) {
+  background: #fff5f4;
+  border-color: #f0b8b3;
+  color: #a61b12;
+}
+
+.sales-form-polished :global(.purchase-total-card) {
+  margin-top: 10px;
+  padding: 10px 12px;
+  gap: 6px;
+  border-color: #dce3eb;
+  background: #f8fafc;
+}
+
+.sales-form-polished :global(.purchase-total-card > div) {
+  min-height: 22px;
+  color: #475467;
+  font-variant-numeric: tabular-nums;
+}
+
+.sales-form-polished :global(.purchase-total-card > div strong) {
+  color: #344054;
+  font-weight: 700;
+}
+
+.sales-form-polished :global(.purchase-grand-total) {
+  min-height: 30px !important;
+  padding-top: 7px;
+  margin-top: 3px;
+  border-top-color: #d6dde6;
+  color: #172033 !important;
+}
+
+.sales-form-polished :global(.purchase-grand-total span) {
+  font-weight: 800;
+}
+
+.sales-form-polished :global(.purchase-grand-total strong) {
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.sales-form-polished :global(.form-actions) {
+  padding-top: 1px;
+  gap: 7px;
+}
+
+.sales-form-polished :global(.form-actions .secondary-button),
+.sales-form-polished :global(.form-actions .primary-button) {
+  min-height: 36px;
+}
+
+.sales-form-polished :global(.secondary-button:hover) {
+  background: #f8fafc;
+}
+
+.sales-form-polished :global(.primary-button) {
+  box-shadow: 0 1px 2px rgba(37, 99, 235, .14);
+}
+
+@media (max-width: 620px) {
+  .sales-form-polished :global(.purchase-items-table) {
+    border-radius: 7px;
+  }
+
+  .sales-form-polished :global(.purchase-items-table tr) {
+    border-color: #e0e5ec;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .025);
+  }
+
+  .sales-form-polished :global(.purchase-items-table td) {
+    padding: 5px 0;
+  }
+
+  .sales-form-polished :global(.purchase-total-card) {
+    margin-top: 9px;
+    padding: 9px 10px;
+  }
+
+  .sales-form-polished :global(.form-actions) {
+    gap: 7px;
+  }
+}
