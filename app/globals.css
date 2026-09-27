@@ -208,6 +208,46 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 
+@media (max-width: 620px) {
+  .purchase-items-table table { min-width: 0 !important; }
+  .purchase-items-table thead { display: none; }
+  .purchase-items-table tbody, .purchase-items-table tr, .purchase-items-table td { display: block; }
+  .purchase-items-table tr {
+    margin-bottom: 9px;
+    padding: 9px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fff;
+  }
+  .purchase-items-table td {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 0;
+    white-space: normal;
+  }
+  .purchase-items-table td::before {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .purchase-items-table td:nth-child(1)::before { content: "Product"; }
+  .purchase-items-table td:nth-child(2)::before { content: "Quantity"; }
+  .purchase-items-table td:nth-child(3)::before { content: "Unit price"; }
+  .purchase-items-table td:nth-child(4)::before { content: "Discount"; }
+  .purchase-items-table td:nth-child(5)::before { content: "Tax"; }
+  .purchase-items-table td:nth-child(6)::before { content: "Line total"; }
+  .purchase-items-table td:nth-child(7)::before { content: "Remove"; }
+  .purchase-items-table td.numeric { text-align: left; }
+  .purchase-items-table .compact-number { width: 100% !important; }
+  .purchase-items-table td:last-child { justify-items: start; }
+  .purchase-items-table td:last-child .icon-button { width: 38px; height: 36px; }
+}
+
 /* UI refinement: shared interaction and layout polish */
 :root {
   --primary-soft: #eff6ff;
