@@ -80,6 +80,24 @@ export default async function PaymentDetailPage({
     outstanding: number;
   }[] = [];
 
+  async function canonicalOutstanding(
+    type: "sale" | "purchase" | "expense",
+    ids: string[],
+  ): Promise<Map<string, number>> {
+    if (!ids.length) return new Map();
+    const { data, error } = await supabase.rpc("outstanding_for_documents", {
+      p_document_type: type,
+      p_document_ids: ids,
+    });
+    if (error) return new Map();
+    return new Map(
+      ((data ?? []) as { document_id: string; outstanding: unknown }[]).map((row) => [
+        row.document_id,
+        Number(row.outstanding || 0),
+      ]),
+    );
+  }
+
   if (payment.status === "Draft") {
     if (payment.payment_type === "In") {
       // Find confirmed sales
@@ -120,6 +138,8 @@ export default async function PaymentDetailPage({
           }
         });
 
+        const saleOutstanding = await canonicalOutstanding("sale", saleIds);
+
         const returnedBySale = new Map<string, number>();
         ((returnList ?? []) as { reference_id: string; credit: number }[]).forEach((r) => {
           returnedBySale.set(r.reference_id, (returnedBySale.get(r.reference_id) || 0) + Number(r.credit || 0));
@@ -130,7 +150,7 @@ export default async function PaymentDetailPage({
             const tot = Number(s.total || 0);
             const pd = paidBySale.get(s.id) || 0;
             const ret = returnedBySale.get(s.id) || 0;
-            const outstanding = Math.max(0, tot - pd - ret);
+            const outstanding = saleOutstanding.get(s.id) ?? Math.max(0, tot - pd - ret);
             return {
               id: s.id,
               type: "sale" as const,
@@ -211,6 +231,8 @@ export default async function PaymentDetailPage({
         }
       });
 
+      const purchaseOutstanding = await canonicalOutstanding("purchase", purchaseIds);
+
       const returnedByPurchase = new Map<string, number>();
       ((purchaseReturnList ?? []) as { reference_id: string; debit: number }[]).forEach((r) => {
         returnedByPurchase.set(r.reference_id, (returnedByPurchase.get(r.reference_id) || 0) + Number(r.debit || 0));
@@ -224,29 +246,13 @@ export default async function PaymentDetailPage({
         }
       });
 
-      const candPurchases = (purchasesList ?? [])
-        .map((p) => {
-          const tot = Number(p.total || 0);
-          const pd = paidByPurchase.get(p.id) || 0;
-          const ret = returnedByPurchase.get(p.id) || 0;
-          const outstanding = Math.max(0, tot - pd - ret);
-          return {
-            id: p.id,
-            type: "purchase" as const,
-            number: p.invoice_no,
-            date: p.invoice_date,
-            total: tot,
-            paid: pd,
-            outstanding,
-          };
-        })
-        .filter((c) => c.outstanding > 0);
+      const expenseOutstanding = await canonicalOutstanding("expense", expenseIds);
 
       const candExpenses = (expensesList ?? [])
         .map((e) => {
           const tot = Number(e.amount || 0);
           const pd = paidByExpense.get(e.id) || 0;
-          const outstanding = Math.max(0, tot - pd);
+          const outstanding = expenseOutstanding.get(e.id) ?? Math.max(0, tot - pd);
           return {
             id: e.id,
             type: "expense" as const,
