@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import Link from "next/link";
+import styles from "./sales-form-polish.module.css";
 
 type ContactOption = {
   id: string;
@@ -104,7 +105,7 @@ export default function SalesForm({
   const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
 
   return (
-    <form action={action} className="purchase-form" id={formId}>
+    <form action={action} className={`purchase-form ${styles["sales-form-polished"]}`} id={formId}>
       {saleId && <input type="hidden" name="sale_id" value={saleId} />}
       <input type="hidden" name="items_json" value={JSON.stringify(items)} />
 
@@ -203,7 +204,7 @@ export default function SalesForm({
                         ))}
                       </select>
                       {isInsufficient && (
-                        <span style={{ fontSize: "10px", color: "var(--danger)", display: "block", marginTop: "2px" }}>
+                        <span className="sale-stock-warning">
                           ⚠ Stock is {availableStock} (Order qty: {item.quantity})
                         </span>
                       )}
