@@ -6,7 +6,8 @@
 .purchase-form-polished :global(.form-grid input),.purchase-form-polished :global(.form-grid select),.purchase-form-polished :global(.form-grid textarea){min-height:37px;border-color:#cfd6df;transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease}
 .purchase-form-polished :global(.form-grid textarea){min-height:68px}
 .purchase-form-polished :global(.form-grid input:focus),.purchase-form-polished :global(.form-grid select:focus),.purchase-form-polished :global(.form-grid textarea:focus){border-color:#7aa7f8;box-shadow:0 0 0 3px rgba(37,99,235,.10)}
-.purchase-form-polished :global(.purchase-items-table){border:1px solid #e1e6ed;border-radius:7px}
+.purchase-form-polished :global(.data-card){min-width:0;max-width:100%;overflow:hidden}
+.purchase-form-polished :global(.purchase-items-table){width:100%;min-width:0;max-width:100%;overflow-x:auto;overflow-y:hidden;border:1px solid #e1e6ed;border-radius:7px;-webkit-overflow-scrolling:touch}
 .purchase-form-polished :global(.purchase-items-table table){border-collapse:separate;border-spacing:0}
 .purchase-form-polished :global(.purchase-items-table th){padding:8px 9px;background:#f8fafc;color:#667085;border-bottom:1px solid #dfe5ec;font-size:10px;font-weight:800;letter-spacing:.055em}
 .purchase-form-polished :global(.purchase-items-table td){padding:7px 9px;border-bottom:1px solid #edf0f4;vertical-align:middle}
@@ -40,3 +41,7 @@
   .purchase-form-polished :global(.purchase-total-card) { margin-top: 9px; padding: 9px 10px; }
   .purchase-form-polished :global(.form-actions) { gap: 7px; }
 }
+
+
+.purchase-form-polished :global(.line-items-actions){display:flex;justify-content:flex-start;margin-top:8px}
+@media (max-width:620px){.purchase-form-polished :global(.line-items-actions){margin-top:7px}.purchase-form-polished :global(.line-items-actions .secondary-button){min-height:34px}}
