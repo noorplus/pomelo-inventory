@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
-import { nextExpenseNoResilient } from "@/lib/services/expenses";
-import { nextPaymentNoResilient } from "@/lib/services/payments";
+import { nextExpenseNo } from "@/lib/services/expenses";
+import { nextPaymentNo } from "@/lib/services/payments";
 
 function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
@@ -41,7 +41,7 @@ export async function createPayment(formData: FormData) {
     // advances it. (The serialized RPC path never collides, so this loop
     // exits on the first try once migrations are applied.)
     for (let attempt = 0; attempt < 8 && !paymentId; attempt++) {
-      const paymentNo = await nextPaymentNoResilient(supabase, organizationId, attempt);
+      const paymentNo = await nextPaymentNo(supabase, organizationId);
 
       const { data: payment, error } = await supabase
         .from("payments")
@@ -144,7 +144,7 @@ export async function createExpense(formData: FormData) {
     if (isNaN(amount) || amount <= 0) throw new Error("Amount must be greater than zero.");
 
     for (let attempt = 0; attempt < 8 && !expenseId; attempt++) {
-      const expenseNo = await nextExpenseNoResilient(supabase, organizationId, attempt);
+      const expenseNo = await nextExpenseNo(supabase, organizationId);
 
       const { data: expense, error } = await supabase
         .from("expenses")
