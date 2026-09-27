@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
@@ -39,6 +40,21 @@ export default async function UomPage() {
       )}
     </WorkspaceShell>
   );
+}
+
+async function toggleUomStatus(formData: FormData) {
+  "use server";
+  const { supabase, organizationId } = await getWorkspaceMembership();
+  const id = String(formData.get("id") || "").trim();
+  const status = String(formData.get("status") || "").trim();
+  if (!id || !["Active", "Inactive"].includes(status)) return;
+  const { error } = await supabase
+    .from("units_of_measure")
+    .update({ status })
+    .eq("id", id)
+    .eq("organization_id", organizationId);
+  if (error) return;
+  revalidatePath("/uom");
 }
 
 async function createUom(formData: FormData) {
