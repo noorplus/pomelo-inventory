@@ -2,7 +2,7 @@ import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import Pager from "@/app/components/pager";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
-import { createExpenseCategory } from "@/app/accounting/actions";
+import { createExpenseCategory, toggleExpenseCategoryStatus } from "@/app/accounting/actions";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
@@ -360,6 +360,7 @@ export default async function AccountingPage({
                     <th>Category Name</th>
                     <th>Status</th>
                     <th>Created</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -373,6 +374,15 @@ export default async function AccountingPage({
                       </td>
                       <td style={{ fontSize: "11px", color: "var(--muted)" }}>
                         {new Date(c.created_at).toLocaleDateString("en-BD")}
+                      </td>
+                      <td>
+                        <form action={toggleExpenseCategoryStatus}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <input type="hidden" name="status" value={c.status === "Active" ? "Inactive" : "Active"} />
+                          <button className="secondary-button table-action-button" type="submit">
+                            {c.status === "Active" ? "Deactivate" : "Activate"}
+                          </button>
+                        </form>
                       </td>
                     </tr>
                   ))}
