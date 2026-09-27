@@ -1,3 +1,26 @@
+
+.sales-form-polished :global(.data-card) {
+  min-width: 0;
+}
+.sales-form-polished :global(.purchase-items-table) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.sales-form-polished :global(.purchase-items-table table) {
+  min-width: 920px !important;
+  width: 100%;
+}
+.sales-form-polished :global(.line-items-add-action) {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 /* New Sales page visual refinement only. Layout and responsive structure remain unchanged. */
 .sales-form-polished :global(.data-card) {
   border-color: #dde3eb;
@@ -167,7 +190,7 @@
 
 @media (max-width: 620px) {
   .sales-form-polished :global(.purchase-items-table) { overflow-x: auto; }
-  .sales-form-polished :global(.purchase-items-table table) { display: table; width: 100%; min-width: 760px; }
+  .sales-form-polished :global(.purchase-items-table table) { display: table; width: 100%; min-width: 920px !important; }
   .sales-form-polished :global(.purchase-items-table thead) { display: table-header-group; }
   .sales-form-polished :global(.purchase-items-table tbody) { display: table-row-group; }
   .sales-form-polished :global(.purchase-items-table tr) { display: table-row; box-shadow: none; }
