@@ -36,9 +36,21 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
 }
 
+.sales-form-polished :global(.data-card) {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 .sales-form-polished :global(.purchase-items-table) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid #e1e6ed;
   border-radius: 7px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sales-form-polished :global(.purchase-items-table table) {
@@ -176,4 +188,16 @@
   .sales-form-polished :global(.purchase-items-table td) { padding: 7px 9px; }
   .sales-form-polished :global(.purchase-total-card) { margin-top: 9px; padding: 9px 10px; }
   .sales-form-polished :global(.form-actions) { gap: 7px; }
+}
+
+
+.sales-form-polished :global(.line-items-actions) {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+
+@media (max-width: 620px) {
+  .sales-form-polished :global(.line-items-actions) { margin-top: 7px; }
+  .sales-form-polished :global(.line-items-actions .secondary-button) { min-height: 34px; }
 }
