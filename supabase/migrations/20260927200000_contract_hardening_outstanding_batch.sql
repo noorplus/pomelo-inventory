@@ -4,6 +4,7 @@ create or replace function public.outstanding_for_documents(
 )
 returns table(document_id uuid, outstanding numeric)
 language plpgsql
+security definer
 set search_path=''
 as $function$
 begin
