@@ -235,28 +235,22 @@ export default async function PaymentDetailPage({
         }
       });
 
-      const candPurchases = (purchasesList ?? [])
-        .map((p) => {
-          const tot = Number(p.total || 0);
-          const pd = paidByPurchase.get(p.id) || 0;
-          const outstanding = purchaseOutstanding.get(p.id) ?? 0;
-          return {
-            id: p.id,
-            type: "purchase" as const,
-            number: p.invoice_no,
-            date: p.invoice_date,
-            total: tot,
-            paid: pd,
-            outstanding,
-          };
-        })
-        .filter((c) => c.outstanding > 0);
+      const { data: expenseOutstandingRaw } = await supabase.rpc("outstanding_for_documents", {
+        p_document_type: "expense",
+        p_document_ids: expenseIds,
+      });
+      const expenseOutstanding = new Map(
+        ((expenseOutstandingRaw ?? []) as { document_id: string; outstanding: unknown }[]).map((r) => [
+          r.document_id,
+          Number(r.outstanding || 0),
+        ]),
+      );
 
       const candExpenses = (expensesList ?? [])
         .map((e) => {
           const tot = Number(e.amount || 0);
           const pd = paidByExpense.get(e.id) || 0;
-          const outstanding = Math.max(0, tot - pd);
+          const outstanding = expenseOutstanding.get(e.id) ?? 0;
           return {
             id: e.id,
             type: "expense" as const,
