@@ -154,9 +154,6 @@ export default function SalesForm({
             <p className="eyebrow">LINE ITEMS</p>
             <h2>Sale items</h2>
           </div>
-          <button type="button" onClick={addItem} className="secondary-button">
-            + Add line
-          </button>
         </div>
 
         <div className="table-scroll purchase-items-table">
@@ -276,6 +273,12 @@ export default function SalesForm({
               })}
             </tbody>
           </table>
+        </div>
+
+        <div className="line-items-add-action">
+          <button type="button" onClick={addItem} className="secondary-button table-action-button">
+            + Add line
+          </button>
         </div>
 
         <div className="purchase-total-card">
