@@ -5,6 +5,7 @@ import PrintButton from "@/app/components/print-button";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { cancelSale, cloneSale, confirmSale, deleteSale, updateSale } from "@/app/sales/actions";
 import SalesForm from "@/app/sales/sales-form";
+import saleItemsStyles from "@/app/sales/sale-items-table.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -337,15 +338,15 @@ export default async function SaleDetailPage({
           </div>
         </section>
 
-        <section className="data-card">
+        <section className={`data-card ${saleItemsStyles.saleItemsCard}`}>
           <div className="form-section-heading">
             <div>
               <p className="eyebrow">ITEMS</p>
               <h2>Sale line items</h2>
             </div>
           </div>
-          <div className="table-scroll">
-            <table>
+          <div className={saleItemsStyles.saleItemsTableWrap}>
+            <table className={saleItemsStyles.saleItemsTable}>
               <thead>
                 <tr>
                   <th>Product</th>
