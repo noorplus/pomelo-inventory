@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import styles from "./purchase-form-polish.module.css";
 
 type Product = { id: string; product_name: string; retail_price: number; uom_id: string; stock_quantity?: number };
 type Contact = { id: string; id_no: number; name: string; phone: string | null };
@@ -60,7 +62,10 @@ export default function PurchaseForm({
   }
 
   function addItem() {
-    setItems((current) => [...current, { product_id: "", quantity: 1, unit_price: 0, discount: 0, tax: 0 }]);
+    setItems((current) => {
+      const nextProduct = products.find((product) => !current.some((item) => item.product_id === product.id));
+      return [...current, { product_id: nextProduct?.id || "", quantity: 1, unit_price: nextProduct ? Number(nextProduct.retail_price) : 0, discount: 0, tax: 0 }];
+    });
   }
 
   function removeItem(index: number) {
@@ -68,7 +73,7 @@ export default function PurchaseForm({
   }
 
   return (
-    <form className="purchase-form" action={action}>
+    <form className={`purchase-form ${styles["purchase-form-polished"]}`} action={action}>
       {purchaseId && <input type="hidden" name="purchase_id" value={purchaseId} />}
       <input type="hidden" name="items_json" value={JSON.stringify(items)} />
 
@@ -126,7 +131,7 @@ export default function PurchaseForm({
                           {availableProducts.map((product) => <option key={product.id} value={product.id}>{product.product_name} (Stock: {product.stock_quantity ?? 0})</option>)}
                         </select>
                         {item.product_id && (
-                          <span style={{ fontSize: "10px", color: "var(--muted)", display: "block", marginTop: "2px" }}>
+                          <span className="purchase-stock-preview">
                             In stock: {currentStock} → after receive: {currentStock + Number(item.quantity || 0)}
                           </span>
                         )}
@@ -155,6 +160,7 @@ export default function PurchaseForm({
 
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="form-actions">
+        <Link className="secondary-button" href="/purchases">Cancel</Link>
         <button className="primary-button" type="submit" disabled={!products.length}>{submitLabel}</button>
       </div>
     </form>
