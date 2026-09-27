@@ -1072,16 +1072,22 @@ export default async function ReportsPage({
         </div>
       </section>
 
-      <div className="module-tabs">
-        {TAB_DEFS.map((t) => (
-          <Link
-            key={t.key}
-            className={`tab-link ${currentTab === t.key ? "active" : ""}`}
-            href={`/reports?tab=${t.key}`}
-          >
-            <span>{t.label}</span>
-            {t.key === currentTab && <span className="tab-badge">{activeCount}</span>}
-          </Link>
+      <div className="report-tab-groups" aria-label="Report categories">
+        {[
+          ["Receivables & Payables", [["due", "Due follow-up"], ["aging", "Aging"]]],
+          ["Performance", [["cashflow", "Cash flow"], ["profit", "Profit"], ["valuation", "Valuation"], ["velocity", "Velocity"], ["efficiency", "Efficiency"]]],
+          ["Analysis", [["tax", "Tax"], ["top", "Top contacts"], ["expenses", "Expenses"], ["audit", "Audit"]]],
+        ].map(([group, items]) => (
+          <section className="report-tab-group" key={String(group)}>
+            <p>{String(group)}</p>
+            <div className="module-tabs">
+              {(items as string[][]).map(([key, label]) => (
+                <Link key={key} className={`tab-link ${currentTab === key ? "active" : ""}`} href={`/reports?tab=${key}`}>
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </section>
         ))}
       </div>
 
