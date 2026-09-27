@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignOutButton } from "@/app/components/sign-out-button";
+import { MobileNavDrawer } from "@/app/components/mobile-nav-drawer";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 type IconName = "dashboard" | "reports" | "purchases" | "sales" | "inventory" | "accounting" | "products" | "contacts" | "uom" | "settings";
@@ -100,10 +101,9 @@ export default async function WorkspaceShell({ active, children }: Props) {
       <aside className="sidebar">
         <div className="sidebar-header">
           <div className="mobile-header-controls">
-            <details className="mobile-menu">
-              <summary aria-label="Open navigation menu">☰</summary>
+            <MobileNavDrawer>
               <NavLinks active={active} className="nav mobile-nav" />
-            </details>
+            </MobileNavDrawer>
             <div className="brand">
               <span className="brand-mark">P</span>
               <span>Pomelo Inventory</span>
