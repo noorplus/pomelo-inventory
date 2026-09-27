@@ -16,39 +16,21 @@ type SaleItemInput = {
 function parseItems(formData: FormData): SaleItemInput[] {
   const raw = String(formData.get("items_json") || "[]");
   let items: unknown;
-
-  try {
-    items = JSON.parse(raw);
-  } catch {
-    throw new Error("Invalid sale items.");
-  }
-
-  if (!Array.isArray(items) || !items.length) {
-    throw new Error("Add at least one product.");
-  }
-
+  try { items = JSON.parse(raw); } catch { throw new Error("Invalid sale items."); }
+  if (!Array.isArray(items) || !items.length) throw new Error("Add at least one product.");
   return items.map((item) => {
     const value = item as Record<string, unknown>;
     const quantity = Number(value.quantity);
     const unitPrice = Number(value.unit_price);
     const discount = Number(value.discount || 0);
     const tax = Number(value.tax || 0);
-
     if (!value.product_id) throw new Error("Product must be selected.");
     if (isNaN(quantity) || quantity <= 0) throw new Error("Quantity must be greater than zero.");
     if (isNaN(unitPrice) || unitPrice < 0) throw new Error("Unit price cannot be negative.");
     if (isNaN(discount) || discount < 0) throw new Error("Discount cannot be negative.");
     if (discount > quantity * unitPrice) throw new Error("Item discount cannot exceed item gross amount.");
     if (isNaN(tax) || tax < 0) throw new Error("Tax cannot be negative.");
-
-    return {
-      id: value.id ? String(value.id) : undefined,
-      product_id: String(value.product_id),
-      quantity,
-      unit_price: unitPrice,
-      discount,
-      tax,
-    };
+    return { id: value.id ? String(value.id) : undefined, product_id: String(value.product_id), quantity, unit_price: unitPrice, discount, tax };
   });
 }
 
@@ -61,61 +43,37 @@ export async function createSale(formData: FormData) {
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
-
   let saleId = "";
-
   try {
-    if (!contactId) throw new Error("Please select a customer.");
-    const items = parseItems(formData);
-
-    // Single atomic transaction server-side: header + lines, server totals.
-    ({ sale_id: saleId } = await createSaleDraft(supabase, {
-      organizationId,
-      contactId,
-      invoiceDate,
-      notes,
-      items,
-    }));
+    if (!contactId) throw new Error("Please select a customer contact.");
+    ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, items: parseItems(formData) }));
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/new", error.message);
     errorRedirect("/sales/new", "Unable to create sale.");
   }
-
   redirect("/sales/" + saleId);
 }
 
 export async function updateSale(formData: FormData) {
-  const { supabase, organizationId } = await getWorkspaceMembership();
+  const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
-
   try {
     if (!saleId) throw new Error("Missing sale ID.");
-    if (!contactId) throw new Error("Please select a customer.");
-    const items = parseItems(formData);
-
-    // Single atomic transaction server-side; line creators stay immutable.
-    await updateSaleDraft(supabase, {
-      saleId,
-      contactId,
-      invoiceDate,
-      notes,
-      items,
-    });
+    if (!contactId) throw new Error("Please select a customer contact.");
+    await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, items: parseItems(formData) });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to update sale.");
   }
-
   redirect("/sales/" + saleId);
 }
 
 export async function confirmSale(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
-
   const { error } = await supabase.rpc("confirm_sale", { p_sale_id: saleId });
   if (error) errorRedirect("/sales/" + saleId, error.message);
   redirect("/sales/" + saleId);
@@ -124,7 +82,6 @@ export async function confirmSale(formData: FormData) {
 export async function cancelSale(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
-
   const { error } = await supabase.rpc("cancel_sale", { p_sale_id: saleId });
   if (error) errorRedirect("/sales/" + saleId, error.message);
   redirect("/sales/" + saleId);
@@ -133,10 +90,8 @@ export async function cancelSale(formData: FormData) {
 export async function deleteSale(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
-
-  try {
-    await deleteSaleDraft(supabase, saleId);
-  } catch (error) {
+  try { await deleteSaleDraft(supabase, saleId); }
+  catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to delete sale.");
   }
@@ -144,75 +99,28 @@ export async function deleteSale(formData: FormData) {
 }
 
 export async function cloneSale(formData: FormData) {
-  const { supabase, organizationId, user } = await getWorkspaceMembership();
+  const { supabase, organizationId } = await getWorkspaceMembership();
   const sourceId = String(formData.get("sale_id") || "").trim();
-
   let newId = "";
-
   try {
     if (!sourceId) throw new Error("Missing sale ID.");
-
     const [{ data: source, error: sourceError }, { data: sourceItems, error: itemsError }] = await Promise.all([
-      supabase
-        .from("sales")
-        .select("contact_id, subtotal, discount, tax, total, notes")
-        .eq("id", sourceId)
-        .eq("organization_id", organizationId)
-        .single(),
-      supabase
-        .from("sale_items")
-        .select("product_id, quantity, unit_price, discount, tax, line_total")
-        .eq("sale_id", sourceId)
-        .eq("organization_id", organizationId),
+      supabase.from("sales").select("contact_id, notes").eq("id", sourceId).eq("organization_id", organizationId).single(),
+      supabase.from("sale_items").select("product_id, quantity, unit_price, discount, tax").eq("sale_id", sourceId).eq("organization_id", organizationId),
     ]);
-
     if (sourceError || !source) throw new Error("Source sale not found.");
     if (itemsError) throw new Error(itemsError.message);
     if (!sourceItems?.length) throw new Error("Source sale has no items to clone.");
-
-    const { data: created, error: createError } = await supabase
-      .from("sales")
-      .insert({
-        organization_id: organizationId,
-        contact_id: source.contact_id,
-        invoice_date: new Date().toISOString().split("T")[0],
-        status: "Draft",
-        invoice_no: "000000", // Automatically replaced by trigger set_sales_invoice_no
-        subtotal: source.subtotal,
-        discount: source.discount,
-        tax: source.tax,
-        total: source.total,
-        notes: source.notes,
-        created_by: user.id,
-      })
-      .select("id")
-      .single();
-
-    if (createError) throw new Error(createError.message);
-    newId = created.id;
-
-    const { error: linesError } = await supabase.from("sale_items").insert(
-      sourceItems.map((item) => ({
-        organization_id: organizationId,
-        sale_id: newId,
-        product_id: item.product_id,
-        quantity: item.quantity,
-        unit_price: item.unit_price,
-        discount: item.discount,
-        tax: item.tax,
-        line_total: item.line_total,
-        created_by: user.id,
-      })),
-    );
-
-    if (linesError) {
-      await supabase.from("sales").delete().eq("id", newId);
-      throw new Error(linesError.message);
-    }
+    ({ sale_id: newId } = await createSaleDraft(supabase, {
+      organizationId,
+      contactId: source.contact_id,
+      invoiceDate: new Date().toISOString().split("T")[0],
+      notes: source.notes,
+      items: sourceItems,
+    }));
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + sourceId, error.message);
     errorRedirect("/sales/" + sourceId, "Unable to clone sale.");
   }
-
   redirect("/sales/" + newId);
 }
