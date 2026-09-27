@@ -120,22 +120,17 @@ export default async function PaymentDetailPage({
           }
         });
 
-        const { data: saleOutstandingRaw } = await supabase.rpc("outstanding_for_documents", {
-          p_document_type: "sale",
-          p_document_ids: saleIds,
+        const returnedBySale = new Map<string, number>();
+        ((returnList ?? []) as { reference_id: string; credit: number }[]).forEach((r) => {
+          returnedBySale.set(r.reference_id, (returnedBySale.get(r.reference_id) || 0) + Number(r.credit || 0));
         });
-        const saleOutstanding = new Map(
-          ((saleOutstandingRaw ?? []) as { document_id: string; outstanding: unknown }[]).map((r) => [
-            r.document_id,
-            Number(r.outstanding || 0),
-          ]),
-        );
 
         candidates = salesList
           .map((s) => {
             const tot = Number(s.total || 0);
             const pd = paidBySale.get(s.id) || 0;
-            const outstanding = saleOutstanding.get(s.id) ?? 0;
+            const ret = returnedBySale.get(s.id) || 0;
+            const outstanding = Math.max(0, tot - pd - ret);
             return {
               id: s.id,
               type: "sale" as const,
@@ -216,16 +211,10 @@ export default async function PaymentDetailPage({
         }
       });
 
-      const { data: purchaseOutstandingRaw } = await supabase.rpc("outstanding_for_documents", {
-        p_document_type: "purchase",
-        p_document_ids: purchaseIds,
+      const returnedByPurchase = new Map<string, number>();
+      ((purchaseReturnList ?? []) as { reference_id: string; debit: number }[]).forEach((r) => {
+        returnedByPurchase.set(r.reference_id, (returnedByPurchase.get(r.reference_id) || 0) + Number(r.debit || 0));
       });
-      const purchaseOutstanding = new Map(
-        ((purchaseOutstandingRaw ?? []) as { document_id: string; outstanding: unknown }[]).map((r) => [
-          r.document_id,
-          Number(r.outstanding || 0),
-        ]),
-      );
 
       const paidByExpense = new Map<string, number>();
       (expenseAllocList ?? []).forEach((a) => {
@@ -235,22 +224,29 @@ export default async function PaymentDetailPage({
         }
       });
 
-      const { data: expenseOutstandingRaw } = await supabase.rpc("outstanding_for_documents", {
-        p_document_type: "expense",
-        p_document_ids: expenseIds,
-      });
-      const expenseOutstanding = new Map(
-        ((expenseOutstandingRaw ?? []) as { document_id: string; outstanding: unknown }[]).map((r) => [
-          r.document_id,
-          Number(r.outstanding || 0),
-        ]),
-      );
+      const candPurchases = (purchasesList ?? [])
+        .map((p) => {
+          const tot = Number(p.total || 0);
+          const pd = paidByPurchase.get(p.id) || 0;
+          const ret = returnedByPurchase.get(p.id) || 0;
+          const outstanding = Math.max(0, tot - pd - ret);
+          return {
+            id: p.id,
+            type: "purchase" as const,
+            number: p.invoice_no,
+            date: p.invoice_date,
+            total: tot,
+            paid: pd,
+            outstanding,
+          };
+        })
+        .filter((c) => c.outstanding > 0);
 
       const candExpenses = (expensesList ?? [])
         .map((e) => {
           const tot = Number(e.amount || 0);
           const pd = paidByExpense.get(e.id) || 0;
-          const outstanding = expenseOutstanding.get(e.id) ?? 0;
+          const outstanding = Math.max(0, tot - pd);
           return {
             id: e.id,
             type: "expense" as const,
