@@ -28,24 +28,15 @@
 .purchase-form-polished :global(.form-actions .secondary-button),.purchase-form-polished :global(.form-actions .primary-button){min-height:36px}
 .purchase-form-polished :global(.secondary-button:hover){background:#f8fafc}
 .purchase-form-polished :global(.primary-button){box-shadow:0 1px 2px rgba(37,99,235,.14)}
-@media (max-width:620px){
-.purchase-form-polished :global(.purchase-items-table){border-radius:7px}
-.purchase-form-polished :global(.purchase-items-table thead){display:none}
-.purchase-form-polished :global(.purchase-items-table),.purchase-form-polished :global(.purchase-items-table table),.purchase-form-polished :global(.purchase-items-table tbody),.purchase-form-polished :global(.purchase-items-table tr),.purchase-form-polished :global(.purchase-items-table td){display:block;width:100%}
-.purchase-form-polished :global(.purchase-items-table tbody tr){position:relative;margin:0;padding:8px 10px 7px;border-bottom:1px solid #e0e5ec;box-shadow:0 1px 2px rgba(16,24,40,.025)}
-.purchase-form-polished :global(.purchase-items-table tbody tr:last-child){border-bottom:0}
-.purchase-form-polished :global(.purchase-items-table td){display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px;align-items:center;padding:5px 0;border:0}
-.purchase-form-polished :global(.purchase-items-table td::before){color:#667085;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(1)){display:block;padding-top:0}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(1)::before){content:none}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(2)::before){content:"Qty"}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(3)::before){content:"Unit price"}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(4)::before){content:"Discount"}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(5)::before){content:"Tax"}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(6)::before){content:"Line total"}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(7)){display:flex;justify-content:flex-end;padding-top:3px}
-.purchase-form-polished :global(.purchase-items-table td:nth-child(7)::before){content:none}
-.purchase-form-polished :global(.purchase-items-table select),.purchase-form-polished :global(.purchase-items-table input){width:100%}
-.purchase-form-polished :global(.purchase-total-card){margin-top:9px;padding:9px 10px}
-.purchase-form-polished :global(.form-actions){gap:7px}
+@media (max-width: 620px) {
+  .purchase-form-polished :global(.purchase-items-table) { overflow-x: auto; }
+  .purchase-form-polished :global(.purchase-items-table table) { display: table; width: 100%; min-width: 760px; }
+  .purchase-form-polished :global(.purchase-items-table thead) { display: table-header-group; }
+  .purchase-form-polished :global(.purchase-items-table tbody) { display: table-row-group; }
+  .purchase-form-polished :global(.purchase-items-table tr) { display: table-row; box-shadow: none; }
+  .purchase-form-polished :global(.purchase-items-table th),
+  .purchase-form-polished :global(.purchase-items-table td) { display: table-cell; }
+  .purchase-form-polished :global(.purchase-items-table td) { padding: 7px 9px; }
+  .purchase-form-polished :global(.purchase-total-card) { margin-top: 9px; padding: 9px 10px; }
+  .purchase-form-polished :global(.form-actions) { gap: 7px; }
 }
