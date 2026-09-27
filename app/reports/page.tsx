@@ -222,50 +222,39 @@ export default async function ReportsPage({
               .in("expense_id", expenseIds)
           : Promise.resolve({ data: [] as AllocRow[] }),
       ]);
+
+    const [{ data: saleOutstandingRaw }, { data: purchaseOutstandingRaw }, { data: expenseOutstandingRaw }] =
+      await Promise.all([
+        saleIds.length
+          ? supabase.rpc("outstanding_for_documents", { p_document_type: "sale", p_document_ids: saleIds })
+          : Promise.resolve({ data: [] }),
+        purchaseIds.length
+          ? supabase.rpc("outstanding_for_documents", { p_document_type: "purchase", p_document_ids: purchaseIds })
+          : Promise.resolve({ data: [] }),
+        expenseIds.length
+          ? supabase.rpc("outstanding_for_documents", { p_document_type: "expense", p_document_ids: expenseIds })
+          : Promise.resolve({ data: [] }),
+      ]);
+
     const salePaid = sumConfirmedBy((saleAllocsRaw ?? []) as AllocRow[], "sale_id");
     const purchasePaid = sumConfirmedBy((purchaseAllocsRaw ?? []) as AllocRow[], "purchase_id");
     const expensePaid = sumConfirmedBy((expenseAllocsRaw ?? []) as AllocRow[], "expense_id");
-
-    // Posted return reversals shrink the balance exactly like the
-    // returns-aware outstanding RPCs define it. Batched, never per-row.
-    type ReturnRow = { reference_id: string; debit?: unknown; credit?: unknown };
-    const sumReturnsBy = (rows: ReturnRow[], col: "debit" | "credit"): Map<string, number> => {
-      const m = new Map<string, number>();
-      for (const r of rows) {
-        if (!r.reference_id) continue;
-        m.set(r.reference_id, (m.get(r.reference_id) || 0) + num(col === "debit" ? r.debit : r.credit));
-      }
-      return m;
-    };
-    const [{ data: saleReturnsRaw }, { data: purchaseReturnsRaw }] = await Promise.all([
-      saleIds.length
-        ? supabase
-            .from("account_transactions")
-            .select("reference_id, credit")
-            .eq("organization_id", organizationId)
-            .eq("reference_type", "Sale")
-            .in("reference_id", saleIds)
-            .like("transaction_type", "Sale Return%")
-        : Promise.resolve({ data: [] as ReturnRow[] }),
-      purchaseIds.length
-        ? supabase
-            .from("account_transactions")
-            .select("reference_id, debit")
-            .eq("organization_id", organizationId)
-            .eq("reference_type", "Purchase")
-            .in("reference_id", purchaseIds)
-            .like("transaction_type", "Purchase Return%")
-        : Promise.resolve({ data: [] as ReturnRow[] }),
-    ]);
-    const saleReturned = sumReturnsBy((saleReturnsRaw ?? []) as ReturnRow[], "credit");
-    const purchaseReturned = sumReturnsBy((purchaseReturnsRaw ?? []) as ReturnRow[], "debit");
+    const saleOutstanding = new Map(
+      ((saleOutstandingRaw ?? []) as { document_id: string; outstanding: unknown }[]).map((r) => [r.document_id, num(r.outstanding)]),
+    );
+    const purchaseOutstanding = new Map(
+      ((purchaseOutstandingRaw ?? []) as { document_id: string; outstanding: unknown }[]).map((r) => [r.document_id, num(r.outstanding)]),
+    );
+    const expenseOutstanding = new Map(
+      ((expenseOutstandingRaw ?? []) as { document_id: string; outstanding: unknown }[]).map((r) => [r.document_id, num(r.outstanding)]),
+    );
 
     const rows: DueRow[] = [];
     for (const s of sales) {
       const total = num(s.total);
       const settled = salePaid.get(s.id) || 0;
-      const returned = saleReturned.get(s.id) || 0;
-      const outstanding = Math.max(0, total - settled - returned);
+      const outstanding = saleOutstanding.get(s.id) ?? 0;
+      const returned = Math.max(0, total - settled - outstanding);
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Sale",
@@ -285,8 +274,8 @@ export default async function ReportsPage({
     for (const p of purchases) {
       const total = num(p.total);
       const settled = purchasePaid.get(p.id) || 0;
-      const returned = purchaseReturned.get(p.id) || 0;
-      const outstanding = Math.max(0, total - settled - returned);
+      const outstanding = purchaseOutstanding.get(p.id) ?? 0;
+      const returned = Math.max(0, total - settled - outstanding);
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Purchase",
@@ -306,7 +295,7 @@ export default async function ReportsPage({
     for (const e of expenses) {
       const total = num(e.amount);
       const settled = expensePaid.get(e.id) || 0;
-      const outstanding = Math.max(0, total - settled);
+      const outstanding = expenseOutstanding.get(e.id) ?? 0;
       if (outstanding <= 0) continue;
       rows.push({
         kind: "Expense",
