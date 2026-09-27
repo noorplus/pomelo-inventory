@@ -103,7 +103,6 @@ export default function PurchaseForm({
       <section className="data-card">
         <div className="form-section-heading">
           <div><p className="eyebrow">ITEMS</p><h2>Purchase items</h2><p className="muted">Add products, quantities, purchase prices, discount and tax.</p></div>
-          <button className="secondary-button" type="button" onClick={addItem}>+ Add item</button>
         </div>
 
         {!products.length ? (
@@ -149,6 +148,10 @@ export default function PurchaseForm({
             </table>
           </div>
         )}
+
+        <div className="line-items-actions">
+          <button className="secondary-button" type="button" onClick={addItem}>+ Add item</button>
+        </div>
 
         <div className="purchase-total-card">
           <div><span>Subtotal</span><strong>৳{money(totals.subtotal)}</strong></div>
