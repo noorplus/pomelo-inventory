@@ -1,4 +1,4 @@
-import { callRpc, ServiceError, toServiceError, type Db } from "./common";
+import { callRpc, type Db } from "./common";
 
 export type PaymentAllocationInput = {
   sale_id?: string;
@@ -24,26 +24,6 @@ export async function nextPaymentNo(db: Db, organizationId: string): Promise<str
     "Unable to generate payment number.",
   );
   return data;
-}
-
-// Resilient numbering: prefers the serialized RPC, but falls back to a
-// count-based number when the live database predates the numbering
-// migration (PGRST202). The caller retries with a growing attempt offset on
-// unique violations, closing both the concurrency race and the delete-gap
-// (deleted rows make plain count + 1 reuse a number). Once the migration is
-// applied the RPC path is used and the offset is ignored.
-export async function nextPaymentNoResilient(db: Db, organizationId: string, attempt = 0): Promise<string> {
-  try {
-    return await nextPaymentNo(db, organizationId);
-  } catch (error) {
-    if (!(error instanceof ServiceError) || error.code !== "PGRST202") throw error;
-    const { count, error: countError } = await db
-      .from("payments")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizationId);
-    if (countError) throw toServiceError(countError, "Unable to generate payment number.");
-    return `PAY-${String((count ?? 0) + 1 + attempt).padStart(6, "0")}`;
-  }
 }
 
 export async function confirmPayment(db: Db, paymentId: string, allocations: PaymentAllocationInput[]): Promise<string> {
