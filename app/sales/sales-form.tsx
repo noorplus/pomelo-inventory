@@ -67,16 +67,13 @@ export default function SalesForm({
   );
 
   function addItem() {
-    setItems((prev) => [
-      ...prev,
-      {
-        product_id: products[0]?.id || "",
-        quantity: 1,
-        unit_price: Number(products[0]?.retail_price || 0),
-        discount: 0,
-        tax: 0,
-      },
-    ]);
+    setItems((prev) => {
+      const nextProduct = products.find(
+        (product) => (product.stock_quantity ?? 0) > 0 && !prev.some((item) => item.product_id === product.id),
+      );
+      if (!nextProduct) return prev;
+      return [...prev, { product_id: nextProduct.id, quantity: 1, unit_price: Number(nextProduct.retail_price || 0), discount: 0, tax: 0 }];
+    });
   }
 
   function removeItem(index: number) {
@@ -186,7 +183,9 @@ export default function SalesForm({
                 // A product picked in another row is hidden here, so the
                 // same product cannot be selected twice in one document.
                 const availableProducts = products.filter(
-                  (p) => p.id === item.product_id || !items.some((other, oi) => oi !== index && other.product_id === p.id),
+                  (p) =>
+                    p.id === item.product_id ||
+                    ((p.stock_quantity ?? 0) > 0 && !items.some((other, oi) => oi !== index && other.product_id === p.id)),
                 );
 
                 return (

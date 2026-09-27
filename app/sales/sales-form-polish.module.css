@@ -166,25 +166,14 @@
 }
 
 @media (max-width: 620px) {
-  .sales-form-polished :global(.purchase-items-table) {
-    border-radius: 7px;
-  }
-
-  .sales-form-polished :global(.purchase-items-table tr) {
-    border-color: #e0e5ec;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, .025);
-  }
-
-  .sales-form-polished :global(.purchase-items-table td) {
-    padding: 5px 0;
-  }
-
-  .sales-form-polished :global(.purchase-total-card) {
-    margin-top: 9px;
-    padding: 9px 10px;
-  }
-
-  .sales-form-polished :global(.form-actions) {
-    gap: 7px;
-  }
+  .sales-form-polished :global(.purchase-items-table) { overflow-x: auto; }
+  .sales-form-polished :global(.purchase-items-table table) { display: table; width: 100%; min-width: 760px; }
+  .sales-form-polished :global(.purchase-items-table thead) { display: table-header-group; }
+  .sales-form-polished :global(.purchase-items-table tbody) { display: table-row-group; }
+  .sales-form-polished :global(.purchase-items-table tr) { display: table-row; box-shadow: none; }
+  .sales-form-polished :global(.purchase-items-table th),
+  .sales-form-polished :global(.purchase-items-table td) { display: table-cell; }
+  .sales-form-polished :global(.purchase-items-table td) { padding: 7px 9px; }
+  .sales-form-polished :global(.purchase-total-card) { margin-top: 9px; padding: 9px 10px; }
+  .sales-form-polished :global(.form-actions) { gap: 7px; }
 }
