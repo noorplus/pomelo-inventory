@@ -915,7 +915,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .pager-summary { flex: 1 1 auto; }
 
 @media print {
-  .sidebar, .module-actions, .form-actions, .no-print { display: none !important; }
+  .global-header, .sidebar, .module-actions, .form-actions, .no-print,
+  .mobile-nav-panel, .mobile-nav-backdrop { display: none !important; }
   /* On document pages only the print-area (invoice/receipt/voucher) prints. */
   .form-page > *:not(.print-area) { display: none !important; }
   .app-shell { display: block; }
