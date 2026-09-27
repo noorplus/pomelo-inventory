@@ -144,7 +144,7 @@ export async function deleteSale(formData: FormData) {
 }
 
 export async function cloneSale(formData: FormData) {
-  const { supabase, organizationId } = await getWorkspaceMembership();
+  const { supabase, organizationId, user } = await getWorkspaceMembership();
   const sourceId = String(formData.get("sale_id") || "").trim();
 
   let newId = "";
