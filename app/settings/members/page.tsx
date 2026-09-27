@@ -3,11 +3,20 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
 import { addMember, changeMemberRole, removeMember } from "./actions";
 
+type Member = {
+  user_id: string;
+  full_name: string;
+  email: string;
+  role: "owner" | "member";
+  created_at: string;
+};
+
 export default async function MembersPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams;
   const { supabase, organizationId, user } = await getWorkspaceMembership();
-  const { data: members, error } = await supabase.rpc("organization_members", { p_organization_id: organizationId });
-  const currentMember = (members || []).find((member) => member.user_id === user.id);
+  const { data, error } = await supabase.rpc("organization_members", { p_organization_id: organizationId });
+  const members = (data ?? []) as Member[];
+  const currentMember = members.find((member) => member.user_id === user.id);
   const isOwner = currentMember?.role === "owner";
   const message =
     params.error === "email-required" ? "Enter a member email address." :
@@ -27,7 +36,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
       <section className="section-heading"><div><h2>Members</h2><p className="muted">Owners can add registered users, transfer ownership, and remove members.</p></div></section>
       {isOwner && <section className="data-card form-panel"><form action={addMember} className="form"><label>Add registered user<span className="muted"> — enter their sign-in email</span><input name="email" type="email" required placeholder="member@example.com" autoComplete="email" /></label><div className="form-actions"><button className="primary-button" type="submit">Add member</button></div></form><p className="muted">The user must already have an account. This does not send an invitation email.</p></section>}
       <section className="data-card">
-        {members?.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th>{isOwner && <th>Actions</th>}</tr></thead><tbody>
+        {members.length ? <div className="table-wrap"><table className="data-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th>{isOwner && <th>Actions</th>}</tr></thead><tbody>
           {members.map((member) => <tr key={member.user_id}><td>{member.full_name}</td><td>{member.email}</td><td><span className="status-badge">{member.role}</span></td><td>{new Date(member.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</td>{isOwner && <td><div className="member-actions">
             {member.role === "member" ? <form action={changeMemberRole}><input type="hidden" name="user_id" value={member.user_id} /><input type="hidden" name="role" value="owner" /><button className="secondary-button" type="submit">Make owner</button></form> : member.user_id === user.id ? null : <form action={changeMemberRole}><input type="hidden" name="user_id" value={member.user_id} /><input type="hidden" name="role" value="member" /><button className="secondary-button" type="submit">Make member</button></form>}
             {member.role !== "owner" && <form action={removeMember}><input type="hidden" name="user_id" value={member.user_id} /><button className="secondary-button" type="submit">Remove</button></form>}
