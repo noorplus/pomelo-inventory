@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignOutButton } from "@/app/components/sign-out-button";
+import { MobileNavDrawer } from "@/app/components/mobile-nav-drawer";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 type IconName = "dashboard" | "reports" | "purchases" | "sales" | "inventory" | "accounting" | "products" | "contacts" | "uom" | "settings";
@@ -97,44 +98,52 @@ export default async function WorkspaceShell({ active, children }: Props) {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="mobile-header-controls">
-            <details className="mobile-menu">
-              <summary aria-label="Open navigation menu">☰</summary>
-              <NavLinks active={active} className="nav mobile-nav" />
-            </details>
-            <div className="brand">
-              <span className="brand-mark">P</span>
-              <span>Pomelo Inventory</span>
-            </div>
-            <details className="mobile-profile">
-              <summary className="profile-trigger" aria-label="Open current user menu">
-                <span className="avatar">{initials || "U"}</span>
-              </summary>
-              <div className="profile-popover">
-                <div className="profile-heading">CURRENT USER</div>
-                <strong>{profile?.full_name || organization?.organization_name || "User"}</strong>
-                <span>{user.email}</span>
-                <div className="profile-divider" />
-                <SignOutButton />
+      <header className="global-header">
+        <div className="global-header-brand">
+          <div className="global-mobile-nav">
+            <MobileNavDrawer>
+              <div className="mobile-drawer-workspace">
+                <span>WORKSPACE</span>
+                <strong>{organization?.organization_name || "Workspace"}</strong>
               </div>
-            </details>
+              <NavLinks active={active} className="nav mobile-nav" />
+            </MobileNavDrawer>
+          </div>
+          <div className="brand">
+            <span className="brand-mark">P</span>
+            <span>Pomelo Inventory</span>
           </div>
         </div>
+
+        <div className="global-header-workspace" title={organization?.organization_name || "Workspace"}>
+          <span className="status-dot" aria-hidden="true" />
+          <span>{organization?.organization_name || "Workspace"}</span>
+        </div>
+
+        <details className="global-header-profile">
+          <summary className="global-profile-trigger" aria-label="Open current user menu">
+            <span className="avatar">{initials || "U"}</span>
+            <span className="global-profile-copy">
+              <strong>{profile?.full_name || "User"}</strong>
+              <span>{user.email}</span>
+            </span>
+            <span className="profile-chevron" aria-hidden="true">⌄</span>
+          </summary>
+          <div className="profile-popover">
+            <div className="profile-heading">CURRENT USER</div>
+            <strong>{profile?.full_name || "User"}</strong>
+            <span>{user.email}</span>
+            <div className="profile-divider" />
+            <SignOutButton />
+          </div>
+        </details>
+      </header>
+
+      <aside className="sidebar">
         <div className="workspace-label">WORKSPACE</div>
         <NavLinks active={active} className="nav desktop-nav" />
-        <div className="sidebar-footer">
-          <div className="sidebar-user">
-            <div className="avatar">{initials || "U"}</div>
-            <div className="sidebar-user-copy">
-              <strong>{profile?.full_name || organization?.organization_name || "User"}</strong>
-              <span>{user.email}</span>
-            </div>
-          </div>
-          <SignOutButton />
-        </div>
       </aside>
+
       <main className="main">{children}</main>
     </div>
   );
