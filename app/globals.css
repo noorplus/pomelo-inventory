@@ -419,12 +419,18 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   .mobile-header-controls .brand { flex: 1; justify-content: center; }
   .mobile-header-controls .brand-mark { flex: 0 0 auto; }
   .mobile-menu { position: relative; }
-  .mobile-menu .mobile-nav {
-    position: absolute; left: 0; top: calc(100% + 7px); z-index: 25; width: min(250px, calc(100vw - 16px));
-    margin: 0; padding: 7px; border: 1px solid #344054; border-radius: 9px;
-    background: var(--sidebar); box-shadow: 0 10px 24px rgba(0,0,0,.22);
+  /* The hamburger drawer uses a fixed panel; keep its navigation in normal flow. */
+  .mobile-nav-panel .mobile-nav {
+    position: static;
+    width: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
-  .mobile-menu .mobile-nav a { min-height: 38px; }
+  .mobile-nav-panel .mobile-nav a { min-height: 38px; }
   .sidebar-footer { display: none; }
 }
 @media (max-width: 620px) {
