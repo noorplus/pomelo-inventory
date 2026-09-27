@@ -144,7 +144,7 @@ export async function deletePurchase(formData: FormData) {
 }
 
 export async function clonePurchase(formData: FormData) {
-  const { supabase, organizationId } = await getWorkspaceMembership();
+  const { supabase, organizationId, user } = await getWorkspaceMembership();
   const sourceId = String(formData.get("purchase_id") || "").trim();
 
   let newId = "";
