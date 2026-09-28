@@ -382,7 +382,7 @@ export default async function PaymentDetailPage({
               </div>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Target Document</th>
