@@ -2,6 +2,7 @@ import Link from "next/link";
 import CsvActions from "@/app/components/csv-actions";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import Pager from "@/app/components/pager";
+import SortableHeader from "@/app/components/sortable-header";
 
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
@@ -56,12 +57,12 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load contacts: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{contacts?.length ?? 0} contact{contacts?.length === 1 ? "" : "s"}</strong>{(search || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table><thead><tr><SortableHeader label="ID No." field="id_no" search={search} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="Name" field="name" search={search} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="Phone" field="phone" search={search} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="Email" field="email" search={search} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="Address" field="address" search={search} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="Status" field="status" search={search} status={status} sort={sort} direction={direction} /><th>Action</th></tr></thead>
+          <div className="table-scroll"><table><thead><tr><SortableHeader label="ID No." field="id_no" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
+              <SortableHeader label="Name" field="name" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
+              <SortableHeader label="Phone" field="phone" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
+              <SortableHeader label="Email" field="email" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
+              <SortableHeader label="Address" field="address" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
+              <SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} /><th>Action</th></tr></thead>
             <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><Link href={"/contacts/" + contact.id}><strong>{contact.name}</strong></Link></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td><td><form action={toggleContactStatus}><input type="hidden" name="id" value={contact.id} /><input type="hidden" name="status" value={contact.status === "Active" ? "Inactive" : "Active"} /><button className="secondary-button table-action-button" type="submit">{contact.status === "Active" ? "Deactivate" : "Activate"}</button></form></td></tr>)}</tbody>
           </table></div>
           {!contacts?.length && <EmptyState icon="◎" title="No contacts found" text={search || status ? "Try changing your filters." : "Add your first customer or supplier contact."} />}
@@ -88,17 +89,3 @@ async function toggleContactStatus(formData: FormData) {
   await supabase.from("contacts").update({ status: nextStatus }).eq("id", id).eq("organization_id", organizationId);
 }
 
-function SortableHeader({ label, field, search, status, sort, direction }: { label: string; field: string; search: string; status: string; sort: string; direction: string }) {
-  const nextDirection = sort === field && direction === "asc" ? "desc" : "asc";
-  const query = new URLSearchParams();
-  if (search) query.set("search", search);
-  if (status) query.set("status", status);
-  query.set("sort", field);
-  query.set("direction", nextDirection);
-  const indicator = sort === field ? (direction === "asc" ? " ↑" : " ↓") : "";
-  return <th className="sortable-header"><Link href={"/contacts?" + query.toString()}>{label}{indicator}</Link></th>;
-}
-
-function EmptyState({ icon, title, text }: { icon: string; title: string; text: string }) {
-  return <div className="empty-state"><div className="empty-icon">{icon}</div><div><h2>{title}</h2><p>{text}</p></div></div>;
-}
