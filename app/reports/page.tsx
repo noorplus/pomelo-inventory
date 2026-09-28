@@ -12,7 +12,6 @@ const TABS = [
   "cashflow",
   "profit",
   "valuation",
-  "tax",
   "top",
   "expenses",
   "velocity",
@@ -28,7 +27,6 @@ const TAB_DEFS: { key: Tab; label: string }[] = [
   { key: "cashflow", label: "Cash flow" },
   { key: "profit", label: "Profit" },
   { key: "valuation", label: "Valuation" },
-  { key: "tax", label: "Tax" },
   { key: "top", label: "Top contacts" },
   { key: "expenses", label: "Expenses" },
   { key: "velocity", label: "Velocity" },
@@ -608,73 +606,6 @@ export default async function ReportsPage({
     valuationRows.sort((a, b) => b.value - a.value);
     valuationTotal = valuationRows.reduce((s, r) => s + r.value, 0);
     activeCount = valuationRows.length;
-  }
-
-  // ---- tax ----
-  type TaxMonth = {
-    month: string;
-    salesTax: number;
-    salesDiscount: number;
-    purchaseTax: number;
-    purchaseDiscount: number;
-  };
-  let taxMonths: TaxMonth[] = [];
-  let taxSalesTotal = 0;
-  let taxPurchaseTotal = 0;
-  let taxDiscountTotal = 0;
-
-  if (currentTab === "tax") {
-    type TaxHead = { invoice_date: string; discount: unknown; tax: unknown };
-    const [{ data: salesTaxRaw }, { data: purchasesTaxRaw }] = await Promise.all([
-      supabase
-        .from("sales")
-        .select("invoice_date, discount, tax")
-        .eq("organization_id", organizationId)
-        .eq("status", "Confirmed")
-        .order("invoice_date", { ascending: false })
-        .limit(200),
-      supabase
-        .from("purchases")
-        .select("invoice_date, discount, tax")
-        .eq("organization_id", organizationId)
-        .eq("status", "Confirmed")
-        .order("invoice_date", { ascending: false })
-        .limit(200),
-    ]);
-    const byMonth = new Map<string, TaxMonth>();
-    const getEntry = (month: string): TaxMonth => {
-      const e = byMonth.get(month) || {
-        month,
-        salesTax: 0,
-        salesDiscount: 0,
-        purchaseTax: 0,
-        purchaseDiscount: 0,
-      };
-      byMonth.set(month, e);
-      return e;
-    };
-    for (const s of ((salesTaxRaw ?? []) as TaxHead[])) {
-      const m = monthKey(s.invoice_date);
-      if (!m) continue;
-      const e = getEntry(m);
-      e.salesTax += num(s.tax);
-      e.salesDiscount += num(s.discount);
-      taxSalesTotal += num(s.tax);
-      taxDiscountTotal += num(s.discount);
-    }
-    for (const p of ((purchasesTaxRaw ?? []) as TaxHead[])) {
-      const m = monthKey(p.invoice_date);
-      if (!m) continue;
-      const e = getEntry(m);
-      e.purchaseTax += num(p.tax);
-      e.purchaseDiscount += num(p.discount);
-      taxPurchaseTotal += num(p.tax);
-      taxDiscountTotal += num(p.discount);
-    }
-    taxMonths = Array.from(byMonth.values()).sort((a, b) =>
-      a.month < b.month ? 1 : a.month > b.month ? -1 : 0,
-    );
-    activeCount = taxMonths.length;
   }
 
   // ---- top contacts ----
@@ -1490,74 +1421,6 @@ export default async function ReportsPage({
                 <div>
                   <h2>No products</h2>
                   <p>Add products and receive stock to see valuation.</p>
-                </div>
-              </div>
-            )}
-          </section>
-        </>
-      )}
-
-      {currentTab === "tax" && (
-        <>
-          <section className="summary-grid">
-            <div className="summary-card">
-              <span>Sales Tax (Confirmed)</span>
-              <strong style={{ color: "var(--success)" }}>{money(taxSalesTotal)}</strong>
-            </div>
-            <div className="summary-card">
-              <span>Purchase Tax (Confirmed)</span>
-              <strong style={{ color: "var(--primary-dark)" }}>{money(taxPurchaseTotal)}</strong>
-            </div>
-            <div className="summary-card">
-              <span>Total Discounts</span>
-              <strong>{money(taxDiscountTotal)}</strong>
-            </div>
-            <div className="summary-card">
-              <span>Months Covered</span>
-              <strong>{taxMonths.length}</strong>
-            </div>
-          </section>
-          <section className="table-card">
-            <div className="table-meta">
-              <strong>{taxMonths.length} month(s)</strong>
-              <span>Tax and discount totals from confirmed sales and purchase headers</span>
-            </div>
-            <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Month</th>
-                    <th className="numeric">Sales Tax</th>
-                    <th className="numeric">Purchase Tax</th>
-                    <th className="numeric">Sales Discount</th>
-                    <th className="numeric">Purchase Discount</th>
-                    <th className="numeric">Combined Tax</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {taxMonths.map((m) => (
-                    <tr key={m.month}>
-                      <td>
-                        <strong className="mono">{m.month}</strong>
-                      </td>
-                      <td className="numeric">{money(m.salesTax)}</td>
-                      <td className="numeric">{money(m.purchaseTax)}</td>
-                      <td className="numeric">{money(m.salesDiscount)}</td>
-                      <td className="numeric">{money(m.purchaseDiscount)}</td>
-                      <td className="numeric">
-                        <strong>{money(m.salesTax + m.purchaseTax)}</strong>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {!taxMonths.length && (
-              <div className="empty-state">
-                <div className="empty-icon">∅</div>
-                <div>
-                  <h2>No tax data</h2>
-                  <p>Confirm sales or purchases to see monthly tax totals.</p>
                 </div>
               </div>
             )}
