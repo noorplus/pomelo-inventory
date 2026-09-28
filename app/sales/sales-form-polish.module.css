@@ -23,7 +23,7 @@
 .sales-form-polished :global(.purchase-items-table .compact-number){text-align:right;font-variant-numeric:tabular-nums}
 .sales-form-polished :global(.purchase-items-table td.numeric){text-align:right}
 .sales-form-polished :global(.purchase-items-table td.numeric strong){white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums}
-.sales-form-polished :global(.sale-stock-warning){display:block;max-width:100%;margin-top:2px;overflow:hidden;color:var(--danger);font-size:9px;line-height:1;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+.sales-form-polished :global(.unused){display:block;max-width:100%;margin-top:2px;overflow:hidden;color:var(--danger);font-size:9px;line-height:1;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
 .sales-form-polished :global(.purchase-stock-preview){display:block;max-width:100%;margin-top:2px;overflow:hidden;color:var(--muted);font-size:9px;line-height:1;text-overflow:ellipsis;white-space:nowrap}
 .sales-form-polished :global(.icon-button){width:28px;height:28px;padding:0;border-color:#d9e0e8;font-size:15px}
 .sales-form-polished :global(.line-items-actions){display:flex;justify-content:flex-start;margin-top:6px}
