@@ -106,7 +106,7 @@ export default function PurchaseForm({
 
       <section className="data-card">
         <div className="form-section-heading">
-          <div><p className="eyebrow">ITEMS</p><h2>Purchase items</h2><p className="muted">Add products, quantities, purchase prices and discount.</p></div>
+          <div><p className="eyebrow">ITEMS</p><h2>Purchase items</h2></div>
         </div>
 
         {!products.length ? (
@@ -158,8 +158,31 @@ export default function PurchaseForm({
 
         <div className="purchase-total-card">
           <div><span>Subtotal</span><strong>৳{money(totals.subtotal)}</strong></div>
-          <div><span>Discount</span><strong>− ৳{money(totals.discount)}</strong></div>
-          <div className="purchase-grand-total"><span>Total</span><strong>৳{money(totals.total)}</strong></div>
+          <div>
+            <span>Item Discounts</span>
+            <strong>− ৳{money(totals.discount)}</strong>
+          </div>
+          <div>
+            <span>Net Subtotal</span>
+            <strong>৳{money(totals.netSubtotal)}</strong>
+          </div>
+          <div>
+            <span>Overall Discount</span>
+            <input
+              type="number"
+              min="0"
+              max={totals.netSubtotal}
+              step="0.01"
+              className="compact-number"
+              value={overallDiscount}
+              onChange={(event) => setOverallDiscount(Number(event.target.value) || 0)}
+              aria-label="Overall discount"
+            />
+          </div>
+          <div className="purchase-grand-total">
+            <span>Grand Total</span>
+            <strong>৳{money(totals.total)}</strong>
+          </div>
         </div>
       </section>
 
