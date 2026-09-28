@@ -4,6 +4,7 @@
 with ordered as (
   select
     im.id as movement_id,
+    p.id as purchase_id,
     pi.line_total,
     pi.quantity,
     row_number() over (partition by p.id order by pi.product_id) as rn,
