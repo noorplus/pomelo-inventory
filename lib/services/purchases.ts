@@ -24,6 +24,7 @@ export async function createPurchaseDraft(
     contactId: string;
     invoiceDate?: string | null;
     notes?: string | null;
+    overallDiscount?: number;
     items: PurchaseLineInput[];
   },
 ): Promise<PurchaseDraftResult> {
@@ -35,6 +36,7 @@ export async function createPurchaseDraft(
       p_contact_id: input.contactId,
       p_invoice_date: input.invoiceDate ?? null,
       p_notes: input.notes ?? null,
+      p_overall_discount: input.overallDiscount ?? 0,
       p_items: input.items,
     },
     "Unable to create purchase draft.",
@@ -50,6 +52,7 @@ export async function updatePurchaseDraft(
     contactId: string;
     invoiceDate?: string | null;
     notes?: string | null;
+    overallDiscount?: number;
     items: PurchaseLineInput[];
   },
 ): Promise<PurchaseDraftResult> {
