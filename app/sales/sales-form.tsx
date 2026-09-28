@@ -158,7 +158,7 @@ export default function SalesForm({
         </div>
 
         <div className="table-scroll purchase-items-table">
-          <table>
+          <table className="spreadsheet-table">
             <colgroup><col className="col-product" /><col className="col-qty" /><col className="col-price" /><col className="col-discount" /><col className="col-total" /><col className="col-action" /></colgroup>
             <thead>
               <tr>
