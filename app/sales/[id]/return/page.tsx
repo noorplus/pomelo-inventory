@@ -123,7 +123,7 @@ export default async function SaleReturnPage({
           <input type="hidden" name="sale_id" value={id} />
           <section className="table-card">
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Product</th>
