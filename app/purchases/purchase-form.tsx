@@ -6,7 +6,7 @@ import styles from "./purchase-form-polish.module.css";
 
 type Product = { id: string; product_name: string; retail_price: number; uom_id: string; stock_quantity?: number };
 type Contact = { id: string; id_no: number; name: string; phone: string | null };
-type Item = { id?: string; product_id: string; quantity: number; unit_price: number; discount: number; tax: number };
+type Item = { id?: string; product_id: string; quantity: number; unit_price: number; discount: number };
 
 type Props = {
   products: Product[];
@@ -39,17 +39,16 @@ export default function PurchaseForm({
   const [invoiceDate, setInvoiceDate] = useState(initialDate);
   const [notes, setNotes] = useState(initialNotes);
   const [items, setItems] = useState<Item[]>(
-    initialItems.length ? initialItems : [{ product_id: "", quantity: 1, unit_price: 0, discount: 0, tax: 0 }],
+    initialItems.length ? initialItems : [{ product_id: "", quantity: 1, unit_price: 0, discount: 0 }],
   );
 
   const totals = useMemo(() => {
-    let subtotal = 0, discount = 0, tax = 0;
+    let subtotal = 0, discount = 0;
     for (const item of items) {
       subtotal += Number(item.quantity || 0) * Number(item.unit_price || 0);
       discount += Number(item.discount || 0);
-      tax += Number(item.tax || 0);
     }
-    return { subtotal, discount, tax, total: subtotal - discount + tax };
+    return { subtotal, discount, total: subtotal - discount };
   }, [items]);
 
   function updateItem(index: number, patch: Partial<Item>) {
@@ -64,7 +63,7 @@ export default function PurchaseForm({
   function addItem() {
     setItems((current) => {
       const nextProduct = products.find((product) => !current.some((item) => item.product_id === product.id));
-      return [...current, { product_id: nextProduct?.id || "", quantity: 1, unit_price: nextProduct ? Number(nextProduct.retail_price) : 0, discount: 0, tax: 0 }];
+      return [...current, { product_id: nextProduct?.id || "", quantity: 1, unit_price: nextProduct ? Number(nextProduct.retail_price) : 0, discount: 0 }];
     });
   }
 
@@ -102,7 +101,7 @@ export default function PurchaseForm({
 
       <section className="data-card">
         <div className="form-section-heading">
-          <div><p className="eyebrow">ITEMS</p><h2>Purchase items</h2><p className="muted">Add products, quantities, purchase prices, discount and tax.</p></div>
+          <div><p className="eyebrow">ITEMS</p><h2>Purchase items</h2><p className="muted">Add products, quantities, purchase prices and discount.</p></div>
         </div>
 
         {!products.length ? (
@@ -110,11 +109,11 @@ export default function PurchaseForm({
         ) : (
           <div className="table-scroll purchase-items-table">
             <table>
-              <thead><tr><th>Product</th><th className="numeric">Qty</th><th className="numeric">Unit price</th><th className="numeric">Discount</th><th className="numeric">Tax</th><th className="numeric">Line total</th><th /></tr></thead>
+              <thead><tr><th>Product</th><th className="numeric">Qty</th><th className="numeric">Unit price</th><th className="numeric">Discount</th><th className="numeric">Line total</th><th /></tr></thead>
               <tbody>
                 {items.map((item, index) => {
                   const base = Number(item.quantity || 0) * Number(item.unit_price || 0);
-                  const lineTotal = base - Number(item.discount || 0) + Number(item.tax || 0);
+                  const lineTotal = base - Number(item.discount || 0);
                   const prod = products.find((p) => p.id === item.product_id);
                   const currentStock = prod?.stock_quantity ?? 0;
                   // A product picked in another row is hidden here, so the
@@ -138,7 +137,6 @@ export default function PurchaseForm({
                       <td className="numeric"><input className="compact-number" type="number" min="0.0001" step="0.0001" value={item.quantity} onChange={(event) => updateItem(index, { quantity: Number(event.target.value) })} aria-label="Quantity" required /></td>
                       <td className="numeric"><input className="compact-number" type="number" min="0" step="0.01" value={item.unit_price} onChange={(event) => updateItem(index, { unit_price: Number(event.target.value) })} aria-label="Unit price" required /></td>
                       <td className="numeric"><input className="compact-number" type="number" min="0" step="0.01" value={item.discount} onChange={(event) => updateItem(index, { discount: Number(event.target.value) })} aria-label="Discount" /></td>
-                      <td className="numeric"><input className="compact-number" type="number" min="0" step="0.01" value={item.tax} onChange={(event) => updateItem(index, { tax: Number(event.target.value) })} aria-label="Tax" /></td>
                       <td className="numeric"><strong>৳{money(lineTotal)}</strong></td>
                       <td><button className="icon-button" type="button" onClick={() => removeItem(index)} disabled={items.length === 1} aria-label="Remove item">×</button></td>
                     </tr>
@@ -156,7 +154,6 @@ export default function PurchaseForm({
         <div className="purchase-total-card">
           <div><span>Subtotal</span><strong>৳{money(totals.subtotal)}</strong></div>
           <div><span>Discount</span><strong>− ৳{money(totals.discount)}</strong></div>
-          <div><span>Tax</span><strong>+ ৳{money(totals.tax)}</strong></div>
           <div className="purchase-grand-total"><span>Total</span><strong>৳{money(totals.total)}</strong></div>
         </div>
       </section>
