@@ -68,7 +68,7 @@ export async function updatePurchase(formData: FormData) {
   try {
     if (!purchaseId) throw new Error("Missing purchase ID.");
     if (!contactId) throw new Error("Please select a supplier contact.");
-    await updatePurchaseDraft(supabase, { purchaseId, contactId, invoiceDate, notes, items: parseItems(formData) });
+    await updatePurchaseDraft(supabase, { purchaseId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
     errorRedirect("/purchases/" + purchaseId, "Unable to update purchase.");
