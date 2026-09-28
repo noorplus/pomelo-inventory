@@ -265,7 +265,8 @@ button { -webkit-tap-highlight-color: transparent; }
   .purchase-items-table td:nth-child(2)::before { content: "Quantity"; }
   .purchase-items-table td:nth-child(3)::before { content: "Unit price"; }
   .purchase-items-table td:nth-child(4)::before { content: "Discount"; }
-  .purchase-items-table td:nth-child(5)::before { content: "Tax"; }
+  .purchase-items-table td:nth-child(5)::before { content: "Line total"; }
+  .purchase-items-table td:nth-child(6)::before { content: "Remove"; }
   .purchase-items-table td:nth-child(6)::before { content: "Line total"; }
   .purchase-items-table td:nth-child(7)::before { content: "Remove"; }
   .purchase-items-table td.numeric { text-align: left; }
@@ -1159,3 +1160,14 @@ body.mobile-drawer-open { overflow: hidden; }
   .global-header-profile .avatar { width: 29px; height: 29px; }
   .main { padding: 12px 9px 22px; }
 }
+
+
+/* Shared spreadsheet-style table controls */
+.table-card .sortable-header a, .data-card .sortable-header a {
+  display: inline-flex; align-items: center; gap: 3px; color: inherit; text-decoration: none; width: 100%;
+}
+.table-card .sortable-header a:hover, .data-card .sortable-header a:hover { color: var(--primary); }
+.data-card .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.data-card .data-table th, .data-card .data-table td { padding: 9px 11px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; white-space: nowrap; }
+.data-card .data-table th { position: sticky; top: 0; z-index: 2; background: #f8fafc; color: #667085; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.data-card .data-table tbody tr:hover td { background: #f8fafc; }
