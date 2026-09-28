@@ -1,5 +1,6 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import SortableHeader from "@/app/components/sortable-header";
 import Pager from "@/app/components/pager";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { createExpenseCategory, toggleExpenseCategoryStatus } from "@/app/accounting/actions";
@@ -13,6 +14,8 @@ type SearchParams = {
   type?: string;
   status?: string;
   page?: string;
+  sort?: string;
+  direction?: string;
 };
 
 export default async function AccountingPage({
@@ -27,6 +30,11 @@ export default async function AccountingPage({
     : "payments";
   const page = parsePageParam(params.page);
   const { from, to } = pageRange(page);
+  const sort = ["payment_no", "payment_date", "payment_type", "amount", "payment_method", "reference_no", "status"].includes(params.sort || "") ? String(params.sort) : "payment_date";
+  const expenseSort = ["expense_no", "expense_date", "description", "amount", "status"].includes(params.sort || "") ? String(params.sort) : "expense_date";
+  const categorySort = ["name", "status", "created_at"].includes(params.sort || "") ? String(params.sort) : "name";
+  const ledgerSort = ["transaction_date", "transaction_type", "description", "reference_type", "debit", "credit"].includes(params.sort || "") ? String(params.sort) : "transaction_date";
+  const direction = params.direction === "asc" ? "asc" : "desc";
 
   // Fetch only what the active tab needs. Summary cards use narrow
   // status-filtered pulls plus a head count instead of full tables.
@@ -59,7 +67,7 @@ export default async function AccountingPage({
           .from("payments")
           .select("id, payment_no, payment_date, payment_type, contact_id, amount, payment_method, reference_no, status, contacts(name)", { count: "exact" })
           .eq("organization_id", organizationId)
-          .order("payment_date", { ascending: false })
+          .order(sort, { ascending: direction === "asc" })
           .range(from, to)
       : Promise.resolve({ data: null, count: null }),
     currentTab === "expenses"
@@ -67,7 +75,7 @@ export default async function AccountingPage({
           .from("expenses")
           .select("id, expense_no, expense_date, description, amount, status, expense_categories(name), contacts(name)", { count: "exact" })
           .eq("organization_id", organizationId)
-          .order("expense_date", { ascending: false })
+          .order(expenseSort, { ascending: direction === "asc" })
           .range(from, to)
       : Promise.resolve({ data: null, count: null }),
     currentTab === "categories"
@@ -75,14 +83,14 @@ export default async function AccountingPage({
           .from("expense_categories")
           .select("id, name, status, created_at")
           .eq("organization_id", organizationId)
-          .order("name")
+          .order(categorySort, { ascending: direction === "asc" })
       : Promise.resolve({ data: null }),
     currentTab === "ledger"
       ? supabase
           .from("account_transactions")
           .select("id, transaction_date, transaction_type, reference_type, reference_id, description, debit, credit, contacts(name)")
           .eq("organization_id", organizationId)
-          .order("transaction_date", { ascending: false })
+          .order(ledgerSort, { ascending: direction === "asc" })
           .limit(100)
       : Promise.resolve({ data: null }),
   ]);
