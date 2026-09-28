@@ -6,7 +6,6 @@ export type SaleLineInput = {
   quantity: number;
   unit_price: number;
   discount?: number;
-  tax?: number;
 };
 
 export type SaleDraftResult = {
