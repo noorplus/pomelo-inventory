@@ -196,7 +196,7 @@ export default async function InventoryPage({
               <Link className="filter-clear" href="/inventory/export">⇩ Export CSV</Link>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Code</th>
@@ -307,7 +307,7 @@ export default async function InventoryPage({
               <span>Immutable inventory audit ledger</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <SortableHeader label="Date & Time" field="movement_date" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} />
