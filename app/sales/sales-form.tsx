@@ -57,9 +57,9 @@ export default function SalesForm({
       ? initialItems
       : [
           {
-            product_id: products[0]?.id || "",
+            product_id: "",
             quantity: 1,
-            unit_price: Number(products[0]?.retail_price || 0),
+            unit_price: 0,
             discount: 0,
             tax: 0,
           },
@@ -68,11 +68,10 @@ export default function SalesForm({
 
   function addItem() {
     setItems((prev) => {
-      const nextProduct = products.find(
-        (product) => (product.stock_quantity ?? 0) > 0 && !prev.some((item) => item.product_id === product.id),
-      );
-      if (!nextProduct) return prev;
-      return [...prev, { product_id: nextProduct.id, quantity: 1, unit_price: Number(nextProduct.retail_price || 0), discount: 0, tax: 0 }];
+      return [
+        ...prev,
+        { product_id: "", quantity: 1, unit_price: 0, discount: 0, tax: 0 },
+      ];
     });
   }
 

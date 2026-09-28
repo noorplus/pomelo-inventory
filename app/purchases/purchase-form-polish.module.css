@@ -45,3 +45,8 @@
 
 .purchase-form-polished :global(.line-items-actions){display:flex;justify-content:flex-start;margin-top:8px}
 @media (max-width:620px){.purchase-form-polished :global(.line-items-actions){margin-top:7px}.purchase-form-polished :global(.line-items-actions .secondary-button){min-height:34px}}
+
+
+/* Keep transaction forms inside the viewport; line-item scrolling stays local to the table. */
+.purchase-form-polished :global(.data-card) { width: 100%; min-width: 0; }
+.purchase-form-polished :global(.purchase-items-table) { min-width: 0; width: 100%; }
