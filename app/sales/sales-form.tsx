@@ -35,6 +35,7 @@ type Props = {
   initialDate?: string;
   initialNotes?: string;
   initialItems?: SaleItemState[];
+  initialDiscount?: number;
   error?: string;
 };
 
@@ -48,9 +49,11 @@ export default function SalesForm({
   initialDate,
   initialNotes = "",
   initialItems = [],
+  initialDiscount = 0,
   error,
 }: Props) {
   const formId = useId();
+  const [overallDiscount, setOverallDiscount] = useState(initialDiscount);
   const [items, setItems] = useState<SaleItemState[]>(
     initialItems.length > 0
       ? initialItems
@@ -95,12 +98,14 @@ export default function SalesForm({
 
   const subtotal = items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unit_price || 0), 0);
   const discountTotal = items.reduce((sum, item) => sum + (item.discount || 0), 0);
-  const grandTotal = Math.max(0, subtotal - discountTotal);
+  const netSubtotal = Math.max(0, subtotal - discountTotal);
+  const grandTotal = Math.max(0, netSubtotal - overallDiscount);
 
   return (
     <form action={action} className={`purchase-form ${styles["sales-form-polished"]}`} id={formId}>
       {saleId && <input type="hidden" name="sale_id" value={saleId} />}
       <input type="hidden" name="items_json" value={JSON.stringify(items)} />
+      <input type="hidden" name="overall_discount" value={overallDiscount} />
 
       {error && <div className="form-error" role="alert">{error}</div>}
 
@@ -275,12 +280,19 @@ export default function SalesForm({
           </div>
           <div>
             <span>Discount</span>
-            <strong>
-              − ৳{discountTotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </strong>
+            <input
+              type="number"
+              min="0"
+              max={netSubtotal}
+              step="0.01"
+              className="compact-number"
+              value={overallDiscount}
+              onChange={(e) => setOverallDiscount(parseFloat(e.target.value) || 0)}
+              aria-label="Overall discount"
+            />
           </div>
           <div className="purchase-grand-total">
-            <span>Net Total</span>
+            <span>Grand Total</span>
             <strong>
               ৳{grandTotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </strong>
