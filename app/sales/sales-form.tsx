@@ -106,7 +106,6 @@ export default function SalesForm({
       {saleId && <input type="hidden" name="sale_id" value={saleId} />}
       <input type="hidden" name="items_json" value={JSON.stringify(items)} />
       <input type="hidden" name="overall_discount" value={overallDiscount} />
-      <input type="hidden" name="overall_discount" value={overallDiscount} />
 
       {error && <div className="form-error" role="alert">{error}</div>}
 
@@ -160,6 +159,7 @@ export default function SalesForm({
 
         <div className="table-scroll purchase-items-table">
           <table>
+            <colgroup><col className="col-product" /><col className="col-qty" /><col className="col-price" /><col className="col-discount" /><col className="col-total" /><col className="col-action" /></colgroup>
             <thead>
               <tr>
                 <th style={{ width: "35%" }}>Product</th>
@@ -268,7 +268,7 @@ export default function SalesForm({
 
         <div className="line-items-actions">
           <button type="button" onClick={addItem} className="secondary-button">
-            + Add line
+            + Add item
           </button>
         </div>
 
