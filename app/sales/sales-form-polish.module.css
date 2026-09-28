@@ -96,3 +96,26 @@
   .sales-form-polished :global(.purchase-items-table .spreadsheet-table select),.sales-form-polished :global(.purchase-items-table .spreadsheet-table input){font-size:11px!important;padding-left:4px!important;padding-right:4px!important}
   .sales-form-polished :global(.purchase-items-table .spreadsheet-table .icon-button){width:24px!important;height:24px!important}
 }
+
+
+/* Mobile transaction grid: content-driven columns; never truncate product names */
+@media(max-width:620px){
+  .sales-form-polished :global(.purchase-items-table){max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table){display:table!important;width:max-content!important;min-width:100%!important;max-width:none!important;table-layout:auto!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-product),
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-qty),
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-price),
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-discount),
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-total),
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-action){width:auto!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-product){min-width:180px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-qty){min-width:62px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-price){min-width:88px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-discount){min-width:82px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-total){min-width:88px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-action){min-width:34px!important;width:34px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table th),.sales-form-polished :global(.purchase-items-table .spreadsheet-table td){overflow:visible!important;white-space:nowrap!important;padding-left:3px!important;padding-right:3px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table select),.sales-form-polished :global(.purchase-items-table .spreadsheet-table input){font-size:11px!important;padding-left:4px!important;padding-right:4px!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table select){min-width:0!important}
+  .sales-form-polished :global(.purchase-items-table .spreadsheet-table .icon-button){width:24px!important;height:24px!important}
+}
