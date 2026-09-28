@@ -80,6 +80,10 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
   );
 }
 
+function EmptyState({ icon, title, text }: { icon: string; title: string; text: string }) {
+  return <div className="empty-state"><div className="empty-icon">{icon}</div><div><h2>{title}</h2><p>{text}</p></div></div>;
+}
+
 async function toggleContactStatus(formData: FormData) {
   "use server";
   const { supabase, organizationId } = await getWorkspaceContext();
