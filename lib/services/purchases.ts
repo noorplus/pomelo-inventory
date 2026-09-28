@@ -24,7 +24,6 @@ export async function createPurchaseDraft(
     contactId: string;
     invoiceDate?: string | null;
     notes?: string | null;
-    overallDiscount?: number;
     items: PurchaseLineInput[];
   },
 ): Promise<PurchaseDraftResult> {
@@ -40,15 +39,8 @@ export async function createPurchaseDraft(
     },
     "Unable to create purchase draft.",
   );
-  const purchaseId = typeof data === "string" ? data : data.purchase_id;
-  const gross = input.items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
-  const itemDiscount = input.items.reduce((sum, item) => sum + Number(item.discount || 0), 0);
-  const netSubtotal = Math.max(0, gross - itemDiscount);
-  const overallDiscount = Number(input.overallDiscount || 0);
-  if (overallDiscount < 0 || overallDiscount > netSubtotal) throw new Error("Overall discount cannot exceed subtotal after item discounts.");
-  const { error } = await db.from("purchases").update({ subtotal: netSubtotal, discount: overallDiscount, total: netSubtotal - overallDiscount }).eq("id", purchaseId);
-  if (error) throw new Error(error.message);
-  return { purchase_id: purchaseId };
+  if (typeof data === "string") return { purchase_id: data };
+  return { purchase_id: data.purchase_id };
 }
 
 export async function updatePurchaseDraft(
@@ -58,7 +50,6 @@ export async function updatePurchaseDraft(
     contactId: string;
     invoiceDate?: string | null;
     notes?: string | null;
-    overallDiscount?: number;
     items: PurchaseLineInput[];
   },
 ): Promise<PurchaseDraftResult> {
@@ -70,20 +61,12 @@ export async function updatePurchaseDraft(
       p_contact_id: input.contactId,
       p_invoice_date: input.invoiceDate ?? null,
       p_notes: input.notes ?? null,
-      p_overall_discount: input.overallDiscount ?? 0,
       p_items: input.items,
     },
     "Unable to update purchase draft.",
   );
-  const purchaseId = typeof data === "string" ? data : data?.purchase_id ?? input.purchaseId;
-  const gross = input.items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
-  const itemDiscount = input.items.reduce((sum, item) => sum + Number(item.discount || 0), 0);
-  const netSubtotal = Math.max(0, gross - itemDiscount);
-  const overallDiscount = Number(input.overallDiscount || 0);
-  if (overallDiscount < 0 || overallDiscount > netSubtotal) throw new Error("Overall discount cannot exceed subtotal after item discounts.");
-  const { error } = await db.from("purchases").update({ subtotal: netSubtotal, discount: overallDiscount, total: netSubtotal - overallDiscount }).eq("id", purchaseId);
-  if (error) throw new Error(error.message);
-  return { purchase_id: purchaseId };
+  if (typeof data === "string") return { purchase_id: data };
+  return { purchase_id: data?.purchase_id ?? input.purchaseId };
 }
 
 export async function deletePurchaseDraft(db: Db, purchaseId: string): Promise<void> {
