@@ -18,6 +18,7 @@ type Props = {
   initialDate?: string;
   initialNotes?: string;
   initialItems?: Item[];
+  initialDiscount?: number;
   error?: string;
 };
 
@@ -33,11 +34,13 @@ export default function PurchaseForm({
   initialDate = new Date().toISOString().slice(0, 10),
   initialNotes = "",
   initialItems = [],
+  initialDiscount = 0,
   error = "",
 }: Props) {
   const [contactId, setContactId] = useState(initialContactId);
   const [invoiceDate, setInvoiceDate] = useState(initialDate);
   const [notes, setNotes] = useState(initialNotes);
+  const [overallDiscount, setOverallDiscount] = useState(initialDiscount);
   const [items, setItems] = useState<Item[]>(
     initialItems.length ? initialItems : [{ product_id: "", quantity: 1, unit_price: 0, discount: 0 }],
   );
@@ -48,8 +51,9 @@ export default function PurchaseForm({
       subtotal += Number(item.quantity || 0) * Number(item.unit_price || 0);
       discount += Number(item.discount || 0);
     }
-    return { subtotal, discount, total: subtotal - discount };
-  }, [items]);
+    const netSubtotal = Math.max(0, subtotal - discount);
+    return { subtotal, discount, netSubtotal, total: Math.max(0, netSubtotal - overallDiscount) };
+  }, [items, overallDiscount]);
 
   function updateItem(index: number, patch: Partial<Item>) {
     setItems((current) => current.map((item, i) => (i === index ? { ...item, ...patch } : item)));
@@ -75,6 +79,7 @@ export default function PurchaseForm({
     <form className={`purchase-form ${styles["purchase-form-polished"]}`} action={action}>
       {purchaseId && <input type="hidden" name="purchase_id" value={purchaseId} />}
       <input type="hidden" name="items_json" value={JSON.stringify(items)} />
+      <input type="hidden" name="overall_discount" value={overallDiscount} />
 
       <section className="data-card">
         <div className="form-section-heading"><div><p className="eyebrow">PURCHASE</p><h2>Invoice details</h2></div></div>
