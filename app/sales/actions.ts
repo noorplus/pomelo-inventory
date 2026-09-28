@@ -31,6 +31,12 @@ function parseItems(formData: FormData): SaleItemInput[] {
   });
 }
 
+function parseOverallDiscount(formData: FormData): number {
+  const value = Number(formData.get("overall_discount") || 0);
+  if (!Number.isFinite(value) || value < 0) throw new Error("Overall discount cannot be negative.");
+  return value;
+}
+
 function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
 }
@@ -40,10 +46,11 @@ export async function createSale(formData: FormData) {
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
+  const overallDiscount = parseOverallDiscount(formData);
   let saleId = "";
   try {
     if (!contactId) throw new Error("Please select a customer contact.");
-    ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, items: parseItems(formData) }));
+    ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) }));
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/new", error.message);
     errorRedirect("/sales/new", "Unable to create sale.");
@@ -57,10 +64,11 @@ export async function updateSale(formData: FormData) {
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
+  const overallDiscount = parseOverallDiscount(formData);
   try {
     if (!saleId) throw new Error("Missing sale ID.");
     if (!contactId) throw new Error("Please select a customer contact.");
-    await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, items: parseItems(formData) });
+    await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to update sale.");
@@ -102,7 +110,7 @@ export async function cloneSale(formData: FormData) {
   try {
     if (!sourceId) throw new Error("Missing sale ID.");
     const [{ data: source, error: sourceError }, { data: sourceItems, error: itemsError }] = await Promise.all([
-      supabase.from("sales").select("contact_id, notes").eq("id", sourceId).eq("organization_id", organizationId).single(),
+      supabase.from("sales").select("contact_id, notes, discount").eq("id", sourceId).eq("organization_id", organizationId).single(),
       supabase.from("sale_items").select("product_id, quantity, unit_price, discount").eq("sale_id", sourceId).eq("organization_id", organizationId),
     ]);
     if (sourceError || !source) throw new Error("Source sale not found.");
@@ -113,6 +121,7 @@ export async function cloneSale(formData: FormData) {
       contactId: source.contact_id,
       invoiceDate: new Date().toISOString().split("T")[0],
       notes: source.notes,
+      overallDiscount: Number(source.discount || 0),
       items: sourceItems,
     }));
   } catch (error) {
