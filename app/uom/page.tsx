@@ -6,7 +6,9 @@ import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspac
 
 export const dynamic = "force-dynamic";
 
-type SearchParams = { sort?: string; direction?: string };\n\nexport default async function UomPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+type SearchParams = { sort?: string; direction?: string };
+
+export default async function UomPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const { supabase, organizationId } = await getWorkspaceContext();
   const params = await searchParams;
   const sort = ["name", "status", "created_at"].includes(params.sort || "") ? String(params.sort) : "name";
