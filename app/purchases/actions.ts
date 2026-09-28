@@ -46,9 +46,9 @@ export async function createPurchase(formData: FormData) {
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
-  const overallDiscount = parseOverallDiscount(formData);
   let purchaseId = "";
   try {
+    const overallDiscount = parseOverallDiscount(formData);
     if (!contactId) throw new Error("Please select a supplier contact.");
     ({ purchase_id: purchaseId } = await createPurchaseDraft(supabase, { organizationId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) }));
   } catch (error) {
@@ -64,8 +64,8 @@ export async function updatePurchase(formData: FormData) {
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
-  const overallDiscount = parseOverallDiscount(formData);
   try {
+    const overallDiscount = parseOverallDiscount(formData);
     if (!purchaseId) throw new Error("Missing purchase ID.");
     if (!contactId) throw new Error("Please select a supplier contact.");
     await updatePurchaseDraft(supabase, { purchaseId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) });
