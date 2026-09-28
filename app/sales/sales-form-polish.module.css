@@ -206,3 +206,18 @@
 /* Keep transaction forms inside the viewport; line-item scrolling stays local to the table. */
 .sales-form-polished :global(.data-card) { width: 100%; min-width: 0; }
 .sales-form-polished :global(.purchase-items-table) { min-width: 0; width: 100%; }
+
+
+/* Keep page width stable; horizontal scrolling belongs only to the line-item table. */
+.sales-form-polished {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+.sales-form-polished :global(.purchase-items-table) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}

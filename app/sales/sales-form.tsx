@@ -192,6 +192,7 @@ export default function SalesForm({
                         onChange={(e) => updateItem(index, { product_id: e.target.value })}
                         required
                       >
+                        <option value="" disabled>Select product</option>
                         {availableProducts.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.product_name} (Stock: {p.stock_quantity ?? 0})
