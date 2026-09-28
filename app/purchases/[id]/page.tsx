@@ -50,10 +50,6 @@ export default async function PurchaseDetailPage({
     supabase.from("stock").select("product_id, quantity").eq("organization_id", organizationId),
   ]);
 
-  const grossSubtotal = (items ?? []).reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
-  const itemDiscountTotal = (items ?? []).reduce((sum, item) => sum + Number(item.discount || 0), 0);
-  const overallDiscount = Math.max(0, grossSubtotal - itemDiscountTotal - Number(purchase.total || 0));
-
   const paid = (allocations ?? []).reduce((sum, allocation) => {
     const payment = Array.isArray(allocation.payments) ? allocation.payments[0] : allocation.payments;
     return payment?.status === "Confirmed" ? sum + Number(allocation.allocated_amount) : sum;
@@ -97,7 +93,6 @@ export default async function PurchaseDetailPage({
             initialContactId={purchase.contact_id}
             initialDate={purchase.invoice_date}
             initialNotes={purchase.notes || ""}
-            initialDiscount={overallDiscount}
             initialItems={(items ?? []).map((item) => ({
               id: item.id,
               product_id: item.product_id,
@@ -153,7 +148,7 @@ export default async function PurchaseDetailPage({
               const product = Array.isArray(item.products) ? item.products[0] : item.products;
               return <tr key={item.id}><td><strong>{product?.product_name || "—"}</strong></td><td className="numeric">{Number(item.quantity).toLocaleString("en-BD", { maximumFractionDigits: 4 })}</td><td className="numeric">৳{Number(item.unit_price).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td className="numeric">৳{Number(item.discount).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td className="numeric"><strong>৳{Number(item.line_total).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></td></tr>;
             })}</tbody></table></div>
-          <div className="purchase-total-card"><div><span>Subtotal</span><strong>৳{grossSubtotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div><div><span>Discount</span><strong>− ৳{overallDiscount.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div><div className="purchase-grand-total"><span>Total</span><strong>৳{Number(purchase.total).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div></div>
+          <div className="purchase-total-card"><div><span>Subtotal</span><strong>৳{Number(purchase.subtotal).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div><div><span>Discount</span><strong>− ৳{Number(purchase.discount).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div><div className="purchase-grand-total"><span>Total</span><strong>৳{Number(purchase.total).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div></div>
         </section>
 
         {purchase.notes && <section className="data-card"><p className="eyebrow">NOTES</p><p>{purchase.notes}</p></section>}
@@ -183,8 +178,8 @@ export default async function PurchaseDetailPage({
               };
             })}
             lineMode="items"
-            subtotal={grossSubtotal}
-            discount={overallDiscount}
+            subtotal={Number(purchase.subtotal)}
+            discount={Number(purchase.discount)}
             total={Number(purchase.total)}
             paid={paid}
             due={due}
