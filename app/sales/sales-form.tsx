@@ -162,12 +162,12 @@ export default function SalesForm({
             <colgroup><col className="col-product" /><col className="col-qty" /><col className="col-price" /><col className="col-discount" /><col className="col-total" /><col className="col-action" /></colgroup>
             <thead>
               <tr>
-                <th style={{ width: "35%" }}>Product</th>
-                <th className="numeric" style={{ width: "12%" }}>Qty</th>
-                <th className="numeric" style={{ width: "15%" }}>Unit Price</th>
-                <th className="numeric" style={{ width: "12%" }}>Discount</th>
-                <th className="numeric" style={{ width: "16%" }}>Line Total</th>
-                <th style={{ width: "40px" }} />
+                <th>Product</th>
+                <th className="numeric">Qty</th>
+                <th className="numeric">Unit Price</th>
+                <th className="numeric">Discount</th>
+                <th className="numeric">Line Total</th>
+                <th />
               </tr>
             </thead>
             <tbody>
