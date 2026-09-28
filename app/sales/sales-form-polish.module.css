@@ -201,3 +201,8 @@
   .sales-form-polished :global(.line-items-actions) { margin-top: 7px; }
   .sales-form-polished :global(.line-items-actions .secondary-button) { min-height: 34px; }
 }
+
+
+/* Keep transaction forms inside the viewport; line-item scrolling stays local to the table. */
+.sales-form-polished :global(.data-card) { width: 100%; min-width: 0; }
+.sales-form-polished :global(.purchase-items-table) { min-width: 0; width: 100%; }
