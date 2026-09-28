@@ -68,7 +68,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load products: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{products.length} product{products.length === 1 ? "" : "s"}</strong>{(search || selectedUom || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table><thead><tr><SortableHeader label="Product" field="product_name" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
+          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr><SortableHeader label="Product" field="product_name" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
               <SortableHeader label="UoM" field="uom_id" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
               <SortableHeader label="Retail price" field="retail_price" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} className="numeric" />
               <SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} /><th>Action</th></tr></thead>
