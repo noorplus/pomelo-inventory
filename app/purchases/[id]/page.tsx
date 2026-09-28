@@ -148,7 +148,7 @@ export default async function PurchaseDetailPage({
 
         <section className="data-card">
           <div className="form-section-heading"><div><p className="eyebrow">ITEMS</p><h2>Purchase items</h2></div></div>
-          <div className="table-scroll"><table><thead><tr><th>Product</th><th className="numeric">Qty</th><th className="numeric">Unit price</th><th className="numeric">Discount</th><th className="numeric">Line total</th></tr></thead>
+          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr><th>Product</th><th className="numeric">Qty</th><th className="numeric">Unit price</th><th className="numeric">Discount</th><th className="numeric">Line total</th></tr></thead>
             <tbody>{items?.map((item) => {
               const product = Array.isArray(item.products) ? item.products[0] : item.products;
               return <tr key={item.id}><td><strong>{product?.product_name || "—"}</strong></td><td className="numeric">{Number(item.quantity).toLocaleString("en-BD", { maximumFractionDigits: 4 })}</td><td className="numeric">৳{Number(item.unit_price).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td className="numeric">৳{Number(item.discount).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td className="numeric"><strong>৳{Number(item.line_total).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></td></tr>;
