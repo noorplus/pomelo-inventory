@@ -200,11 +200,11 @@ export default async function InventoryPage({
                 <thead>
                   <tr>
                     <th>Code</th>
-                    <th>Product Name</th>
-                    <th>UoM</th>
-                    <th className="numeric">Retail Price</th>
-                    <th className="numeric">Stock on Hand</th>
-                    <th>Status</th>
+                    <SortableHeader label="Product Name" field="name" sort={stockSort} direction={direction} basePath="/inventory" params={{ tab: "stock", search: search || undefined }} />
+                    <SortableHeader label="UoM" field="uom" sort={stockSort} direction={direction} basePath="/inventory" params={{ tab: "stock", search: search || undefined }} />
+                    <SortableHeader label="Retail Price" field="retail_price" sort={stockSort} direction={direction} basePath="/inventory" params={{ tab: "stock", search: search || undefined }} className="numeric" />
+                    <SortableHeader label="Stock on Hand" field="quantity" sort={stockSort} direction={direction} basePath="/inventory" params={{ tab: "stock", search: search || undefined }} className="numeric" />
+                    <SortableHeader label="Status" field="status" sort={stockSort} direction={direction} basePath="/inventory" params={{ tab: "stock", search: search || undefined }} />
                     <th className="numeric">Actions</th>
                   </tr>
                 </thead>
@@ -310,13 +310,13 @@ export default async function InventoryPage({
               <table>
                 <thead>
                   <tr>
-                    <th>Date & Time</th>
-                    <th>Product</th>
-                    <th>Direction</th>
-                    <th>Type</th>
-                    <th className="numeric">Quantity</th>
-                    <th>Reference</th>
-                    <th className="numeric">Unit Cost</th>
+                    <SortableHeader label="Date & Time" field="movement_date" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} />
+                    <SortableHeader label="Product" field="product_name" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} />
+                    <SortableHeader label="Direction" field="movement_direction" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} />
+                    <SortableHeader label="Type" field="movement_type" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} />
+                    <SortableHeader label="Quantity" field="quantity" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} className="numeric" />
+                    <SortableHeader label="Reference" field="reference_type" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} />
+                    <SortableHeader label="Unit Cost" field="unit_cost" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} className="numeric" />
                   </tr>
                 </thead>
                 <tbody>
