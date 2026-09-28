@@ -124,7 +124,7 @@ export async function cloneSale(formData: FormData) {
       contactId: source.contact_id,
       invoiceDate: new Date().toISOString().split("T")[0],
       notes: source.notes,
-      overallDiscount: Number(source.discount || 0),
+      overallDiscount,
       items: sourceItems,
     }));
   } catch (error) {
