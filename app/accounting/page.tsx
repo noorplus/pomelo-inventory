@@ -188,7 +188,7 @@ export default async function AccountingPage({
             <Link className="filter-clear" href="/accounting/export?scope=payments">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
-            <table>
+            <table className="spreadsheet-table">
               <thead>
                 <tr>
                   <SortableHeader label="Payment No" field="payment_no" sort={sort} direction={direction} basePath="/accounting" params={{ tab: "payments" }} />
@@ -270,7 +270,7 @@ export default async function AccountingPage({
             <Link className="filter-clear" href="/accounting/export?scope=expenses">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
-            <table>
+            <table className="spreadsheet-table">
               <thead>
                 <tr>
                   <SortableHeader label="Expense No" field="expense_no" sort={expenseSort} direction={direction} basePath="/accounting" params={{ tab: "expenses" }} />
@@ -362,7 +362,7 @@ export default async function AccountingPage({
               <strong>{categories?.length ?? 0} category / categories</strong>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <SortableHeader label="Category Name" field="name" sort={categorySort} direction={direction} basePath="/accounting" params={{ tab: "categories" }} />
@@ -409,7 +409,7 @@ export default async function AccountingPage({
             <Link className="filter-clear" href="/accounting/export?scope=ledger">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
-            <table>
+            <table className="spreadsheet-table">
               <thead>
                 <tr>
                   <SortableHeader label="Date & Time" field="transaction_date" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} />
