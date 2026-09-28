@@ -1,18 +1,22 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
 export const dynamic = "force-dynamic";
 
-export default async function UomPage() {
+type SearchParams = { sort?: string; direction?: string };\n\nexport default async function UomPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const { supabase, organizationId } = await getWorkspaceContext();
+  const params = await searchParams;
+  const sort = ["name", "status", "created_at"].includes(params.sort || "") ? String(params.sort) : "name";
+  const direction = params.direction === "desc" ? "desc" : "asc";
 
   const { data: units, error } = await supabase
     .from("units_of_measure")
     .select("id, name, status, created_at")
     .eq("organization_id", organizationId)
-    .order("name");
+    .order(sort, { ascending: direction === "asc" });
 
   return (
     <WorkspaceShell active="uom">
@@ -32,7 +36,7 @@ export default async function UomPage() {
       <section className="section-heading"><div><h2>UoM list</h2><p className="muted">All units belonging to this organization.</p></div></section>
       {error ? <section className="form-error" role="alert">Unable to load units: {error.message}</section> : (
         <section className="table-card">
-          <div className="table-scroll"><table><thead><tr><th>Name</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+          <div className="table-scroll"><table><thead><tr><SortableHeader label="Name" field="name" sort={sort} direction={direction} basePath="/uom" /><SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/uom" /><SortableHeader label="Created" field="created_at" sort={sort} direction={direction} basePath="/uom" /><th>Action</th></tr></thead>
             <tbody>{units?.map((unit) => <tr key={unit.id}>
               <td><strong>{unit.name}</strong></td>
               <td><span className="status-badge">{unit.status}</span></td>
