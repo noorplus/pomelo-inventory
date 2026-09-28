@@ -61,18 +61,18 @@
 .purchase-form-polished :global(.form-grid input),.purchase-form-polished :global(.form-grid select),.purchase-form-polished :global(.form-grid textarea){min-height:34px;padding:6px 8px;border-radius:4px}
 .purchase-form-polished :global(.form-grid textarea){min-height:58px}
 .purchase-form-polished :global(.purchase-items-table){border-radius:4px}
-.purchase-form-polished :global(.purchase-items-table .spreadsheet-table){display:table!important;min-width:918px!important;width:918px!important}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table){display:table!important;width:100%!important;min-width:0!important;max-width:none!important;table-layout:auto!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table thead){display:table-header-group!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table tbody){display:table-row-group!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table tr){display:table-row!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table th),.purchase-form-polished :global(.purchase-items-table .spreadsheet-table td){display:table-cell!important;white-space:nowrap!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table td::before){content:none!important;display:none!important}
-.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-product){width:390px!important}
-.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-qty){width:90px!important}
-.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-price){width:135px!important}
-.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-discount){width:120px!important}
-.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-total){width:135px!important}
-.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-action){width:48px!important}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-product){width:auto!important}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-qty){width:1%!important}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-price){width:1%!important}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-discount){width:1%!important}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-total){width:1%!important}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-action){width:1%!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table th){height:30px!important;padding:3px 6px!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table td){height:38px!important;padding:2px 5px!important}
 .purchase-form-polished :global(.purchase-items-table .spreadsheet-table select),.purchase-form-polished :global(.purchase-items-table .spreadsheet-table input){height:30px!important;min-height:30px!important;padding:3px 6px!important;border-radius:3px!important}
@@ -82,3 +82,8 @@
 .purchase-form-polished :global(.purchase-total-card>div){min-height:19px}
 .purchase-form-polished :global(.purchase-grand-total){min-height:27px!important;padding-top:4px!important;margin-top:2px!important}
 .purchase-form-polished :global(.form-actions){margin-top:0}
+
+@media(max-width:620px){
+  .purchase-form-polished :global(.purchase-items-table .spreadsheet-table){width:max-content!important;min-width:100%!important;table-layout:auto!important}
+  .purchase-form-polished :global(.purchase-items-table){max-width:100%;overflow-x:auto!important}
+}
