@@ -106,10 +106,6 @@ export default async function SaleDetailPage({
     stock_quantity: stockMap.get(p.id) ?? 0,
   }));
 
-  const grossSubtotal = (items ?? []).reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
-  const itemDiscountTotal = (items ?? []).reduce((sum, item) => sum + Number(item.discount || 0), 0);
-  const overallDiscount = Math.max(0, grossSubtotal - itemDiscountTotal - Number(sale.total || 0));
-
   const paid = (allocations ?? []).reduce((sum, allocation) => {
     const payment = Array.isArray(allocation.payments) ? allocation.payments[0] : allocation.payments;
     return payment?.status === "Confirmed" ? sum + Number(allocation.allocated_amount) : sum;
@@ -167,7 +163,6 @@ export default async function SaleDetailPage({
             initialContactId={sale.contact_id}
             initialDate={sale.invoice_date}
             initialNotes={sale.notes || ""}
-            initialDiscount={overallDiscount}
             initialItems={(items ?? []).map((item) => ({
               id: item.id,
               product_id: item.product_id,
@@ -224,8 +219,8 @@ export default async function SaleDetailPage({
                 };
               })}
               lineMode="items"
-              subtotal={grossSubtotal}
-              discount={overallDiscount}
+              subtotal={Number(sale.subtotal)}
+              discount={Number(sale.discount)}
               total={Number(sale.total)}
               notes={sale.notes}
             />
@@ -392,7 +387,7 @@ export default async function SaleDetailPage({
             <div>
               <span>Subtotal</span>
               <strong>
-                ৳{grossSubtotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ৳{Number(sale.subtotal).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </strong>
             </div>
             <div>
