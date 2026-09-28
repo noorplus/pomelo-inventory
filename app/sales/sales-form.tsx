@@ -23,7 +23,6 @@ export type SaleItemState = {
   quantity: number;
   unit_price: number;
   discount: number;
-  tax: number;
 };
 
 type Props = {
@@ -61,7 +60,6 @@ export default function SalesForm({
             quantity: 1,
             unit_price: 0,
             discount: 0,
-            tax: 0,
           },
         ],
   );
@@ -70,7 +68,7 @@ export default function SalesForm({
     setItems((prev) => {
       return [
         ...prev,
-        { product_id: "", quantity: 1, unit_price: 0, discount: 0, tax: 0 },
+        { product_id: "", quantity: 1, unit_price: 0, discount: 0 },
       ];
     });
   }
@@ -97,8 +95,7 @@ export default function SalesForm({
 
   const subtotal = items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unit_price || 0), 0);
   const discountTotal = items.reduce((sum, item) => sum + (item.discount || 0), 0);
-  const taxTotal = items.reduce((sum, item) => sum + (item.tax || 0), 0);
-  const grandTotal = Math.max(0, subtotal - discountTotal + taxTotal);
+  const grandTotal = Math.max(0, subtotal - discountTotal);
 
   return (
     <form action={action} className={`purchase-form ${styles["sales-form-polished"]}`} id={formId}>
@@ -163,7 +160,6 @@ export default function SalesForm({
                 <th className="numeric" style={{ width: "12%" }}>Qty</th>
                 <th className="numeric" style={{ width: "15%" }}>Unit Price</th>
                 <th className="numeric" style={{ width: "12%" }}>Discount</th>
-                <th className="numeric" style={{ width: "10%" }}>Tax</th>
                 <th className="numeric" style={{ width: "16%" }}>Line Total</th>
                 <th style={{ width: "40px" }} />
               </tr>
@@ -238,16 +234,6 @@ export default function SalesForm({
                         onChange={(e) => updateItem(index, { discount: parseFloat(e.target.value) || 0 })}
                       />
                     </td>
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="compact-number"
-                        value={item.tax}
-                        onChange={(e) => updateItem(index, { tax: parseFloat(e.target.value) || 0 })}
-                      />
-                    </td>
                     <td className="numeric">
                       <strong>
                         ৳
@@ -292,12 +278,6 @@ export default function SalesForm({
             <span>Discount</span>
             <strong>
               − ৳{discountTotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </strong>
-          </div>
-          <div>
-            <span>Tax</span>
-            <strong>
-              + ৳{taxTotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </strong>
           </div>
           <div className="purchase-grand-total">
