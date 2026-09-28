@@ -1,5 +1,6 @@
-import DataTable from "@/app/components/data-table";
 "use client";
+
+import DataTable from "@/app/components/data-table";
 
 import { useId, useState } from "react";
 import Link from "next/link";
