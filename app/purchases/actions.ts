@@ -110,18 +110,20 @@ export async function clonePurchase(formData: FormData) {
   try {
     if (!sourceId) throw new Error("Missing purchase ID.");
     const [{ data: source, error: sourceError }, { data: sourceItems, error: itemsError }] = await Promise.all([
-      supabase.from("purchases").select("contact_id, notes, discount").eq("id", sourceId).eq("organization_id", organizationId).single(),
+      supabase.from("purchases").select("contact_id, notes, discount, total").eq("id", sourceId).eq("organization_id", organizationId).single(),
       supabase.from("purchase_items").select("product_id, quantity, unit_price, discount").eq("purchase_id", sourceId).eq("organization_id", organizationId),
     ]);
     if (sourceError || !source) throw new Error("Source purchase not found.");
     if (itemsError) throw new Error(itemsError.message);
     if (!sourceItems?.length) throw new Error("Source purchase has no items to clone.");
+    const gross = sourceItems.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
+    const itemDiscount = sourceItems.reduce((sum, item) => sum + Number(item.discount || 0), 0);
     ({ purchase_id: newId } = await createPurchaseDraft(supabase, {
       organizationId,
       contactId: source.contact_id,
       invoiceDate: new Date().toISOString().split("T")[0],
       notes: source.notes,
-      overallDiscount: Number(source.discount || 0),
+      overallDiscount: Math.max(0, gross - itemDiscount - Number(source.total || 0)),
       items: sourceItems,
     }));
   } catch (error) {
