@@ -140,14 +140,16 @@ begin
       case
         when o.rn = o.row_count then
           v_discount - coalesce(
-            sum(round(v_discount * o2.line_total / nullif(o2.net_total, 0), 4))
-              over (order by o2.rn rows between unbounded preceding and 1 preceding),
+            (
+              select sum(round(v_discount * o2.line_total / nullif(o2.net_total, 0), 4))
+              from ordered o2
+              where o2.rn < o.rn
+            ),
             0
           )
         else round(v_discount * o.line_total / nullif(o.net_total, 0), 4)
       end as allocated_discount
     from ordered o
-    left join ordered o2 on o2.rn <= o.rn
   )
   select
     v_organization_id,
