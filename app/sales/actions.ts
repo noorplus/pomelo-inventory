@@ -46,9 +46,9 @@ export async function createSale(formData: FormData) {
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
-  const overallDiscount = parseOverallDiscount(formData);
   let saleId = "";
   try {
+    const overallDiscount = parseOverallDiscount(formData);
     if (!contactId) throw new Error("Please select a customer contact.");
     ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) }));
   } catch (error) {
@@ -64,8 +64,8 @@ export async function updateSale(formData: FormData) {
   const contactId = String(formData.get("contact_id") || "").trim();
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
-  const overallDiscount = parseOverallDiscount(formData);
   try {
+    const overallDiscount = parseOverallDiscount(formData);
     if (!saleId) throw new Error("Missing sale ID.");
     if (!contactId) throw new Error("Please select a customer contact.");
     await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) });
