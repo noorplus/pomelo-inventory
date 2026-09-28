@@ -1156,6 +1156,15 @@ begin
 end;
 $func$;
 
+alter table public.purchase_items drop constraint purchase_items_line_total_formula_check;
+alter table public.purchase_items drop constraint purchase_items_tax_check;
+alter table public.purchases drop constraint purchases_total_formula_check;
+alter table public.purchases drop constraint purchases_tax_check;
+alter table public.sale_items drop constraint sale_items_line_total_formula_check;
+alter table public.sale_items drop constraint sale_items_tax_check;
+alter table public.sales drop constraint sales_total_formula_check;
+alter table public.sales drop constraint sales_tax_check;
+
 update public.purchase_items set line_total = quantity * unit_price - discount;
 update public.purchases set total = subtotal - discount;
 update public.sale_items set line_total = quantity * unit_price - discount;
@@ -1165,3 +1174,9 @@ alter table public.purchase_items drop column tax;
 alter table public.purchases drop column tax;
 alter table public.sale_items drop column tax;
 alter table public.sales drop column tax;
+
+
+alter table public.purchase_items add constraint purchase_items_line_total_formula_check check (line_total = ((quantity * unit_price) - discount));
+alter table public.purchases add constraint purchases_total_formula_check check (total = (subtotal - discount));
+alter table public.sale_items add constraint sale_items_line_total_formula_check check (line_total = ((quantity * unit_price) - discount));
+alter table public.sales add constraint sales_total_formula_check check (total = (subtotal - discount));
