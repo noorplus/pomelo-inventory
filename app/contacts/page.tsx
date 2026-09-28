@@ -57,7 +57,7 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load contacts: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{contacts?.length ?? 0} contact{contacts?.length === 1 ? "" : "s"}</strong>{(search || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table><thead><tr><SortableHeader label="ID No." field="id_no" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
+          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr><SortableHeader label="ID No." field="id_no" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Name" field="name" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Phone" field="phone" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Email" field="email" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
