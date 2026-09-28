@@ -5,6 +5,7 @@ import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
+import DataTable from "@/app/components/data-table";
 export const dynamic = "force-dynamic";
 
 type SearchParams = { search?: string; status?: string; sort?: string; direction?: string; page?: string };
@@ -54,7 +55,7 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
       {error ? <section className="form-error" role="alert">Unable to load purchases: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{purchases?.length ?? 0} purchase{purchases?.length === 1 ? "" : "s"}</strong>{(search || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr>
+          <div className="table-scroll"><DataTable><thead><tr>
             <SortableHeader label="Invoice" field="invoice_no" sort={sort} direction={direction} basePath="/purchases" params={{ search, status }} />
             <SortableHeader label="Date" field="invoice_date" sort={sort} direction={direction} basePath="/purchases" params={{ search, status }} />
             <th>Contact</th>
@@ -70,7 +71,7 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
               <td className="numeric"><strong>৳{Number(purchase.total).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></td>
               <td><span className="status-badge">{purchase.status}</span></td>
             </tr>;
-          })}</tbody></table></div>
+          })}</tbody></DataTable></div>
           {!purchases?.length && <div className="empty-state"><div className="empty-icon">↥</div><div><h2>No purchases found</h2><p>{search || status ? "Try changing your filters." : "Create your first purchase invoice."}</p></div></div>}
           <Pager
             basePath="/purchases"
