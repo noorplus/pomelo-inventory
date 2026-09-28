@@ -517,7 +517,7 @@ export default async function DashboardPage() {
                     return (
                       <tr key={`${movement.movement_date}-${index}`}>
                         <td className="dashboard-date-cell">{new Date(movement.movement_date).toLocaleString("en-BD")}</td>
-                        <td><strong>{product?.product_name || productNames.get(movement.product_id) || "—"}</strong></td>
+                        <td><strong>{product?.product_name || "—"}</strong></td>
                         <td><span className={isIn ? "badge-in" : "badge-out"}>{isIn ? "↓ In" : "↑ Out"}</span></td>
                         <td><span className="status-badge">{movement.movement_type}</span></td>
                         <td className="numeric"><strong>{number(Number(movement.quantity || 0))}</strong></td>
