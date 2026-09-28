@@ -167,8 +167,7 @@ export default function SalesForm({
             <tbody>
               {items.map((item, index) => {
                 const prod = products.find((p) => p.id === item.product_id);
-                const lineTotal =
-                  (item.quantity || 0) * (item.unit_price || 0) - (item.discount || 0) + (item.tax || 0);
+                const lineTotal = (item.quantity || 0) * (item.unit_price || 0) - (item.discount || 0);
                 const availableStock = prod?.stock_quantity ?? 0;
                 const isOutOfStock = availableStock <= 0;
                 const isInsufficient = item.quantity > availableStock;
