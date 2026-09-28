@@ -3,6 +3,7 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
+import DataTable from "@/app/components/data-table";
 export const dynamic = "force-dynamic";
 
 type SearchParams = {
@@ -196,7 +197,7 @@ export default async function InventoryPage({
               <Link className="filter-clear" href="/inventory/export">⇩ Export CSV</Link>
             </div>
             <div className="table-scroll">
-              <table className="spreadsheet-table">
+              <DataTable>
                 <thead>
                   <tr>
                     <th>Code</th>
@@ -251,7 +252,7 @@ export default async function InventoryPage({
                     );
                   })}
                 </tbody>
-              </table>
+              </DataTable>
             </div>
             {!filteredStock.length && (
               <div className="empty-state">
@@ -307,7 +308,7 @@ export default async function InventoryPage({
               <span>Immutable inventory audit ledger</span>
             </div>
             <div className="table-scroll">
-              <table className="spreadsheet-table">
+              <DataTable>
                 <thead>
                   <tr>
                     <SortableHeader label="Date & Time" field="movement_date" sort={movementSort} direction={direction} basePath="/inventory" params={{ tab: "movements", movement_direction: filterDirection || undefined, type: filterType || undefined }} />
@@ -370,7 +371,7 @@ export default async function InventoryPage({
                     );
                   })}
                 </tbody>
-              </table>
+              </DataTable>
             </div>
             {!movements?.length && (
               <div className="empty-state">
