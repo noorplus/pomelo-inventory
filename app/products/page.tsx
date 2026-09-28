@@ -6,6 +6,7 @@ import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
+import DataTable from "@/app/components/data-table";
 export const dynamic = "force-dynamic";
 
 type SearchParams = { search?: string; uom_id?: string; status?: string; sort?: string; direction?: string; page?: string };
@@ -68,12 +69,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load products: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{products.length} product{products.length === 1 ? "" : "s"}</strong>{(search || selectedUom || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr><SortableHeader label="Product" field="product_name" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
+          <div className="table-scroll"><DataTable><thead><tr><SortableHeader label="Product" field="product_name" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
               <SortableHeader label="UoM" field="uom_id" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
               <SortableHeader label="Retail price" field="retail_price" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} className="numeric" />
               <SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} /><th>Action</th></tr></thead>
             <tbody>{products.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{unitMap.get(product.uom_id) || "—"}</td><td className="numeric"><span className="price-value">৳{Number(product.retail_price).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></td><td><span className="status-badge">{product.status}</span></td><td><form action={toggleProductStatus}><input type="hidden" name="id" value={product.id} /><input type="hidden" name="status" value={product.status === "Active" ? "Inactive" : "Active"} /><button className="secondary-button table-action-button" type="submit">{product.status === "Active" ? "Deactivate" : "Activate"}</button></form></td></tr>)}</tbody>
-          </table></div>
+          </DataTable></div>
           {!products.length && <EmptyState icon="▦" title="No products found" text={search || selectedUom || status ? "Try changing your filters." : "Add your first product."} />}
           <Pager
             basePath="/products"
