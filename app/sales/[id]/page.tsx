@@ -215,7 +215,6 @@ export default async function SaleDetailPage({
                   qty: Number(item.quantity),
                   unitPrice: Number(item.unit_price),
                   discount: Number(item.discount),
-                  tax: Number(item.tax),
                   total: Number(item.line_total),
                 };
               })}
@@ -512,7 +511,6 @@ export default async function SaleDetailPage({
             lineMode="items"
             subtotal={Number(sale.subtotal)}
             discount={Number(sale.discount)}
-            tax={Number(sale.tax)}
             total={Number(sale.total)}
             paid={paid}
             due={due}
