@@ -53,7 +53,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   if v_item_count = 0 then
@@ -113,13 +113,13 @@ begin
 
   select
     coalesce(sum(x.quantity * x.unit_price), 0),
-    coalesce(sum(coalesce(x.discount, 0)), 0),
+    coalesce(sum(coalesce(x.discount, 0)), 0)
   into v_subtotal, v_discount
   from jsonb_to_recordset(p_items) as x(
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   v_total := v_subtotal - v_discount;
@@ -164,13 +164,14 @@ begin
     x.product_id,
     x.quantity,
     x.unit_price,
-    coalesce(x.discount, 0), x.quantity * x.unit_price - coalesce(x.discount, 0),
+    coalesce(x.discount, 0),
+    x.quantity * x.unit_price - coalesce(x.discount, 0),
     v_user_id
   from jsonb_to_recordset(p_items) as x(
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   return jsonb_build_object(
@@ -248,7 +249,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   if v_item_count = 0 then
@@ -332,14 +333,14 @@ begin
 
   select
     coalesce(sum(x.quantity * x.unit_price), 0),
-    coalesce(sum(coalesce(x.discount, 0)), 0),
+    coalesce(sum(coalesce(x.discount, 0)), 0)
   into v_subtotal, v_discount
   from jsonb_to_recordset(p_items) as x(
     id uuid,
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   v_total := v_subtotal - v_discount;
@@ -401,7 +402,8 @@ begin
     x.product_id,
     x.quantity,
     x.unit_price,
-    coalesce(x.discount, 0), x.quantity * x.unit_price - coalesce(x.discount, 0),
+    coalesce(x.discount, 0),
+    x.quantity * x.unit_price - coalesce(x.discount, 0),
     v_user_id
   from jsonb_to_recordset(p_items) as x(
     id uuid,
@@ -470,7 +472,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   if v_item_count = 0 then
@@ -530,13 +532,13 @@ begin
 
   select
     coalesce(sum(x.quantity * x.unit_price), 0),
-    coalesce(sum(coalesce(x.discount, 0)), 0),
+    coalesce(sum(coalesce(x.discount, 0)), 0)
   into v_subtotal, v_discount
   from jsonb_to_recordset(p_items) as x(
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   v_total := v_subtotal - v_discount;
@@ -581,13 +583,14 @@ begin
     x.product_id,
     x.quantity,
     x.unit_price,
-    coalesce(x.discount, 0), x.quantity * x.unit_price - coalesce(x.discount, 0),
+    coalesce(x.discount, 0),
+    x.quantity * x.unit_price - coalesce(x.discount, 0),
     v_user_id
   from jsonb_to_recordset(p_items) as x(
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   return jsonb_build_object(
@@ -665,7 +668,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   if v_item_count = 0 then
@@ -749,14 +752,14 @@ begin
 
   select
     coalesce(sum(x.quantity * x.unit_price), 0),
-    coalesce(sum(coalesce(x.discount, 0)), 0),
+    coalesce(sum(coalesce(x.discount, 0)), 0)
   into v_subtotal, v_discount
   from jsonb_to_recordset(p_items) as x(
     id uuid,
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   );
 
   v_total := v_subtotal - v_discount;
@@ -818,7 +821,8 @@ begin
     x.product_id,
     x.quantity,
     x.unit_price,
-    coalesce(x.discount, 0), x.quantity * x.unit_price - coalesce(x.discount, 0),
+    coalesce(x.discount, 0),
+    x.quantity * x.unit_price - coalesce(x.discount, 0),
     v_user_id
   from jsonb_to_recordset(p_items) as x(
     id uuid,
