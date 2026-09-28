@@ -45,13 +45,6 @@ function getNetSubtotal(items: SaleItemInput[]) {
   return Math.max(0, gross - itemDiscount);
 }
 
-async function applyOverallDiscount(supabase: SupabaseClient, saleId: string, items: SaleItemInput[], overallDiscount: number) {
-  const netSubtotal = getNetSubtotal(items);
-  if (overallDiscount > netSubtotal) throw new Error("Overall discount cannot exceed subtotal after item discounts.");
-  const { error } = await supabase.from("sales").update({ subtotal: netSubtotal, discount: overallDiscount, total: netSubtotal - overallDiscount }).eq("id", saleId);
-  if (error) throw new Error(error.message);
-}
-
 function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
 }
@@ -66,8 +59,7 @@ export async function createSale(formData: FormData) {
     if (!contactId) throw new Error("Please select a customer contact.");
     const items = parseItems(formData);
     const overallDiscount = parseOverallDiscount(formData);
-    ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, items }));
-    await applyOverallDiscount(supabase, saleId, items, overallDiscount);
+    ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, items, overallDiscount }));
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/new", error.message);
     errorRedirect("/sales/new", "Unable to create sale.");
@@ -86,8 +78,7 @@ export async function updateSale(formData: FormData) {
     if (!contactId) throw new Error("Please select a customer contact.");
     const items = parseItems(formData);
     const overallDiscount = parseOverallDiscount(formData);
-    await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, items });
-    await applyOverallDiscount(supabase, saleId, items, overallDiscount);
+    await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, items, overallDiscount });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to update sale.");
@@ -143,8 +134,8 @@ export async function cloneSale(formData: FormData) {
       invoiceDate: new Date().toISOString().split("T")[0],
       notes: source.notes,
       items,
+      overallDiscount,
     }));
-    await applyOverallDiscount(supabase, newId, items, overallDiscount);
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + sourceId, error.message);
     errorRedirect("/sales/" + sourceId, "Unable to clone sale.");
