@@ -151,7 +151,6 @@ export default async function DashboardPage() {
   ]);
 
   const productPrices = new Map((productsData ?? []).map((product) => [product.id, Number(product.retail_price || 0)]));
-  const productNames = new Map((productsData ?? []).map((product) => [product.id, product.product_name]));
 
   const totalStockUnits = (stockData ?? []).reduce((sum, row) => sum + Number(row.quantity || 0), 0);
   const lowStockLines = (stockData ?? []).filter((row) => {
