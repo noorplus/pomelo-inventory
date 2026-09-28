@@ -38,7 +38,6 @@ export async function createPurchaseDraft(
       p_notes: input.notes ?? null,
       p_items: input.items,
       p_overall_discount: input.overallDiscount ?? 0,
-      p_overall_discount: input.overallDiscount ?? 0,
     },
     "Unable to create purchase draft.",
   );
