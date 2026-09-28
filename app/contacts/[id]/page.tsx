@@ -74,7 +74,7 @@ function StatementTable({
         <span>{subtitle}</span>
       </div>
       <div className="table-scroll">
-        <table>
+        <table className="spreadsheet-table">
           <thead>
             <tr>
               <th>Date</th>
