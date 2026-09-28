@@ -1,5 +1,6 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
+import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +10,7 @@ type SearchParams = {
   search?: string;
   direction?: string;
   type?: string;
+  sort?: string;
 };
 
 export default async function InventoryPage({
@@ -22,6 +24,9 @@ export default async function InventoryPage({
   const search = String(params.search || "").trim();
   const filterDirection = String(params.direction || "");
   const filterType = String(params.type || "");
+  const stockSort = ["id", "name", "uom", "retail_price", "quantity", "status"].includes(params.sort || "") ? String(params.sort) : "name";
+  const movementSort = ["movement_date", "product_name", "movement_direction", "movement_type", "quantity", "reference_type", "unit_cost"].includes(params.sort || "") ? String(params.sort) : "movement_date";
+  const direction = params.direction === "asc" ? "asc" : "desc";
 
   // Load stock overview
   const [{ data: products }, { data: stockItems }, { data: uoms }] = await Promise.all([
@@ -82,12 +87,14 @@ export default async function InventoryPage({
     );
   });
 
+  filteredStock.sort((a, b) => { const av = a[stockSort as keyof typeof a]; const bv = b[stockSort as keyof typeof b]; const cmp = typeof av === "number" && typeof bv === "number" ? av - bv : String(av ?? "").localeCompare(String(bv ?? ""), undefined, { numeric: true }); return direction === "asc" ? cmp : -cmp; });
+
   // Load movements if on movements tab
   let movementsQuery = supabase
     .from("inventory_movements")
     .select("id, movement_date, product_id, movement_direction, movement_type, quantity, reference_type, reference_id, unit_cost, products(product_name)")
     .eq("organization_id", organizationId)
-    .order("movement_date", { ascending: false })
+    .order(movementSort === "product_name" ? "product_name" : movementSort, { referencedTable: movementSort === "product_name" ? "products" : undefined, ascending: direction === "asc" })
     .limit(100);
 
   if (filterDirection && ["In", "Out"].includes(filterDirection)) {
@@ -98,6 +105,7 @@ export default async function InventoryPage({
   }
 
   const { data: movements } = await movementsQuery;
+  const sortedMovements = [...(movements ?? [])].sort((a: any, b: any) => { if (movementSort === "product_name") { const av = Array.isArray(a.products) ? a.products[0]?.product_name : a.products?.product_name; const bv = Array.isArray(b.products) ? b.products[0]?.product_name : b.products?.product_name; const cmp = String(av ?? "").localeCompare(String(bv ?? ""), undefined, { numeric: true }); return direction === "asc" ? cmp : -cmp; } return 0; });
 
   return (
     <WorkspaceShell active="inventory">
@@ -294,7 +302,7 @@ export default async function InventoryPage({
 
           <section className="table-card">
             <div className="table-meta">
-              <strong>{movements?.length ?? 0} movement record(s)</strong>
+              <strong>{sortedMovements.length} movement record(s)</strong>
               <span>Immutable inventory audit ledger</span>
             </div>
             <div className="table-scroll">
@@ -311,7 +319,7 @@ export default async function InventoryPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {movements?.map((m) => {
+                  {sortedMovements.map((m) => {
                     const prod = Array.isArray(m.products) ? m.products[0] : m.products;
                     const isDirIn = m.movement_direction === "In";
                     const refLink =
