@@ -136,7 +136,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             {(search || status) && <span>Filtered results</span>}
           </div>
           <div className="table-scroll">
-            <table>
+            <table className="spreadsheet-table">
               <thead>
                 <tr>
                   <SortableHeader label="Invoice" field="invoice_no" sort={sort} direction={direction} basePath="/sales" params={{ search, status }} />
