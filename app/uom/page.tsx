@@ -4,6 +4,7 @@ import WorkspaceShell from "@/app/components/workspace-shell";
 import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext, getWorkspaceMembership } from "@/lib/auth/workspace";
 
+import DataTable from "@/app/components/data-table";
 export const dynamic = "force-dynamic";
 
 type SearchParams = { sort?: string; direction?: string };
@@ -38,7 +39,7 @@ export default async function UomPage({ searchParams }: { searchParams: Promise<
       <section className="section-heading"><div><h2>UoM list</h2><p className="muted">All units belonging to this organization.</p></div></section>
       {error ? <section className="form-error" role="alert">Unable to load units: {error.message}</section> : (
         <section className="table-card">
-          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr><SortableHeader label="Name" field="name" sort={sort} direction={direction} basePath="/uom" /><SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/uom" /><SortableHeader label="Created" field="created_at" sort={sort} direction={direction} basePath="/uom" /><th>Action</th></tr></thead>
+          <div className="table-scroll"><DataTable><thead><tr><SortableHeader label="Name" field="name" sort={sort} direction={direction} basePath="/uom" /><SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/uom" /><SortableHeader label="Created" field="created_at" sort={sort} direction={direction} basePath="/uom" /><th>Action</th></tr></thead>
             <tbody>{units?.map((unit) => <tr key={unit.id}>
               <td><strong>{unit.name}</strong></td>
               <td><span className="status-badge">{unit.status}</span></td>
@@ -53,7 +54,7 @@ export default async function UomPage({ searchParams }: { searchParams: Promise<
                 </form>
               </td>
             </tr>)}</tbody>
-          </table></div>
+          </DataTable></div>
           {!units?.length && <EmptyState icon="◈" title="No UoM yet" text="Add your first unit of measure above." />}
         </section>
       )}
