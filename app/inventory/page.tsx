@@ -8,8 +8,9 @@ export const dynamic = "force-dynamic";
 type SearchParams = {
   tab?: string;
   search?: string;
-  direction?: string;
+  movement_direction?: string;
   type?: string;
+  direction?: string;
   sort?: string;
 };
 
@@ -22,7 +23,7 @@ export default async function InventoryPage({
   const params = await searchParams;
   const currentTab = params.tab === "movements" ? "movements" : "stock";
   const search = String(params.search || "").trim();
-  const filterDirection = String(params.direction || "");
+  const filterDirection = String(params.movement_direction || "");
   const filterType = String(params.type || "");
   const stockSort = ["id", "name", "uom", "retail_price", "quantity", "status"].includes(params.sort || "") ? String(params.sort) : "name";
   const movementSort = ["movement_date", "product_name", "movement_direction", "movement_type", "quantity", "reference_type", "unit_cost"].includes(params.sort || "") ? String(params.sort) : "movement_date";
@@ -272,7 +273,7 @@ export default async function InventoryPage({
               <input type="hidden" name="tab" value="movements" />
               <label>
                 Direction
-                <select name="direction" defaultValue={filterDirection}>
+                <select name="movement_direction" defaultValue={filterDirection}>
                   <option value="">All directions</option>
                   <option value="In">In (Inbound)</option>
                   <option value="Out">Out (Outbound)</option>
