@@ -1,5 +1,7 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
 import { createSaleDraft, deleteSaleDraft, updateSaleDraft } from "@/lib/services/sales";
@@ -43,7 +45,7 @@ function getNetSubtotal(items: SaleItemInput[]) {
   return Math.max(0, gross - itemDiscount);
 }
 
-async function applyOverallDiscount(supabase: Awaited<ReturnType<typeof getWorkspaceMembership>>["supabase"], saleId: string, items: SaleItemInput[], overallDiscount: number) {
+async function applyOverallDiscount(supabase: SupabaseClient, saleId: string, items: SaleItemInput[], overallDiscount: number) {
   const netSubtotal = getNetSubtotal(items);
   if (overallDiscount > netSubtotal) throw new Error("Overall discount cannot exceed subtotal after item discounts.");
   const { error } = await supabase.from("sales").update({ subtotal: netSubtotal, discount: overallDiscount, total: netSubtotal - overallDiscount }).eq("id", saleId);
