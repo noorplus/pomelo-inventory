@@ -114,6 +114,7 @@ export default function PurchaseForm({
         ) : (
           <div className="table-scroll purchase-items-table">
             <table>
+            <colgroup><col className="col-product" /><col className="col-qty" /><col className="col-price" /><col className="col-discount" /><col className="col-total" /><col className="col-action" /></colgroup>
               <thead><tr><th>Product</th><th className="numeric">Qty</th><th className="numeric">Unit price</th><th className="numeric">Discount</th><th className="numeric">Line total</th><th /></tr></thead>
               <tbody>
                 {items.map((item, index) => {
