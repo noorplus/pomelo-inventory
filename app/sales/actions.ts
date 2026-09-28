@@ -31,12 +31,6 @@ function parseItems(formData: FormData): SaleItemInput[] {
   });
 }
 
-function parseOverallDiscount(formData: FormData): number {
-  const value = Number(formData.get("overall_discount") || 0);
-  if (!Number.isFinite(value) || value < 0) throw new Error("Overall discount cannot be negative.");
-  return value;
-}
-
 function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
 }
@@ -48,9 +42,8 @@ export async function createSale(formData: FormData) {
   const notes = String(formData.get("notes") || "").trim() || null;
   let saleId = "";
   try {
-    const overallDiscount = parseOverallDiscount(formData);
     if (!contactId) throw new Error("Please select a customer contact.");
-    ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) }));
+    ({ sale_id: saleId } = await createSaleDraft(supabase, { organizationId, contactId, invoiceDate, notes, items: parseItems(formData) }));
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/new", error.message);
     errorRedirect("/sales/new", "Unable to create sale.");
@@ -65,10 +58,9 @@ export async function updateSale(formData: FormData) {
   const invoiceDate = String(formData.get("invoice_date") || "").trim() || null;
   const notes = String(formData.get("notes") || "").trim() || null;
   try {
-    const overallDiscount = parseOverallDiscount(formData);
     if (!saleId) throw new Error("Missing sale ID.");
     if (!contactId) throw new Error("Please select a customer contact.");
-    await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, overallDiscount, items: parseItems(formData) });
+    await updateSaleDraft(supabase, { saleId, contactId, invoiceDate, notes, items: parseItems(formData) });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to update sale.");
@@ -110,21 +102,17 @@ export async function cloneSale(formData: FormData) {
   try {
     if (!sourceId) throw new Error("Missing sale ID.");
     const [{ data: source, error: sourceError }, { data: sourceItems, error: itemsError }] = await Promise.all([
-      supabase.from("sales").select("contact_id, notes, discount, total").eq("id", sourceId).eq("organization_id", organizationId).single(),
+      supabase.from("sales").select("contact_id, notes").eq("id", sourceId).eq("organization_id", organizationId).single(),
       supabase.from("sale_items").select("product_id, quantity, unit_price, discount").eq("sale_id", sourceId).eq("organization_id", organizationId),
     ]);
     if (sourceError || !source) throw new Error("Source sale not found.");
     if (itemsError) throw new Error(itemsError.message);
     if (!sourceItems?.length) throw new Error("Source sale has no items to clone.");
-    const gross = sourceItems.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
-    const itemDiscount = sourceItems.reduce((sum, item) => sum + Number(item.discount || 0), 0);
-    const overallDiscount = Math.max(0, gross - itemDiscount - Number(source.total || 0));
     ({ sale_id: newId } = await createSaleDraft(supabase, {
       organizationId,
       contactId: source.contact_id,
       invoiceDate: new Date().toISOString().split("T")[0],
       notes: source.notes,
-      overallDiscount,
       items: sourceItems,
     }));
   } catch (error) {
