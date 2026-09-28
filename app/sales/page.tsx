@@ -5,6 +5,7 @@ import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
+import DataTable from "@/app/components/data-table";
 export const dynamic = "force-dynamic";
 
 type SearchParams = { search?: string; status?: string; sort?: string; direction?: string; page?: string };
@@ -136,7 +137,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             {(search || status) && <span>Filtered results</span>}
           </div>
           <div className="table-scroll">
-            <table className="spreadsheet-table">
+            <DataTable>
               <thead>
                 <tr>
                   <SortableHeader label="Invoice" field="invoice_no" sort={sort} direction={direction} basePath="/sales" params={{ search, status }} />
@@ -177,7 +178,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
                   );
                 })}
               </tbody>
-            </table>
+            </DataTable>
           </div>
           {!sales?.length && (
             <div className="empty-state">
