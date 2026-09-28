@@ -7,6 +7,7 @@ import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
+import DataTable from "@/app/components/data-table";
 export const dynamic = "force-dynamic";
 
 type SearchParams = { search?: string; status?: string; sort?: string; direction?: string; page?: string };
@@ -57,14 +58,14 @@ export default async function ContactsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load contacts: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{contacts?.length ?? 0} contact{contacts?.length === 1 ? "" : "s"}</strong>{(search || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr><SortableHeader label="ID No." field="id_no" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
+          <div className="table-scroll"><DataTable><thead><tr><SortableHeader label="ID No." field="id_no" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Name" field="name" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Phone" field="phone" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Email" field="email" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Address" field="address" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} />
               <SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/contacts" params={{ search, status }} /><th>Action</th></tr></thead>
             <tbody>{contacts?.map((contact) => <tr key={contact.id}><td><strong className="mono">{contact.id_no}</strong></td><td><Link href={"/contacts/" + contact.id}><strong>{contact.name}</strong></Link></td><td>{contact.phone || "—"}</td><td>{contact.email || "—"}</td><td className="truncate-cell">{contact.address || "—"}</td><td><span className="status-badge">{contact.status}</span></td><td><form action={toggleContactStatus}><input type="hidden" name="id" value={contact.id} /><input type="hidden" name="status" value={contact.status === "Active" ? "Inactive" : "Active"} /><button className="secondary-button table-action-button" type="submit">{contact.status === "Active" ? "Deactivate" : "Activate"}</button></form></td></tr>)}</tbody>
-          </table></div>
+          </DataTable></div>
           {!contacts?.length && <EmptyState icon="◎" title="No contacts found" text={search || status ? "Try changing your filters." : "Add your first customer or supplier contact."} />}
           <Pager
             basePath="/contacts"
