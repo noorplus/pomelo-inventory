@@ -34,13 +34,19 @@ export async function createSaleDraft(
       p_contact_id: input.contactId,
       p_invoice_date: input.invoiceDate ?? null,
       p_notes: input.notes ?? null,
-      p_overall_discount: input.overallDiscount ?? 0,
       p_items: input.items,
     },
     "Unable to create sale draft.",
   );
-  if (typeof data === "string") return { sale_id: data };
-  return { sale_id: data.sale_id };
+  const saleId = typeof data === "string" ? data : data.sale_id;
+  const gross = input.items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
+  const itemDiscount = input.items.reduce((sum, item) => sum + Number(item.discount || 0), 0);
+  const netSubtotal = Math.max(0, gross - itemDiscount);
+  const overallDiscount = Number(input.overallDiscount || 0);
+  if (overallDiscount < 0 || overallDiscount > netSubtotal) throw new Error("Overall discount cannot exceed subtotal after item discounts.");
+  const { error } = await db.from("sales").update({ subtotal: netSubtotal, discount: overallDiscount, total: netSubtotal - overallDiscount }).eq("id", saleId);
+  if (error) throw new Error(error.message);
+  return { sale_id: saleId };
 }
 
 export async function updateSaleDraft(
@@ -67,8 +73,15 @@ export async function updateSaleDraft(
     },
     "Unable to update sale draft.",
   );
-  if (typeof data === "string") return { sale_id: data };
-  return { sale_id: data?.sale_id ?? input.saleId };
+  const saleId = typeof data === "string" ? data : data?.sale_id ?? input.saleId;
+  const gross = input.items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
+  const itemDiscount = input.items.reduce((sum, item) => sum + Number(item.discount || 0), 0);
+  const netSubtotal = Math.max(0, gross - itemDiscount);
+  const overallDiscount = Number(input.overallDiscount || 0);
+  if (overallDiscount < 0 || overallDiscount > netSubtotal) throw new Error("Overall discount cannot exceed subtotal after item discounts.");
+  const { error } = await db.from("sales").update({ subtotal: netSubtotal, discount: overallDiscount, total: netSubtotal - overallDiscount }).eq("id", saleId);
+  if (error) throw new Error(error.message);
+  return { sale_id: saleId };
 }
 
 export async function deleteSaleDraft(db: Db, saleId: string): Promise<void> {
