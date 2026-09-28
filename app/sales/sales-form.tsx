@@ -192,6 +192,7 @@ export default function SalesForm({
                         value={item.product_id}
                         onChange={(e) => updateItem(index, { product_id: e.target.value })}
                         required
+                        title={isInsufficient ? `Stock is ${availableStock} (Order qty: ${item.quantity})` : undefined}
                       >
                         <option value="" disabled>Select product</option>
                         {availableProducts.map((p) => (
@@ -200,11 +201,7 @@ export default function SalesForm({
                           </option>
                         ))}
                       </select>
-                      {isInsufficient && (
-                        <span className="sale-stock-warning">
-                          ⚠ Stock is {availableStock} (Order qty: {item.quantity})
-                        </span>
-                      )}
+                      {isInsufficient && null}
                     </td>
                     <td>
                       <input
