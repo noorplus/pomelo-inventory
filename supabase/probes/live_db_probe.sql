@@ -48,3 +48,37 @@ from information_schema.columns
 where table_schema = 'public'
   and table_name in ('products', 'units_of_measure')
   and column_name in ('id_no', 'symbol');
+
+
+-- 5. Sales/Purchase financial contract: Tax must be absent; overall discount must exist.
+select table_name, column_name
+from information_schema.columns
+where table_schema = 'public'
+  and table_name in ('sales', 'sale_items', 'purchases', 'purchase_items')
+  and column_name in ('tax', 'overall_discount')
+order by table_name, column_name;
+
+-- 6. Current canonical overall-discount RPC signatures.
+select
+  p.proname as function_name,
+  pg_get_function_identity_arguments(p.oid) as identity_arguments,
+  p.prosecdef as security_definer,
+  coalesce(array_to_string(p.proconfig, ','), '') as config
+from pg_proc p
+join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and p.proname in (
+    'create_sale_draft', 'update_sale_draft',
+    'create_purchase_draft', 'update_purchase_draft',
+    'create_sale_draft_base', 'update_sale_draft_base',
+    'create_purchase_draft_base', 'update_purchase_draft_base'
+  )
+order by p.proname, identity_arguments;
+
+-- 7. Applied migration names useful for provenance reconciliation.
+select version, name
+from supabase_migrations.schema_migrations
+where name ilike '%tax%'
+   or name ilike '%discount%'
+   or name ilike '%hardening%'
+order by version;

@@ -14,14 +14,14 @@ Multi-organization inventory, purchasing, sales, and accounting workspace built 
 | Inventory | Stock on hand, immutable movement ledger (Purchase/Sale/Adjustment/Opening/Return), opening balances, stock adjustments, CSV export |
 | Contacts | Unified customer/supplier master, CSV import/export, per-contact ledger with receivable & payable statements and running balances |
 | Products & UoM | Product master with retail prices, units of measure, CSV import/export |
-| Reports | Due follow-up, aging, cash flow, profit, stock valuation, tax, top contacts, expense trends, movement velocity, audit trail, collection efficiency |
+| Reports | Due follow-up, aging, cash flow, profit, stock valuation, top contacts, expense trends, movement velocity, audit trail, collection efficiency |
 | Settings | Numbered sections (workspace, data, organization, user) with view-cards and edit toggles scoped to writable columns |
 
 Every list is server-paginated; destructive financial actions go through single-transaction PostgreSQL RPCs, never multi-step client writes.
 
 ## Database architecture
 
-- `supabase/migrations/` holds the full history. `20260926180000_*_schema.sql` is the **frozen** schema migration — never edited; everything after it adds RPCs, grants, or probes only. No new tables exist beyond the frozen 11 business tables plus masters.
+- `supabase/migrations/` holds the versioned migration history. The initial/frozen schema migration establishes the core tables; later migrations may add columns, constraints, indexes, RLS policies, triggers, RPCs, grants, and hardening.
 - **Ledgers are append-only and client read-only** (`stock`, `inventory_movements`, `payment_allocations`, `account_transactions`). All effects run inside atomic `SECURITY DEFINER` RPCs with row locking, idempotency guards, and proportional reversals; cancellations never delete history.
 - **Outstanding is always derived** (`total − confirmed allocations − posted returns`, floored at 0). No `paid_amount` / payment-status columns anywhere.
 - Contacts are the single shared customer/supplier master. Single-organization model per user.
@@ -53,6 +53,7 @@ supabase/
 
 ```bash
 npm install
+npm test         # discount calculation regression tests
 npm run dev      # http://localhost:3000
 ```
 

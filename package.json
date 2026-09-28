@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "node tests/discount-calculations.mjs",
     "supabase": "supabase"
   },
   "dependencies": {
