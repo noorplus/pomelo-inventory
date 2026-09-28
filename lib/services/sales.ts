@@ -23,6 +23,7 @@ export async function createSaleDraft(
     invoiceDate?: string | null;
     notes?: string | null;
     items: SaleLineInput[];
+    overallDiscount?: number;
   },
 ): Promise<SaleDraftResult> {
   const data = await callRpc<{ sale_id: string } | string>(
@@ -34,6 +35,7 @@ export async function createSaleDraft(
       p_invoice_date: input.invoiceDate ?? null,
       p_notes: input.notes ?? null,
       p_items: input.items,
+      p_overall_discount: input.overallDiscount ?? 0,
     },
     "Unable to create sale draft.",
   );
@@ -49,6 +51,7 @@ export async function updateSaleDraft(
     invoiceDate?: string | null;
     notes?: string | null;
     items: SaleLineInput[];
+    overallDiscount?: number;
   },
 ): Promise<SaleDraftResult> {
   const data = await callRpc<{ sale_id: string } | string>(

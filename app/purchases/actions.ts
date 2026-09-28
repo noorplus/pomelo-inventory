@@ -45,13 +45,6 @@ function getNetSubtotal(items: PurchaseItemInput[]) {
   return Math.max(0, gross - itemDiscount);
 }
 
-async function applyOverallDiscount(supabase: SupabaseClient, purchaseId: string, items: PurchaseItemInput[], overallDiscount: number) {
-  const netSubtotal = getNetSubtotal(items);
-  if (overallDiscount > netSubtotal) throw new Error("Overall discount cannot exceed subtotal after item discounts.");
-  const { error } = await supabase.from("purchases").update({ subtotal: netSubtotal, discount: overallDiscount, total: netSubtotal - overallDiscount }).eq("id", purchaseId);
-  if (error) throw new Error(error.message);
-}
-
 function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
 }
@@ -66,8 +59,7 @@ export async function createPurchase(formData: FormData) {
     if (!contactId) throw new Error("Please select a supplier contact.");
     const items = parseItems(formData);
     const overallDiscount = parseOverallDiscount(formData);
-    ({ purchase_id: purchaseId } = await createPurchaseDraft(supabase, { organizationId, contactId, invoiceDate, notes, items }));
-    await applyOverallDiscount(supabase, purchaseId, items, overallDiscount);
+    ({ purchase_id: purchaseId } = await createPurchaseDraft(supabase, { organizationId, contactId, invoiceDate, notes, items, overallDiscount }));
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/new", error.message);
     errorRedirect("/purchases/new", "Unable to create purchase.");
@@ -86,8 +78,7 @@ export async function updatePurchase(formData: FormData) {
     if (!contactId) throw new Error("Please select a supplier contact.");
     const items = parseItems(formData);
     const overallDiscount = parseOverallDiscount(formData);
-    await updatePurchaseDraft(supabase, { purchaseId, contactId, invoiceDate, notes, items });
-    await applyOverallDiscount(supabase, purchaseId, items, overallDiscount);
+    await updatePurchaseDraft(supabase, { purchaseId, contactId, invoiceDate, notes, items, overallDiscount });
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
     errorRedirect("/purchases/" + purchaseId, "Unable to update purchase.");
@@ -143,8 +134,8 @@ export async function clonePurchase(formData: FormData) {
       invoiceDate: new Date().toISOString().split("T")[0],
       notes: source.notes,
       items,
+      overallDiscount,
     }));
-    await applyOverallDiscount(supabase, newId, items, overallDiscount);
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + sourceId, error.message);
     errorRedirect("/purchases/" + sourceId, "Unable to clone purchase.");
