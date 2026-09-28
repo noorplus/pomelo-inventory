@@ -6,6 +6,7 @@ import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { createExpenseCategory, toggleExpenseCategoryStatus } from "@/app/accounting/actions";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
+import DataTable from "@/app/components/data-table";
 export const dynamic = "force-dynamic";
 
 type SearchParams = {
@@ -188,7 +189,7 @@ export default async function AccountingPage({
             <Link className="filter-clear" href="/accounting/export?scope=payments">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
-            <table className="spreadsheet-table">
+            <DataTable>
               <thead>
                 <tr>
                   <SortableHeader label="Payment No" field="payment_no" sort={sort} direction={direction} basePath="/accounting" params={{ tab: "payments" }} />
@@ -240,7 +241,7 @@ export default async function AccountingPage({
                   );
                 })}
               </tbody>
-            </table>
+            </DataTable>
           </div>
           {!payments?.length && (
             <div className="empty-state">
@@ -270,7 +271,7 @@ export default async function AccountingPage({
             <Link className="filter-clear" href="/accounting/export?scope=expenses">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
-            <table className="spreadsheet-table">
+            <DataTable>
               <thead>
                 <tr>
                   <SortableHeader label="Expense No" field="expense_no" sort={expenseSort} direction={direction} basePath="/accounting" params={{ tab: "expenses" }} />
@@ -318,7 +319,7 @@ export default async function AccountingPage({
                   );
                 })}
               </tbody>
-            </table>
+            </DataTable>
           </div>
           {!expenses?.length && (
             <div className="empty-state">
@@ -362,7 +363,7 @@ export default async function AccountingPage({
               <strong>{categories?.length ?? 0} category / categories</strong>
             </div>
             <div className="table-scroll">
-              <table className="spreadsheet-table">
+              <DataTable>
                 <thead>
                   <tr>
                     <SortableHeader label="Category Name" field="name" sort={categorySort} direction={direction} basePath="/accounting" params={{ tab: "categories" }} />
@@ -395,7 +396,7 @@ export default async function AccountingPage({
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </DataTable>
             </div>
           </section>
         </div>
@@ -409,7 +410,7 @@ export default async function AccountingPage({
             <Link className="filter-clear" href="/accounting/export?scope=ledger">⇩ Export CSV</Link>
           </div>
           <div className="table-scroll">
-            <table className="spreadsheet-table">
+            <DataTable>
               <thead>
                 <tr>
                   <SortableHeader label="Date & Time" field="transaction_date" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} />
@@ -463,7 +464,7 @@ export default async function AccountingPage({
                   );
                 })}
               </tbody>
-            </table>
+            </DataTable>
           </div>
           {!ledger?.length && (
             <div className="empty-state">
