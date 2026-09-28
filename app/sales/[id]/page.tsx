@@ -372,9 +372,6 @@ export default async function SaleDetailPage({
                         ৳{Number(item.discount).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="numeric">
-                        ৳{Number(item.tax).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="numeric">
                         <strong>
                           ৳{Number(item.line_total).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </strong>
