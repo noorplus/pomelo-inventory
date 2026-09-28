@@ -106,6 +106,7 @@ export default function SalesForm({
       {saleId && <input type="hidden" name="sale_id" value={saleId} />}
       <input type="hidden" name="items_json" value={JSON.stringify(items)} />
       <input type="hidden" name="overall_discount" value={overallDiscount} />
+      <input type="hidden" name="overall_discount" value={overallDiscount} />
 
       {error && <div className="form-error" role="alert">{error}</div>}
 
