@@ -29,7 +29,6 @@ declare
   v_product_id uuid;
   v_quantity numeric(18,4);
   v_stock_quantity numeric(18,4);
-  v_line_total numeric(18,4);
 begin
   if v_user_id is null then
     raise exception 'Authentication required';
