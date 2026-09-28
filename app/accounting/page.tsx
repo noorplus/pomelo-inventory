@@ -197,7 +197,7 @@ export default async function AccountingPage({
                   <th>Contact</th>
                   <th className="numeric">Amount</th>
                   <th>Method</th>
-                  <th>Reference</th>
+                  <SortableHeader label="Reference" field="reference_type" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} />
                   <th>Status</th>
                 </tr>
               </thead>
@@ -277,7 +277,7 @@ export default async function AccountingPage({
                   <th>Date</th>
                   <th>Category</th>
                   <th>Vendor / Payee</th>
-                  <th>Description</th>
+                  <SortableHeader label="Description" field="description" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} />
                   <th className="numeric">Amount</th>
                   <th>Status</th>
                 </tr>
@@ -412,13 +412,13 @@ export default async function AccountingPage({
             <table>
               <thead>
                 <tr>
-                  <th>Date & Time</th>
-                  <th>Transaction Type</th>
+                  <SortableHeader label="Date & Time" field="transaction_date" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} />
+                  <SortableHeader label="Transaction Type" field="transaction_type" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} />
                   <th>Description</th>
                   <th>Reference</th>
                   <th>Contact</th>
-                  <th className="numeric">Debit (৳)</th>
-                  <th className="numeric">Credit (৳)</th>
+                  <SortableHeader label="Debit (৳)" field="debit" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} className="numeric" />
+                  <SortableHeader label="Credit (৳)" field="credit" sort={ledgerSort} direction={direction} basePath="/accounting" params={{ tab: "ledger" }} className="numeric" />
                 </tr>
               </thead>
               <tbody>
