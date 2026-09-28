@@ -36,3 +36,18 @@
   .purchase-form-polished :global(.purchase-items-table th){padding:5px 6px}
   .purchase-form-polished :global(.purchase-items-table td){padding:4px 5px}
 }
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table){width:100%;min-width:900px;table-layout:fixed;border-collapse:collapse;border-spacing:0}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-product){width:390px}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-qty){width:90px}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-price){width:135px}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-discount){width:120px}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-total){width:135px}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .col-action){width:48px}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table th){height:30px;padding:3px 6px;box-sizing:border-box}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table td){height:38px;padding:2px 5px;box-sizing:border-box;vertical-align:middle;white-space:nowrap;overflow:hidden}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table td:first-child){overflow:hidden}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table select),.purchase-form-polished :global(.purchase-items-table .spreadsheet-table input){height:30px;min-height:30px;padding:3px 6px;border-radius:3px}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .compact-number){text-align:right}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table td.numeric){text-align:right}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table td.numeric strong){font-size:12px;line-height:1;white-space:nowrap}
+.purchase-form-polished :global(.purchase-items-table .spreadsheet-table .icon-button){width:26px;height:26px}
