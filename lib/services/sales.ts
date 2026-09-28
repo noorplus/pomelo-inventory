@@ -36,7 +36,6 @@ export async function createSaleDraft(
       p_notes: input.notes ?? null,
       p_items: input.items,
       p_overall_discount: input.overallDiscount ?? 0,
-      p_overall_discount: input.overallDiscount ?? 0,
     },
     "Unable to create sale draft.",
   );
