@@ -1,7 +1,12 @@
--- Fix purchase confirmation validation for the two-level discount model.
+-- Fix purchase confirmation validation and inventory costing for the two-level discount model.
 -- Item line totals already include item-level discounts. The purchase header
 -- discount is the separate overall discount and must be applied once more
 -- before comparing against purchases.total.
+--
+-- The public function previously returned uuid. Drop it before recreating because
+-- PostgreSQL cannot change a function return type with CREATE OR REPLACE.
+
+drop function if exists public.confirm_purchase(uuid);
 
 create or replace function public.confirm_purchase(
   p_purchase_id uuid
@@ -101,41 +106,61 @@ begin
     where organization_id = v_organization_id
       and product_id = v_product_id;
 
-    select pi.line_total
-    into v_line_total
-    from public.purchase_items pi
-    where pi.purchase_id = p_purchase_id
-      and pi.organization_id = v_organization_id
-      and pi.product_id = v_product_id;
-
-    insert into public.inventory_movements (
-      organization_id,
-      product_id,
-      movement_direction,
-      movement_type,
-      quantity,
-      reference_type,
-      reference_id,
-      unit_cost,
-      movement_date,
-      created_by
-    )
-    select
-      v_organization_id,
-      pi.product_id,
-      'In',
-      'Purchase',
-      pi.quantity,
-      'purchase',
-      p_purchase_id,
-      pi.unit_price,
-      now(),
-      v_user_id
-    from public.purchase_items pi
-    where pi.purchase_id = p_purchase_id
-      and pi.organization_id = v_organization_id
-      and pi.product_id = v_product_id;
+    -- Inventory movements are inserted after stock updates so the overall
+    -- discount can be allocated proportionally across all net purchase lines.
   end loop;
+
+  insert into public.inventory_movements (
+    organization_id,
+    product_id,
+    movement_direction,
+    movement_type,
+    quantity,
+    reference_type,
+    reference_id,
+    unit_cost,
+    movement_date,
+    created_by
+  )
+  with ordered as (
+    select
+      pi.product_id,
+      pi.quantity,
+      pi.line_total,
+      row_number() over (order by pi.product_id) as rn,
+      count(*) over () as row_count,
+      sum(pi.line_total) over () as net_total
+    from public.purchase_items pi
+    where pi.purchase_id = p_purchase_id
+      and pi.organization_id = v_organization_id
+  ),
+  allocated as (
+    select
+      o.*,
+      case
+        when o.rn = o.row_count then
+          v_discount - coalesce(
+            sum(round(v_discount * o2.line_total / nullif(o2.net_total, 0), 4))
+              over (order by o2.rn rows between unbounded preceding and 1 preceding),
+            0
+          )
+        else round(v_discount * o.line_total / nullif(o.net_total, 0), 4)
+      end as allocated_discount
+    from ordered o
+    left join ordered o2 on o2.rn <= o.rn
+  )
+  select
+    v_organization_id,
+    a.product_id,
+    'In',
+    'Purchase',
+    a.quantity,
+    'purchase',
+    p_purchase_id,
+    round((a.line_total - a.allocated_discount) / nullif(a.quantity, 0), 4),
+    now(),
+    v_user_id
+  from allocated a;
 
   insert into public.account_transactions (
     organization_id,
