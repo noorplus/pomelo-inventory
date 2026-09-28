@@ -1,6 +1,7 @@
 import Link from "next/link";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import Pager from "@/app/components/pager";
+import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
@@ -138,11 +139,11 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
             <table>
               <thead>
                 <tr>
-                  <SortableHeader label="Invoice" field="invoice_no" search={search} status={status} sort={sort} direction={direction} />
-                  <SortableHeader label="Date" field="invoice_date" search={search} status={status} sort={sort} direction={direction} />
+                  <SortableHeader label="Invoice" field="invoice_no" sort={sort} direction={direction} basePath="/sales" params={{ search, status }} />
+                  <SortableHeader label="Date" field="invoice_date" sort={sort} direction={direction} basePath="/sales" params={{ search, status }} />
                   <th>Customer</th>
-                  <SortableHeader label="Total" field="total" search={search} status={status} sort={sort} direction={direction} className="numeric" />
-                  <SortableHeader label="Status" field="status" search={search} status={status} sort={sort} direction={direction} />
+                  <SortableHeader label="Total" field="total" sort={sort} direction={direction} basePath="/sales" params={{ search, status }} className="numeric" />
+                  <SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/sales" params={{ search, status }} />
                 </tr>
               </thead>
               <tbody>
@@ -201,36 +202,3 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
   );
 }
 
-function SortableHeader({
-  label,
-  field,
-  search,
-  status,
-  sort,
-  direction,
-  className = "",
-}: {
-  label: string;
-  field: string;
-  search: string;
-  status: string;
-  sort: string;
-  direction: string;
-  className?: string;
-}) {
-  const nextDirection = sort === field && direction === "asc" ? "desc" : "asc";
-  const query = new URLSearchParams();
-  if (search) query.set("search", search);
-  if (status) query.set("status", status);
-  query.set("sort", field);
-  query.set("direction", nextDirection);
-  const indicator = sort === field ? (direction === "asc" ? " ↑" : " ↓") : "";
-  return (
-    <th className={"sortable-header " + className}>
-      <Link href={"/sales?" + query.toString()}>
-        {label}
-        {indicator}
-      </Link>
-    </th>
-  );
-}
