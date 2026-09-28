@@ -399,13 +399,7 @@ export default async function SaleDetailPage({
                 − ৳{Number(sale.discount).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </strong>
             </div>
-            <div>
-              <span>Tax</span>
-              <strong>
-                + ৳{Number(sale.tax).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </strong>
-            </div>
-            <div className="purchase-grand-total">
+              <div className="purchase-grand-total">
               <span>Total</span>
               <strong>
                 ৳{Number(sale.total).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -504,7 +498,6 @@ export default async function SaleDetailPage({
                 qty: Number(item.quantity),
                 unitPrice: Number(item.unit_price),
                 discount: Number(item.discount),
-                tax: Number(item.tax),
                 total: Number(item.line_total),
               };
             })}
