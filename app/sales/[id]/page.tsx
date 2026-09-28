@@ -27,7 +27,7 @@ export default async function SaleDetailPage({
 
   const { data: sale, error: saleError } = await supabase
     .from("sales")
-    .select("id, invoice_no, invoice_date, contact_id, status, subtotal, discount, tax, total, notes, created_at, created_by, contacts(id_no, name, phone, email)")
+    .select("id, invoice_no, invoice_date, contact_id, status, subtotal, discount, total, notes, created_at, created_by, contacts(id_no, name, phone, email)")
     .eq("organization_id", organizationId)
     .eq("id", id)
     .single();
@@ -61,7 +61,7 @@ export default async function SaleDetailPage({
   ] = await Promise.all([
     supabase
       .from("sale_items")
-      .select("id, product_id, quantity, unit_price, discount, tax, line_total, products(product_name, retail_price)")
+      .select("id, product_id, quantity, unit_price, discount, line_total, products(product_name, retail_price)")
       .eq("organization_id", organizationId)
       .eq("sale_id", id)
       .order("created_at"),
@@ -169,7 +169,6 @@ export default async function SaleDetailPage({
               quantity: Number(item.quantity),
               unit_price: Number(item.unit_price),
               discount: Number(item.discount),
-              tax: Number(item.tax),
             }))}
             error={error}
           />
@@ -223,7 +222,6 @@ export default async function SaleDetailPage({
               lineMode="items"
               subtotal={Number(sale.subtotal)}
               discount={Number(sale.discount)}
-              tax={Number(sale.tax)}
               total={Number(sale.total)}
               notes={sale.notes}
             />
@@ -353,7 +351,7 @@ export default async function SaleDetailPage({
                   <th className="numeric">Qty</th>
                   <th className="numeric">Unit Price</th>
                   <th className="numeric">Discount</th>
-                  <th className="numeric">Tax</th>
+                  
                   <th className="numeric">Line Total</th>
                 </tr>
               </thead>
