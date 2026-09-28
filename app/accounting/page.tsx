@@ -191,7 +191,7 @@ export default async function AccountingPage({
             <table>
               <thead>
                 <tr>
-                  <SortableHeader label="Payment No" field="payment_no" sort={sort} direction={direction} basePath="/accounting" params={{ tab: "payments" }} />
+                  <SortableHeader label="Payment No" field="payment_no" sort={sort} direction={direction} basePath="/accounting" params={{ tab: "payments", sort, direction }} />
                   <SortableHeader label="Date" field="payment_date" sort={sort} direction={direction} basePath="/accounting" params={{ tab: "payments" }} />
                   <SortableHeader label="Type" field="payment_type" sort={sort} direction={direction} basePath="/accounting" params={{ tab: "payments" }} />
                   <th>Contact</th>
@@ -273,7 +273,7 @@ export default async function AccountingPage({
             <table>
               <thead>
                 <tr>
-                  <SortableHeader label="Expense No" field="expense_no" sort={expenseSort} direction={direction} basePath="/accounting" params={{ tab: "expenses" }} />
+                  <SortableHeader label="Expense No" field="expense_no" sort={expenseSort} direction={direction} basePath="/accounting" params={{ tab: "expenses", sort: expenseSort, direction }} />
                   <SortableHeader label="Date" field="expense_date" sort={expenseSort} direction={direction} basePath="/accounting" params={{ tab: "expenses" }} />
                   <th>Category</th>
                   <th>Vendor / Payee</th>
