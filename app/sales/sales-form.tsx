@@ -1,3 +1,4 @@
+import DataTable from "@/app/components/data-table";
 "use client";
 
 import { useId, useState } from "react";
@@ -158,7 +159,7 @@ export default function SalesForm({
         </div>
 
         <div className="table-scroll purchase-items-table">
-          <table className="spreadsheet-table">
+          <DataTable>
             <colgroup><col className="col-product" /><col className="col-qty" /><col className="col-price" /><col className="col-discount" /><col className="col-total" /><col className="col-action" /></colgroup>
             <thead>
               <tr>
@@ -260,7 +261,7 @@ export default function SalesForm({
                 );
               })}
             </tbody>
-          </table>
+          </DataTable>
         </div>
 
         <div className="line-items-actions">
