@@ -22,6 +22,7 @@ export async function createSaleDraft(
     contactId: string;
     invoiceDate?: string | null;
     notes?: string | null;
+    overallDiscount?: number;
     items: SaleLineInput[];
   },
 ): Promise<SaleDraftResult> {
@@ -33,6 +34,7 @@ export async function createSaleDraft(
       p_contact_id: input.contactId,
       p_invoice_date: input.invoiceDate ?? null,
       p_notes: input.notes ?? null,
+      p_overall_discount: input.overallDiscount ?? 0,
       p_items: input.items,
     },
     "Unable to create sale draft.",
@@ -48,6 +50,7 @@ export async function updateSaleDraft(
     contactId: string;
     invoiceDate?: string | null;
     notes?: string | null;
+    overallDiscount?: number;
     items: SaleLineInput[];
   },
 ): Promise<SaleDraftResult> {
