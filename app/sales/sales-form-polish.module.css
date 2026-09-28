@@ -51,3 +51,34 @@
 .sales-form-polished :global(.purchase-items-table .spreadsheet-table td.numeric){text-align:right}
 .sales-form-polished :global(.purchase-items-table .spreadsheet-table td.numeric strong){font-size:12px;line-height:1;white-space:nowrap}
 .sales-form-polished :global(.purchase-items-table .spreadsheet-table .icon-button){width:26px;height:26px}
+
+
+/* Spreadsheet transaction grid: never collapse into stacked cards */
+.sales-form-polished :global(.data-card){padding:10px}
+.sales-form-polished :global(.form-section-heading){margin-bottom:8px}
+.sales-form-polished :global(.form-grid){gap:8px}
+.sales-form-polished :global(.form-grid label){gap:4px}
+.sales-form-polished :global(.form-grid input),.sales-form-polished :global(.form-grid select),.sales-form-polished :global(.form-grid textarea){min-height:34px;padding:6px 8px;border-radius:4px}
+.sales-form-polished :global(.form-grid textarea){min-height:58px}
+.sales-form-polished :global(.purchase-items-table){border-radius:4px}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table){display:table!important;min-width:918px!important;width:918px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table thead){display:table-header-group!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table tbody){display:table-row-group!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table tr){display:table-row!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table th),.sales-form-polished :global(.purchase-items-table .spreadsheet-table td){display:table-cell!important;white-space:nowrap!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table td::before){content:none!important;display:none!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-product){width:390px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-qty){width:90px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-price){width:135px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-discount){width:120px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-total){width:135px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table .col-action){width:48px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table th){height:30px!important;padding:3px 6px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table td){height:38px!important;padding:2px 5px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table select),.sales-form-polished :global(.purchase-items-table .spreadsheet-table input){height:30px!important;min-height:30px!important;padding:3px 6px!important;border-radius:3px!important}
+.sales-form-polished :global(.purchase-items-table .spreadsheet-table .icon-button){width:26px!important;height:26px!important}
+.sales-form-polished :global(.line-items-actions){margin-top:5px}
+.sales-form-polished :global(.purchase-total-card){margin-top:7px;padding:7px 9px;gap:3px}
+.sales-form-polished :global(.purchase-total-card>div){min-height:19px}
+.sales-form-polished :global(.purchase-grand-total){min-height:27px!important;padding-top:4px!important;margin-top:2px!important}
+.sales-form-polished :global(.form-actions){margin-top:0}
