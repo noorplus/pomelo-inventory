@@ -113,7 +113,7 @@ export default function PurchaseForm({
           <div className="form-error" role="alert">No active products are available. Add an active product before creating a purchase.</div>
         ) : (
           <div className="table-scroll purchase-items-table">
-            <table>
+            <table className="spreadsheet-table">
             <colgroup><col className="col-product" /><col className="col-qty" /><col className="col-price" /><col className="col-discount" /><col className="col-total" /><col className="col-action" /></colgroup>
               <thead><tr><th>Product</th><th className="numeric">Qty</th><th className="numeric">Unit price</th><th className="numeric">Discount</th><th className="numeric">Line total</th><th /></tr></thead>
               <tbody>
@@ -129,16 +129,12 @@ export default function PurchaseForm({
                   );
                   return (
                     <tr key={index}>
-                      <td>
+                      <td title={item.product_id ? `In stock: ${currentStock} → after receive: ${currentStock + Number(item.quantity || 0)}` : undefined}>
                         <select value={item.product_id} onChange={(event) => selectProduct(index, event.target.value)} required aria-label="Product">
                           <option value="" disabled>Select product</option>
                           {availableProducts.map((product) => <option key={product.id} value={product.id}>{product.product_name} (Stock: {product.stock_quantity ?? 0})</option>)}
                         </select>
-                        {item.product_id && (
-                          <span className="purchase-stock-preview">
-                            In stock: {currentStock} → after receive: {currentStock + Number(item.quantity || 0)}
-                          </span>
-                        )}
+
                       </td>
                       <td className="numeric"><input className="compact-number" type="number" min="0.0001" step="0.0001" value={item.quantity} onChange={(event) => updateItem(index, { quantity: Number(event.target.value) })} aria-label="Quantity" required /></td>
                       <td className="numeric"><input className="compact-number" type="number" min="0" step="0.01" value={item.unit_price} onChange={(event) => updateItem(index, { unit_price: Number(event.target.value) })} aria-label="Unit price" required /></td>
