@@ -64,6 +64,7 @@ export async function updatePurchaseDraft(
       p_contact_id: input.contactId,
       p_invoice_date: input.invoiceDate ?? null,
       p_notes: input.notes ?? null,
+      p_overall_discount: input.overallDiscount ?? 0,
       p_items: input.items,
     },
     "Unable to update purchase draft.",
