@@ -8,7 +8,6 @@ export type DocLine = {
   qty?: number;
   unitPrice?: number;
   discount?: number;
-  tax?: number;
   total: number;
 };
 
@@ -30,7 +29,6 @@ export type InvoiceDocumentProps = {
   lineMode: "items" | "simple";
   subtotal?: number;
   discount?: number;
-  tax?: number;
   total: number;
   paid?: number;
   due?: number;
@@ -59,7 +57,6 @@ export default function InvoiceDocument(props: InvoiceDocumentProps) {
     lineMode,
     subtotal,
     discount,
-    tax,
     total,
     paid,
     due,
@@ -115,8 +112,7 @@ export default function InvoiceDocument(props: InvoiceDocumentProps) {
                   <th className="numeric">Qty</th>
                   <th className="numeric">Unit Price</th>
                   <th className="numeric">Discount</th>
-                  <th className="numeric">Tax</th>
-                </>
+                        </>
               )}
               <th className="numeric">Amount</th>
             </tr>
@@ -138,7 +134,6 @@ export default function InvoiceDocument(props: InvoiceDocumentProps) {
                     </td>
                     <td className="numeric">{line.unitPrice !== undefined ? money(line.unitPrice) : "—"}</td>
                     <td className="numeric">{line.discount !== undefined ? money(line.discount) : "—"}</td>
-                    <td className="numeric">{line.tax !== undefined ? money(line.tax) : "—"}</td>
                   </>
                 )}
                 <td className="numeric">
@@ -161,12 +156,6 @@ export default function InvoiceDocument(props: InvoiceDocumentProps) {
           <div>
             <span>Discount</span>
             <strong>− {money(discount)}</strong>
-          </div>
-        )}
-        {tax !== undefined && tax > 0 && (
-          <div>
-            <span>Tax</span>
-            <strong>+ {money(tax)}</strong>
           </div>
         )}
         <div className="invoice-grand-total">
