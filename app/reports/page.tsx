@@ -1041,7 +1041,7 @@ export default async function ReportsPage({
               <span>Confirmed sales, purchases, and expenses with outstanding balance · oldest first</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Type</th>
@@ -1119,7 +1119,7 @@ export default async function ReportsPage({
               <span>Receivables and payables grouped by age since invoice / expense date</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Bucket</th>
@@ -1205,7 +1205,7 @@ export default async function ReportsPage({
               </span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Month</th>
@@ -1271,7 +1271,7 @@ export default async function ReportsPage({
               <span>Revenue from sale lines minus Out-Sale movement cost (purchase price fallback)</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Product</th>
@@ -1316,7 +1316,7 @@ export default async function ReportsPage({
               <span>Per-invoice margin for the latest 50 confirmed sales</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Invoice</th>
@@ -1386,7 +1386,7 @@ export default async function ReportsPage({
               <span>Stock quantity × latest In-Purchase unit cost (retail price fallback)</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Product</th>
@@ -1456,7 +1456,7 @@ export default async function ReportsPage({
               <span>Top 10 customers by confirmed sales and top 10 suppliers by confirmed purchases</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th className="numeric">Rank</th>
@@ -1524,7 +1524,7 @@ export default async function ReportsPage({
               <span>Confirmed expense totals by category by month</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Category</th>
@@ -1590,7 +1590,7 @@ export default async function ReportsPage({
               <span>Movement quantities over the last 90 days plus current stock</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Product</th>
@@ -1658,7 +1658,7 @@ export default async function ReportsPage({
               <span>Latest 100 account_transactions with actor, date, and description</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -1719,7 +1719,7 @@ export default async function ReportsPage({
               <span>Latest 100 inventory_movements with actor, date, and description</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Date</th>
@@ -1805,7 +1805,7 @@ export default async function ReportsPage({
               <span>Per-month sales billed vs Confirmed-payment receipts attributed to invoice month</span>
             </div>
             <div className="table-scroll">
-              <table>
+              <table className="spreadsheet-table">
                 <thead>
                   <tr>
                     <th>Month</th>
