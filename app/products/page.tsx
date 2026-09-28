@@ -2,6 +2,7 @@ import Link from "next/link";
 import CsvActions from "@/app/components/csv-actions";
 import WorkspaceShell from "@/app/components/workspace-shell";
 import Pager from "@/app/components/pager";
+import SortableHeader from "@/app/components/sortable-header";
 import { getWorkspaceContext } from "@/lib/auth/workspace";
 import { PAGE_SIZE, pageRange, parsePageParam } from "@/lib/pagination";
 
@@ -67,10 +68,10 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
       {error ? <section className="form-error" role="alert">Unable to load products: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{products.length} product{products.length === 1 ? "" : "s"}</strong>{(search || selectedUom || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table><thead><tr><SortableHeader label="Product" field="product_name" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="UoM" field="uom_id" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} />
-              <SortableHeader label="Retail price" field="retail_price" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} className="numeric" />
-              <SortableHeader label="Status" field="status" search={search} uomId={selectedUom} status={status} sort={sort} direction={direction} /><th>Action</th></tr></thead>
+          <div className="table-scroll"><table><thead><tr><SortableHeader label="Product" field="product_name" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
+              <SortableHeader label="UoM" field="uom_id" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} />
+              <SortableHeader label="Retail price" field="retail_price" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} className="numeric" />
+              <SortableHeader label="Status" field="status" sort={sort} direction={direction} basePath="/products" params={{ search, uom_id: selectedUom, status }} /><th>Action</th></tr></thead>
             <tbody>{products.map((product) => <tr key={product.id}><td><strong>{product.product_name}</strong></td><td>{unitMap.get(product.uom_id) || "—"}</td><td className="numeric"><span className="price-value">৳{Number(product.retail_price).toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></td><td><span className="status-badge">{product.status}</span></td><td><form action={toggleProductStatus}><input type="hidden" name="id" value={product.id} /><input type="hidden" name="status" value={product.status === "Active" ? "Inactive" : "Active"} /><button className="secondary-button table-action-button" type="submit">{product.status === "Active" ? "Deactivate" : "Activate"}</button></form></td></tr>)}</tbody>
           </table></div>
           {!products.length && <EmptyState icon="▦" title="No products found" text={search || selectedUom || status ? "Try changing your filters." : "Add your first product."} />}
@@ -100,18 +101,3 @@ async function toggleProductStatus(formData: FormData) {
   }
 }
 
-function SortableHeader({ label, field, search, uomId, status, sort, direction, className = "" }: { label: string; field: string; search: string; uomId: string; status: string; sort: string; direction: string; className?: string }) {
-  const nextDirection = sort === field && direction === "asc" ? "desc" : "asc";
-  const query = new URLSearchParams();
-  if (search) query.set("search", search);
-  if (uomId) query.set("uom_id", uomId);
-  if (status) query.set("status", status);
-  query.set("sort", field);
-  query.set("direction", nextDirection);
-  const indicator = sort === field ? (direction === "asc" ? " ↑" : " ↓") : "";
-  return <th className={"sortable-header " + className}><Link href={"/products?" + query.toString()}>{label}{indicator}</Link></th>;
-}
-
-function EmptyState({ icon, title, text }: { icon: string; title: string; text: string }) {
-  return <div className="empty-state"><div className="empty-icon">{icon}</div><div><h2>{title}</h2><p>{text}</p></div></div>;
-}
