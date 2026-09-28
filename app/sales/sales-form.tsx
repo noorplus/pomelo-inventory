@@ -279,8 +279,7 @@ export default function SalesForm({
               ৳{subtotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </strong>
           </div>
-          <div>
-            <span>Discount</span>
+          <div><span>Item Discounts</span><strong>− ৳{discountTotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div><div><span>Net Subtotal</span><strong>৳{netSubtotal.toLocaleString("en-BD", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div><div><span>Overall Discount</span>
             <input
               type="number"
               min="0"
