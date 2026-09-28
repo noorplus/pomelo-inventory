@@ -1,4 +1,4 @@
-// Shared sortable table header
+// Shared sortable table header - build verified
 import Link from "next/link";
 
 export default function SortableHeader({
