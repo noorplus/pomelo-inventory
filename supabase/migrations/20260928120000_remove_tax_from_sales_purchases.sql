@@ -66,7 +66,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where x.product_id is null
        or x.quantity is null
@@ -85,7 +85,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     group by x.product_id
     having count(*) > 1
@@ -99,7 +99,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where not exists (
       select 1
@@ -263,7 +263,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where x.product_id is null
        or x.quantity is null
@@ -283,7 +283,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     group by x.product_id
     having count(*) > 1
@@ -298,7 +298,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where not exists (
       select 1
@@ -317,7 +317,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where x.id is not null
       and not exists (
@@ -364,7 +364,7 @@ begin
         product_id uuid,
         quantity numeric,
         unit_price numeric,
-        discount numeric,
+        discount numeric
       )
       where x.id = pi.id
     );
@@ -381,7 +381,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   )
   where pi.id = x.id
     and pi.purchase_id = p_purchase_id;
@@ -410,7 +410,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   )
   where x.id is null;
 
@@ -485,7 +485,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where x.product_id is null
        or x.quantity is null
@@ -504,7 +504,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     group by x.product_id
     having count(*) > 1
@@ -518,7 +518,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where not exists (
       select 1
@@ -682,7 +682,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where x.product_id is null
        or x.quantity is null
@@ -702,7 +702,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     group by x.product_id
     having count(*) > 1
@@ -717,7 +717,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where not exists (
       select 1
@@ -736,7 +736,7 @@ begin
       product_id uuid,
       quantity numeric,
       unit_price numeric,
-      discount numeric,
+      discount numeric
     )
     where x.id is not null
       and not exists (
@@ -783,7 +783,7 @@ begin
         product_id uuid,
         quantity numeric,
         unit_price numeric,
-        discount numeric,
+        discount numeric
       )
       where x.id = si.id
     );
@@ -800,7 +800,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   )
   where si.id = x.id
     and si.sale_id = p_sale_id;
@@ -829,7 +829,7 @@ begin
     product_id uuid,
     quantity numeric,
     unit_price numeric,
-    discount numeric,
+    discount numeric
   )
   where x.id is null;
 
