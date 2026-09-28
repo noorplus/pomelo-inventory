@@ -10,7 +10,6 @@ type PurchaseItemInput = {
   quantity: number;
   unit_price: number;
   discount?: number;
-  tax?: number;
 };
 
 function parseItems(formData: FormData): PurchaseItemInput[] {
@@ -23,14 +22,12 @@ function parseItems(formData: FormData): PurchaseItemInput[] {
     const quantity = Number(value.quantity);
     const unitPrice = Number(value.unit_price);
     const discount = Number(value.discount || 0);
-    const tax = Number(value.tax || 0);
     if (!value.product_id) throw new Error("Product must be selected.");
     if (isNaN(quantity) || quantity <= 0) throw new Error("Quantity must be greater than zero.");
     if (isNaN(unitPrice) || unitPrice < 0) throw new Error("Unit price cannot be negative.");
     if (isNaN(discount) || discount < 0) throw new Error("Discount cannot be negative.");
     if (discount > quantity * unitPrice) throw new Error("Item discount cannot exceed item gross amount.");
-    if (isNaN(tax) || tax < 0) throw new Error("Tax cannot be negative.");
-    return { id: value.id ? String(value.id) : undefined, product_id: String(value.product_id), quantity, unit_price: unitPrice, discount, tax };
+    return { id: value.id ? String(value.id) : undefined, product_id: String(value.product_id), quantity, unit_price: unitPrice, discount };
   });
 }
 
@@ -106,7 +103,7 @@ export async function clonePurchase(formData: FormData) {
     if (!sourceId) throw new Error("Missing purchase ID.");
     const [{ data: source, error: sourceError }, { data: sourceItems, error: itemsError }] = await Promise.all([
       supabase.from("purchases").select("contact_id, notes").eq("id", sourceId).eq("organization_id", organizationId).single(),
-      supabase.from("purchase_items").select("product_id, quantity, unit_price, discount, tax").eq("purchase_id", sourceId).eq("organization_id", organizationId),
+      supabase.from("purchase_items").select("product_id, quantity, unit_price, discount").eq("purchase_id", sourceId).eq("organization_id", organizationId),
     ]);
     if (sourceError || !source) throw new Error("Source purchase not found.");
     if (itemsError) throw new Error(itemsError.message);
