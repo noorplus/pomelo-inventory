@@ -54,7 +54,7 @@ export default async function PurchasesPage({ searchParams }: { searchParams: Pr
       {error ? <section className="form-error" role="alert">Unable to load purchases: {error.message}</section> : (
         <section className="table-card">
           <div className="table-meta"><strong>{purchases?.length ?? 0} purchase{purchases?.length === 1 ? "" : "s"}</strong>{(search || status) && <span>Filtered results</span>}</div>
-          <div className="table-scroll"><table><thead><tr>
+          <div className="table-scroll"><table className="spreadsheet-table"><thead><tr>
             <SortableHeader label="Invoice" field="invoice_no" sort={sort} direction={direction} basePath="/purchases" params={{ search, status }} />
             <SortableHeader label="Date" field="invoice_date" sort={sort} direction={direction} basePath="/purchases" params={{ search, status }} />
             <th>Contact</th>
