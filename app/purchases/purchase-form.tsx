@@ -1,3 +1,4 @@
+import DataTable from "@/app/components/data-table";
 "use client";
 
 import { useMemo, useState } from "react";
@@ -113,7 +114,7 @@ export default function PurchaseForm({
           <div className="form-error" role="alert">No active products are available. Add an active product before creating a purchase.</div>
         ) : (
           <div className="table-scroll purchase-items-table">
-            <table className="spreadsheet-table">
+            <DataTable>
             <colgroup><col className="col-product" /><col className="col-qty" /><col className="col-price" /><col className="col-discount" /><col className="col-total" /><col className="col-action" /></colgroup>
               <thead><tr><th>Product</th><th className="numeric">Qty</th><th className="numeric">Unit price</th><th className="numeric">Discount</th><th className="numeric">Line total</th><th /></tr></thead>
               <tbody>
@@ -145,7 +146,7 @@ export default function PurchaseForm({
                   );
                 })}
               </tbody>
-            </table>
+            </DataTable>
           </div>
         )}
 
