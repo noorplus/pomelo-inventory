@@ -199,7 +199,7 @@ export default async function PaymentDetailPage({
               .eq("organization_id", organizationId)
               .eq("reference_type", "Purchase")
               .in("reference_id", purchaseIds)
-              .like("transaction_type", "Purchase Return%")
+              .eq("transaction_type", "Purchase Return - Payable")
           : Promise.resolve({ data: [] }),
       ]);
 
