@@ -41,3 +41,41 @@ assert.throws(() => calculate(lines, 14301), /cannot exceed/);
 assert.throws(() => calculate(lines, -1), /cannot be negative/);
 
 console.log("Discount regression tests passed.");
+
+function allocateOverallDiscount(lines, overallDiscount) {
+  const netTotal = lines.reduce((sum, line) => sum + line.lineTotal, 0);
+  if (overallDiscount < 0) throw new Error("Overall discount cannot be negative");
+  if (overallDiscount > netTotal) throw new Error("Overall discount cannot exceed net purchase value");
+
+  let allocated = 0;
+  return lines.map((line, index) => {
+    const isLast = index === lines.length - 1;
+    const allocation = isLast
+      ? Number((overallDiscount - allocated).toFixed(4))
+      : Number((overallDiscount * line.lineTotal / netTotal).toFixed(4));
+    allocated = Number((allocated + allocation).toFixed(4));
+    const effectiveUnitCost = Number(((line.lineTotal - allocation) / line.quantity).toFixed(4));
+    return { ...line, allocatedOverallDiscount: allocation, effectiveUnitCost };
+  });
+}
+
+const purchaseLines = [
+  { quantity: 11, lineTotal: 22094 },
+  { quantity: 51, lineTotal: 104307 },
+  { quantity: 21, lineTotal: 42539 },
+];
+const allocated = allocateOverallDiscount(purchaseLines, 1000);
+assert.equal(allocated.reduce((sum, line) => sum + line.allocatedOverallDiscount, 0), 1000);
+assert.equal(
+  Number(allocated.reduce((sum, line) => sum + line.effectiveUnitCost * line.quantity, 0).toFixed(4)),
+  167940,
+);
+assert.equal(
+  allocated[0].effectiveUnitCost,
+  1996.6563,
+);
+
+const singleItem = allocateOverallDiscount([{ quantity: 1, lineTotal: 2000 }], 550);
+assert.equal(singleItem[0].effectiveUnitCost, 1450);
+
+console.log("Overall discount allocation regression tests passed.");
