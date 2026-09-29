@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
-import { cancelPurchase, confirmPurchase, createPurchaseDraft, deletePurchaseDraft, updatePurchaseDraft } from "@/lib/services/purchases";
+import { cancelPurchase as cancelPurchaseRpc, confirmPurchase as confirmPurchaseRpc, createPurchaseDraft, deletePurchaseDraft, updatePurchaseDraft } from "@/lib/services/purchases";
 
 type PurchaseItemInput = {
   id?: string;
@@ -90,7 +90,7 @@ export async function confirmPurchase(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const purchaseId = String(formData.get("purchase_id") || "").trim();
   try {
-    await confirmPurchase(supabase, purchaseId);
+    await confirmPurchaseRpc(supabase, purchaseId);
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
     errorRedirect("/purchases/" + purchaseId, "Unable to confirm purchase.");
@@ -102,7 +102,7 @@ export async function cancelPurchase(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const purchaseId = String(formData.get("purchase_id") || "").trim();
   try {
-    await cancelPurchase(supabase, purchaseId);
+    await cancelPurchaseRpc(supabase, purchaseId);
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/purchases/" + purchaseId, error.message);
     errorRedirect("/purchases/" + purchaseId, "Unable to cancel purchase.");
