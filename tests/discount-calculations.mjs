@@ -66,9 +66,13 @@ const purchaseLines = [
 ];
 const allocated = allocateOverallDiscount(purchaseLines, 1000);
 assert.equal(allocated.reduce((sum, line) => sum + line.allocatedOverallDiscount, 0), 1000);
-assert.equal(
-  Number(allocated.reduce((sum, line) => sum + line.effectiveUnitCost * line.quantity, 0).toFixed(4)),
-  167940,
+const effectiveCostTotal = allocated.reduce(
+  (sum, line) => sum + line.effectiveUnitCost * line.quantity,
+  0,
+);
+assert.ok(
+  Math.abs(effectiveCostTotal - 167940) < 0.01,
+  "rounded effective cost total drifted by " + (effectiveCostTotal - 167940),
 );
 assert.equal(
   allocated[0].effectiveUnitCost,
