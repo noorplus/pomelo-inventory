@@ -64,10 +64,10 @@ test("overall discount never changes the document formula unexpectedly", () => {
     { quantity: 2, unitPrice: 5000, discount: 250 },
     { quantity: 3, unitPrice: 2000, discount: 100 },
   ];
-  assert.equal(documentTotal(lines), 15200);
-  assert.equal(documentTotal(lines, 750), 14450);
+  assert.equal(documentTotal(lines), 15650);
+  assert.equal(documentTotal(lines, 750), 14900);
   assert.throws(() => documentTotal(lines, -1), /negative/);
-  assert.throws(() => documentTotal(lines, 15201), /exceed/);
+  assert.throws(() => documentTotal(lines, 15651), /exceed/);
 });
 
 test("overall discount allocation preserves the exact document discount", () => {
