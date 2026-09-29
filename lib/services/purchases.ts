@@ -78,8 +78,13 @@ export async function deletePurchaseDraft(db: Db, purchaseId: string): Promise<v
 }
 
 export async function confirmPurchase(db: Db, purchaseId: string): Promise<string> {
-  const data = await callRpc<string>(db, "confirm_purchase", { p_purchase_id: purchaseId }, "Unable to confirm purchase.");
-  return data ?? purchaseId;
+  const data = await callRpc<{ purchase_id: string } | string>(
+    db,
+    "confirm_purchase",
+    { p_purchase_id: purchaseId },
+    "Unable to confirm purchase.",
+  );
+  return typeof data === "string" ? data : data?.purchase_id ?? purchaseId;
 }
 
 export async function cancelPurchase(db: Db, purchaseId: string): Promise<string> {
