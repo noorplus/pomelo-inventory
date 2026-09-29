@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
-import { nextExpenseNo } from "@/lib/services/expenses";
-import { nextPaymentNo } from "@/lib/services/payments";
+import { cancelExpense, confirmExpense, nextExpenseNo } from "@/lib/services/expenses";
+import { cancelPayment, confirmPayment, nextPaymentNo } from "@/lib/services/payments";
 
 function errorRedirect(path: string, message: string): never {
   redirect(path + "?error=" + encodeURIComponent(message));
@@ -94,12 +94,12 @@ export async function confirmPaymentAction(formData: FormData) {
     errorRedirect("/accounting/payments/" + paymentId, "Invalid allocations payload.");
   }
 
-  const { error } = await supabase.rpc("confirm_payment", {
-    p_payment_id: paymentId,
-    p_allocations: allocations,
-  });
-
-  if (error) errorRedirect("/accounting/payments/" + paymentId, error.message);
+  try {
+    await confirmPayment(supabase, paymentId, allocations as Parameters<typeof confirmPayment>[2]);
+  } catch (error) {
+    if (error instanceof Error && error.message) errorRedirect("/accounting/payments/" + paymentId, error.message);
+    errorRedirect("/accounting/payments/" + paymentId, "Unable to confirm payment.");
+  }
   redirect("/accounting/payments/" + paymentId);
 }
 
@@ -107,8 +107,12 @@ export async function cancelPaymentAction(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const paymentId = String(formData.get("payment_id") || "").trim();
 
-  const { error } = await supabase.rpc("cancel_payment", { p_payment_id: paymentId });
-  if (error) errorRedirect("/accounting/payments/" + paymentId, error.message);
+  try {
+    await cancelPayment(supabase, paymentId);
+  } catch (error) {
+    if (error instanceof Error && error.message) errorRedirect("/accounting/payments/" + paymentId, error.message);
+    errorRedirect("/accounting/payments/" + paymentId, "Unable to cancel payment.");
+  }
   redirect("/accounting/payments/" + paymentId);
 }
 
@@ -185,8 +189,12 @@ export async function confirmExpenseAction(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const expenseId = String(formData.get("expense_id") || "").trim();
 
-  const { error } = await supabase.rpc("confirm_expense", { p_expense_id: expenseId });
-  if (error) errorRedirect("/accounting/expenses/" + expenseId, error.message);
+  try {
+    await confirmExpense(supabase, expenseId);
+  } catch (error) {
+    if (error instanceof Error && error.message) errorRedirect("/accounting/expenses/" + expenseId, error.message);
+    errorRedirect("/accounting/expenses/" + expenseId, "Unable to confirm expense.");
+  }
   redirect("/accounting/expenses/" + expenseId);
 }
 
@@ -194,8 +202,12 @@ export async function cancelExpenseAction(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const expenseId = String(formData.get("expense_id") || "").trim();
 
-  const { error } = await supabase.rpc("cancel_expense", { p_expense_id: expenseId });
-  if (error) errorRedirect("/accounting/expenses/" + expenseId, error.message);
+  try {
+    await cancelExpense(supabase, expenseId);
+  } catch (error) {
+    if (error instanceof Error && error.message) errorRedirect("/accounting/expenses/" + expenseId, error.message);
+    errorRedirect("/accounting/expenses/" + expenseId, "Unable to cancel expense.");
+  }
   redirect("/accounting/expenses/" + expenseId);
 }
 
