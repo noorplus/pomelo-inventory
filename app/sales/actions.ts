@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { redirect } from "next/navigation";
 import { getWorkspaceMembership } from "@/lib/auth/workspace";
-import { cancelSale, confirmSale, createSaleDraft, deleteSaleDraft, updateSaleDraft } from "@/lib/services/sales";
+import { cancelSale as cancelSaleRpc, confirmSale as confirmSaleRpc, createSaleDraft, deleteSaleDraft, updateSaleDraft } from "@/lib/services/sales";
 
 type SaleItemInput = {
   id?: string;
@@ -90,7 +90,7 @@ export async function confirmSale(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
   try {
-    await confirmSale(supabase, saleId);
+    await confirmSaleRpc(supabase, saleId);
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to confirm sale.");
@@ -102,7 +102,7 @@ export async function cancelSale(formData: FormData) {
   const { supabase } = await getWorkspaceMembership();
   const saleId = String(formData.get("sale_id") || "").trim();
   try {
-    await cancelSale(supabase, saleId);
+    await cancelSaleRpc(supabase, saleId);
   } catch (error) {
     if (error instanceof Error && error.message) errorRedirect("/sales/" + saleId, error.message);
     errorRedirect("/sales/" + saleId, "Unable to cancel sale.");
