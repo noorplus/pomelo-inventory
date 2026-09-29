@@ -83,8 +83,8 @@ begin
   end if;
 
   insert into public.inventory_movements(
-    organization_id, product_id, movement_type, reference_type,
-    quantity, reference_id, unit_cost, created_at, created_by
+    organization_id, product_id, movement_direction, movement_type, reference_type,
+    quantity, reference_id, unit_cost, movement_date, created_at, created_by
   )
   with x as (
     select pi.product_id, pi.quantity, pi.line_total,
@@ -106,8 +106,8 @@ begin
            end ad
     from x
   )
-  select v_org_id, product_id, 'Purchase', 'Purchase', quantity, p_purchase_id,
-         round((line_total - ad) / nullif(quantity, 0), 4), now(), v_user_id
+  select v_org_id, product_id, 'In', 'Purchase', 'Purchase', quantity, p_purchase_id,
+         round((line_total - ad) / nullif(quantity, 0), 4), now(), now(), v_user_id
   from a;
 
   for r in
