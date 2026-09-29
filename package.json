@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node tests/discount-calculations.mjs",
+    "test": "node --test tests/*.test.mjs tests/discount-calculations.mjs",
+    "test:regression": "node --test tests/*.test.mjs",
     "supabase": "supabase"
   },
   "dependencies": {
